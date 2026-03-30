@@ -1,0 +1,44 @@
+{
+    "bucket": "test",
+    "num_shards": 11,
+    "tenant": "",
+    "versioning": "enabled",
+    "zonegroup": "e09a64a0-5bd8-4df8-aa9a-fa25a07929e1",
+    "placement_rule": "default-placement",
+    "explicit_placement": {
+        "data_pool": "",
+        "data_extra_pool": "",
+        "index_pool": ""
+    },
+    "id": "20135590-8915-4c5e-9328-f759717a4f87.21289.1",
+    "marker": "20135590-8915-4c5e-9328-f759717a4f87.21289.1",
+    "index_type": "Normal",
+    "versioned": true,
+    "versioning_enabled": true,
+    "object_lock_enabled": false,
+    "mfa_enabled": false,
+    "owner": "test",
+    "ver": "0#1,1#1,2#1,3#1,4#1,5#1,6#1,7#1,8#1,9#1,10#4",
+    "master_ver": "0#0,1#0,2#0,3#0,4#0,5#0,6#0,7#0,8#0,9#0,10#0",
+    "mtime": "2026-03-19T06:28:33.500971Z",
+    "creation_time": "2026-03-19T06:28:28.719160Z",
+    "max_marker": "0#,1#,2#,3#,4#,5#,6#,7#,8#,9#,10#00000000003.7446.10",
+    "usage": {
+        "rgw.main": {
+            "size": 5,
+            "size_actual": 4096,
+            "size_utilized": 5,
+            "size_kb": 1,
+            "size_kb_actual": 4,
+            "size_kb_utilized": 1,
+            "num_objects": 1
+        }
+    },
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    }
+}
