@@ -21,12 +21,15 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	)
 
 	service := flow.NewService(
-		stubClient(func(_ context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
-			gotContainerName = containerName
-			gotBucketName = bucketName
+		stubClient{
+			bucketStats: func(_ context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
+				gotContainerName = containerName
+				gotBucketName = bucketName
 
-			return domain.NewBucketStats("bucket-id"), nil
-		}),
+				return domain.NewBucketStats("bucket-id"), nil
+			},
+			listBuckets: nil,
+		},
 	)
 
 	// Act
@@ -44,9 +47,12 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 
 	// Arrange
 	wantErr := errClientFailed
-	service := flow.NewService(stubClient(func(context.Context, string, string) (*domain.BucketStats, error) {
-		return nil, wantErr
-	}))
+	service := flow.NewService(stubClient{
+		bucketStats: func(context.Context, string, string) (*domain.BucketStats, error) {
+			return nil, wantErr
+		},
+		listBuckets: nil,
+	})
 
 	// Act
 	_, err := service.BucketStats(t.Context(), "rgw", "test")
@@ -55,12 +61,65 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 	require.ErrorIs(t, err, wantErr)
 }
 
-type stubClient func(context.Context, string, string) (*domain.BucketStats, error)
+func TestServiceListBucketsDelegatesToClient(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	var gotContainerName string
+
+	service := flow.NewService(stubClient{
+		bucketStats: nil,
+		listBuckets: func(_ context.Context, containerName string) ([]string, error) {
+			gotContainerName = containerName
+
+			return []string{"alpha", "beta"}, nil
+		},
+	})
+
+	// Act
+	buckets, err := service.ListBuckets(t.Context(), "rgw")
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, "rgw", gotContainerName)
+	require.Equal(t, []string{"alpha", "beta"}, buckets)
+}
+
+func TestServiceListBucketsReturnsClientError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	wantErr := errClientFailed
+	service := flow.NewService(stubClient{
+		bucketStats: nil,
+		listBuckets: func(context.Context, string) ([]string, error) {
+			return nil, wantErr
+		},
+	})
+
+	// Act
+	_, err := service.ListBuckets(t.Context(), "rgw")
+
+	// Assert
+	require.ErrorIs(t, err, wantErr)
+}
+
+type stubClient struct {
+	bucketStats func(context.Context, string, string) (*domain.BucketStats, error)
+	listBuckets func(context.Context, string) ([]string, error)
+}
 
 func (s stubClient) BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
-	return s(ctx, containerName, bucketName)
+	return s.bucketStats(ctx, containerName, bucketName)
+}
+
+func (s stubClient) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
+	return s.listBuckets(ctx, containerName)
 }
 
 var errClientFailed = errors.New("client failed")
 
-var _ client.Client = stubClient(nil)
+var _ client.Client = stubClient{
+	bucketStats: nil,
+	listBuckets: nil,
+}

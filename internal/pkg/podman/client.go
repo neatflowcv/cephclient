@@ -60,6 +60,34 @@ func (c *Client) BucketStats(ctx context.Context, containerName, bucketName stri
 	return stats, nil
 }
 
+func (c *Client) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"radosgw-admin",
+		"bucket",
+		"list",
+	}
+
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	buckets, err := decodeBucketList(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("parse bucket list output: %w", err)
+	}
+
+	return buckets, nil
+}
+
 func decodeBucketStats(data []byte) (*domain.BucketStats, error) {
 	var raw bucketStatsResponse
 
@@ -69,4 +97,15 @@ func decodeBucketStats(data []byte) (*domain.BucketStats, error) {
 	}
 
 	return domain.NewBucketStats(raw.ID), nil
+}
+
+func decodeBucketList(data []byte) ([]string, error) {
+	var raw listBucketsResponse
+
+	err := json.Unmarshal(data, &raw)
+	if err != nil {
+		return nil, fmt.Errorf("decode bucket list response: %w", err)
+	}
+
+	return []string(raw), nil
 }

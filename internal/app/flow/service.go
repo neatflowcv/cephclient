@@ -24,3 +24,12 @@ func (s *Service) BucketStats(ctx context.Context, containerName, bucketName str
 
 	return stats, nil
 }
+
+func (s *Service) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
+	buckets, err := s.client.ListBuckets(ctx, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("get bucket list: %w", err)
+	}
+
+	return buckets, nil
+}

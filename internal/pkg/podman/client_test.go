@@ -88,6 +88,62 @@ func TestClientBucketStatsReturnsJSONError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestClientListBucketsRunsPodmanCommand(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "bucket", "list"}
+			require.Equal(t, wantArgs, args)
+
+			return []byte(`["alpha","beta"]`), "", nil
+		}),
+	)
+
+	// Act
+	buckets, err := client.ListBuckets(t.Context(), "rgw")
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, []string{"alpha", "beta"}, buckets)
+}
+
+func TestClientListBucketsReturnsRunnerErrorWithStderr(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return nil, "permission denied", errExitStatus125
+		}),
+	)
+
+	// Act
+	_, err := client.ListBuckets(t.Context(), "rgw")
+
+	// Assert
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "permission denied")
+}
+
+func TestClientListBucketsReturnsJSONError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return []byte("{"), "", nil
+		}),
+	)
+
+	// Act
+	_, err := client.ListBuckets(t.Context(), "rgw")
+
+	// Assert
+	require.Error(t, err)
+}
+
 type stubRunner func(context.Context, ...string) ([]byte, string, error)
 
 func (s stubRunner) Run(ctx context.Context, args ...string) ([]byte, string, error) {
