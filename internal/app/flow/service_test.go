@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/neatflowcv/cephclient/internal/app/flow"
-	"github.com/neatflowcv/cephclient/internal/pkg/client"
 	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 	"github.com/stretchr/testify/require"
 )
@@ -15,111 +14,90 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	var (
-		gotContainerName string
-		gotBucketName    string
-	)
+	ctx := t.Context()
+	mockClient := &ClientMock{
+		BucketStatsFunc: func(gotCtx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
+			require.Equal(t, ctx, gotCtx)
+			require.Equal(t, "rgw", containerName)
+			require.Equal(t, "test", bucketName)
 
-	service := flow.NewService(
-		stubClient{
-			bucketStats: func(_ context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
-				gotContainerName = containerName
-				gotBucketName = bucketName
-
-				return domain.NewBucketStats("bucket-id"), nil
-			},
-			listBuckets: nil,
+			return domain.NewBucketStats("bucket-id"), nil
 		},
-	)
+	}
+	service := flow.NewService(mockClient)
 
 	// Act
-	stats, err := service.BucketStats(t.Context(), "rgw", "test")
+	stats, err := service.BucketStats(ctx, "rgw", "test")
 
 	// Assert
 	require.NoError(t, err)
-	require.Equal(t, "rgw", gotContainerName)
-	require.Equal(t, "test", gotBucketName)
 	require.Equal(t, "bucket-id", stats.ID())
+	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 
 func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
+	ctx := t.Context()
 	wantErr := errClientFailed
-	service := flow.NewService(stubClient{
-		bucketStats: func(context.Context, string, string) (*domain.BucketStats, error) {
+	mockClient := &ClientMock{
+		BucketStatsFunc: func(context.Context, string, string) (*domain.BucketStats, error) {
 			return nil, wantErr
 		},
-		listBuckets: nil,
-	})
+	}
+	service := flow.NewService(mockClient)
 
 	// Act
-	_, err := service.BucketStats(t.Context(), "rgw", "test")
+	_, err := service.BucketStats(ctx, "rgw", "test")
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
+	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 
 func TestServiceListBucketsDelegatesToClient(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	var gotContainerName string
-
-	service := flow.NewService(stubClient{
-		bucketStats: nil,
-		listBuckets: func(_ context.Context, containerName string) ([]string, error) {
-			gotContainerName = containerName
-
+	ctx := t.Context()
+	mockClient := &ClientMock{
+		ListBucketsFunc: func(gotCtx context.Context, containerName string) ([]string, error) {
+			require.Equal(t, ctx, gotCtx)
+			require.Equal(t, "rgw", containerName)
 			return []string{"alpha", "beta"}, nil
 		},
-	})
+	}
+	service := flow.NewService(mockClient)
 
 	// Act
-	buckets, err := service.ListBuckets(t.Context(), "rgw")
+	buckets, err := service.ListBuckets(ctx, "rgw")
 
 	// Assert
 	require.NoError(t, err)
-	require.Equal(t, "rgw", gotContainerName)
 	require.Equal(t, []string{"alpha", "beta"}, buckets)
+	require.Len(t, mockClient.ListBucketsCalls(), 1)
 }
 
 func TestServiceListBucketsReturnsClientError(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
+	ctx := t.Context()
 	wantErr := errClientFailed
-	service := flow.NewService(stubClient{
-		bucketStats: nil,
-		listBuckets: func(context.Context, string) ([]string, error) {
+	mockClient := &ClientMock{
+		ListBucketsFunc: func(context.Context, string) ([]string, error) {
 			return nil, wantErr
 		},
-	})
+	}
+	service := flow.NewService(mockClient)
 
 	// Act
-	_, err := service.ListBuckets(t.Context(), "rgw")
+	_, err := service.ListBuckets(ctx, "rgw")
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
-}
-
-type stubClient struct {
-	bucketStats func(context.Context, string, string) (*domain.BucketStats, error)
-	listBuckets func(context.Context, string) ([]string, error)
-}
-
-func (s stubClient) BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
-	return s.bucketStats(ctx, containerName, bucketName)
-}
-
-func (s stubClient) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
-	return s.listBuckets(ctx, containerName)
+	require.Len(t, mockClient.ListBucketsCalls(), 1)
 }
 
 var errClientFailed = errors.New("client failed")
-
-var _ client.Client = stubClient{
-	bucketStats: nil,
-	listBuckets: nil,
-}
