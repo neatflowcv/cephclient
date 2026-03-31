@@ -40,7 +40,7 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 
-func TestServiceBIListDelegatesToClient(t *testing.T) {
+func TestServiceBIListByObjectDelegatesToClient(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -65,7 +65,7 @@ func TestServiceBIListDelegatesToClient(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BIListFunc = func(
+	mockClient.BIListByObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName string,
 		shardID int,
@@ -81,15 +81,15 @@ func TestServiceBIListDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	biList, err := service.BIList(ctx, "rgw", "bucket-a", "test.txt", 3)
+	biList, err := service.BIListByObject(ctx, "rgw", "bucket-a", "test.txt", 3)
 
 	// Assert
 	require.NoError(t, err)
 	require.Same(t, wantList, biList)
-	require.Len(t, mockClient.BIListCalls(), 1)
+	require.Len(t, mockClient.BIListByObjectCalls(), 1)
 }
 
-func TestServiceBIListReturnsClientError(t *testing.T) {
+func TestServiceBIListByObjectReturnsClientError(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -98,17 +98,17 @@ func TestServiceBIListReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BIListFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
+	mockClient.BIListByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
 		return nil, wantErr
 	}
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.BIList(ctx, "rgw", "bucket-a", "test.txt", 3)
+	_, err := service.BIListByObject(ctx, "rgw", "bucket-a", "test.txt", 3)
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
-	require.Len(t, mockClient.BIListCalls(), 1)
+	require.Len(t, mockClient.BIListByObjectCalls(), 1)
 }
 
 func TestServiceBucketStatsReturnsClientError(t *testing.T) {

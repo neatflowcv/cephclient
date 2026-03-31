@@ -20,7 +20,7 @@ type biListCommand struct {
 }
 
 func (c *biListCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	biList, err := service.BIList(ctx, c.ContainerName, c.BucketName, c.ObjectName, c.ShardID)
+	biList, err := service.BIListByObject(ctx, c.ContainerName, c.BucketName, c.ObjectName, c.ShardID)
 	if err != nil {
 		return fmt.Errorf("read bucket index list: %w", err)
 	}

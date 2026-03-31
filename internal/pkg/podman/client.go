@@ -31,7 +31,7 @@ func NewClientWithRunner(runner Runner) *Client {
 	return &Client{runner: runner}
 }
 
-func (c *Client) BIList(
+func (c *Client) BIListByObject(
 	ctx context.Context,
 	containerName, bucketName, objectName string,
 	shardID int,

@@ -36,7 +36,7 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 	require.Equal(t, 11, stats.TotalShards())
 }
 
-func TestClientBIListRunsPodmanCommand(t *testing.T) {
+func TestClientBIListByObjectRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -60,14 +60,14 @@ func TestClientBIListRunsPodmanCommand(t *testing.T) {
 	)
 
 	// Act
-	biList, err := client.BIList(t.Context(), "rgw", "test-bucket", "test-object", 7)
+	biList, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
 	// Assert
 	require.NoError(t, err)
 	require.Empty(t, biList.Entries())
 }
 
-func TestClientBIListParsesFixture(t *testing.T) {
+func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -81,7 +81,7 @@ func TestClientBIListParsesFixture(t *testing.T) {
 	)
 
 	// Act
-	biList, err := client.BIList(t.Context(), "rgw", "test-bucket", "test.txt", 3)
+	biList, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test.txt", 3)
 
 	// Assert
 	require.NoError(t, err)
@@ -121,7 +121,7 @@ func TestClientBIListParsesFixture(t *testing.T) {
 	require.Len(t, olh.Entry().PendingLog()[0].Val(), 2)
 }
 
-func TestClientBIListReturnsRunnerErrorWithStderr(t *testing.T) {
+func TestClientBIListByObjectReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -132,14 +132,14 @@ func TestClientBIListReturnsRunnerErrorWithStderr(t *testing.T) {
 	)
 
 	// Act
-	_, err := client.BIList(t.Context(), "rgw", "test-bucket", "test-object", 7)
+	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
 	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 }
 
-func TestClientBIListReturnsJSONError(t *testing.T) {
+func TestClientBIListByObjectReturnsJSONError(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -150,13 +150,13 @@ func TestClientBIListReturnsJSONError(t *testing.T) {
 	)
 
 	// Act
-	_, err := client.BIList(t.Context(), "rgw", "test-bucket", "test-object", 7)
+	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
 	// Assert
 	require.Error(t, err)
 }
 
-func TestClientBIListRejectsUnknownType(t *testing.T) {
+func TestClientBIListByObjectRejectsUnknownType(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -167,7 +167,7 @@ func TestClientBIListRejectsUnknownType(t *testing.T) {
 	)
 
 	// Act
-	_, err := client.BIList(t.Context(), "rgw", "test-bucket", "test-object", 7)
+	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
 	// Assert
 	require.Error(t, err)

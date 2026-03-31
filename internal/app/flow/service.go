@@ -16,12 +16,12 @@ func NewService(client client.Client) *Service {
 	return &Service{client: client}
 }
 
-func (s *Service) BIList(
+func (s *Service) BIListByObject(
 	ctx context.Context,
 	containerName, bucketName, objectName string,
 	shardID int,
 ) (*domain.BIList, error) {
-	biList, err := s.client.BIList(ctx, containerName, bucketName, objectName, shardID)
+	biList, err := s.client.BIListByObject(ctx, containerName, bucketName, objectName, shardID)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket index list: %w", err)
 	}
