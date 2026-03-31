@@ -96,7 +96,7 @@ func decodeBucketStats(data []byte) (*domain.BucketStats, error) {
 		return nil, fmt.Errorf("decode bucket stats response: %w", err)
 	}
 
-	return domain.NewBucketStats(raw.ID), nil
+	return domain.NewBucketStats(raw.ID, raw.NumShards), nil
 }
 
 func decodeBucketList(data []byte) ([]string, error) {

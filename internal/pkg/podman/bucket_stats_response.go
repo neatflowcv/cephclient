@@ -1,5 +1,6 @@
 package podman
 
 type bucketStatsResponse struct {
-	ID string `json:"id"`
+	ID        string `json:"id"`
+	NumShards int    `json:"num_shards"`
 }

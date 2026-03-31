@@ -15,16 +15,20 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 
 	// Arrange
 	ctx := t.Context()
-	mockClient := &ClientMock{
-		BucketStatsFunc: func(gotCtx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
-			require.Equal(t, ctx, gotCtx)
-			require.Equal(t, "rgw", containerName)
-			require.Equal(t, "test", bucketName)
 
-			return domain.NewBucketStats("bucket-id"), nil
-		},
+	var mockClient ClientMock
+
+	mockClient.BucketStatsFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.BucketStats, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "test", bucketName)
+
+		return domain.NewBucketStats("bucket-id", 11), nil
 	}
-	service := flow.NewService(mockClient)
+	service := flow.NewService(&mockClient)
 
 	// Act
 	stats, err := service.BucketStats(ctx, "rgw", "test")
@@ -32,6 +36,7 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, "bucket-id", stats.ID())
+	require.Equal(t, 11, stats.TotalShards())
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 

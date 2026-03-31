@@ -20,7 +20,7 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "bucket", "stats", "--bucket=test"}
 			require.Equal(t, wantArgs, args)
 
-			return []byte(`{"id":"bucket-id"}`), "", nil
+			return []byte(`{"id":"bucket-id","num_shards":11}`), "", nil
 		}),
 	)
 
@@ -30,6 +30,7 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, "bucket-id", stats.ID())
+	require.Equal(t, 11, stats.TotalShards())
 }
 
 func TestClientBucketStatsParsesFixture(t *testing.T) {
