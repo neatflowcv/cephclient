@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/neatflowcv/cephclient/internal/app/flow"
 	"github.com/neatflowcv/cephclient/internal/pkg/domain"
@@ -59,9 +60,9 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d",
 			typed.Type(),
-			typed.IDX().Escaped(),
-			typed.Entry().Name(),
-			typed.Entry().Instance(),
+			quoteField(typed.IDX().Escaped()),
+			quoteField(typed.Entry().Name()),
+			quoteField(typed.Entry().Instance()),
 			typed.Entry().Exists(),
 			typed.Entry().VersionedEpoch(),
 		), nil
@@ -69,9 +70,9 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d",
 			typed.Type(),
-			typed.IDX().Escaped(),
-			typed.Entry().Name(),
-			typed.Entry().Instance(),
+			quoteField(typed.IDX().Escaped()),
+			quoteField(typed.Entry().Name()),
+			quoteField(typed.Entry().Instance()),
 			typed.Entry().Exists(),
 			typed.Entry().VersionedEpoch(),
 		), nil
@@ -79,9 +80,9 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t epoch=%d pending_removal=%t delete_marker=%t",
 			typed.Type(),
-			typed.IDX().Escaped(),
-			typed.Entry().Key().Name(),
-			typed.Entry().Key().Instance(),
+			quoteField(typed.IDX().Escaped()),
+			quoteField(typed.Entry().Key().Name()),
+			quoteField(typed.Entry().Key().Instance()),
 			typed.Entry().Exists(),
 			typed.Entry().Epoch(),
 			typed.Entry().PendingRemoval(),
@@ -90,4 +91,8 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 	default:
 		return "", fmt.Errorf("%w: %T", errUnsupportedBIEntryFormat, entry)
 	}
+}
+
+func quoteField(value string) string {
+	return `"` + strings.ReplaceAll(value, `"`, `\"`) + `"`
 }
