@@ -1,0 +1,146 @@
+[
+    {
+        "type": "plain",
+        "idx": "test.txt",
+        "entry": {
+            "name": "test.txt",
+            "instance": "",
+            "ver": {
+                "pool": -1,
+                "epoch": 0
+            },
+            "locator": "",
+            "exists": false,
+            "meta": {
+                "category": 0,
+                "size": 0,
+                "mtime": "0.000000",
+                "etag": "",
+                "storage_class": "",
+                "owner": "",
+                "owner_display_name": "",
+                "content_type": "",
+                "accounted_size": 0,
+                "user_data": "",
+                "appendable": false
+            },
+            "tag": "",
+            "flags": 8,
+            "pending_map": [
+                {
+                    "key": "_U-yRh58uJtdkq5PRyYmG5eI7Tpo__5O",
+                    "val": {
+                        "state": 0,
+                        "timestamp": "2026-02-12T08:42:30.893959Z",
+                        "op": 0
+                    }
+                }
+            ],
+            "versioned_epoch": 0
+        }
+    },
+    {
+        "type": "plain",
+        "idx": "test.txt\u0000v913\u0000iPDGqmtJA7imna.RLH.1nsBhSy1ZWf9m",
+        "entry": {
+            "name": "test.txt",
+            "instance": "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m",
+            "ver": {
+                "pool": 8,
+                "epoch": 119
+            },
+            "locator": "",
+            "exists": true,
+            "meta": {
+                "category": 1,
+                "size": 5,
+                "mtime": "2026-03-19T06:28:46.233729Z",
+                "etag": "ed5d34c74e59d16bd6d5b3683db655c3",
+                "storage_class": "",
+                "owner": "test",
+                "owner_display_name": "test",
+                "content_type": "text/plain",
+                "accounted_size": 5,
+                "user_data": "",
+                "appendable": false
+            },
+            "tag": "20135590-8915-4c5e-9328-f759717a4f87.21287.10568997384167473470",
+            "flags": 3,
+            "pending_map": [],
+            "versioned_epoch": 2
+        }
+    },
+    {
+        "type": "instance",
+        "idx": "�1000_test.txt\u0000iPDGqmtJA7imna.RLH.1nsBhSy1ZWf9m",
+        "entry": {
+            "name": "test.txt",
+            "instance": "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m",
+            "ver": {
+                "pool": 8,
+                "epoch": 119
+            },
+            "locator": "",
+            "exists": true,
+            "meta": {
+                "category": 1,
+                "size": 5,
+                "mtime": "2026-03-19T06:28:46.233729Z",
+                "etag": "ed5d34c74e59d16bd6d5b3683db655c3",
+                "storage_class": "",
+                "owner": "test",
+                "owner_display_name": "test",
+                "content_type": "text/plain",
+                "accounted_size": 5,
+                "user_data": "",
+                "appendable": false
+            },
+            "tag": "20135590-8915-4c5e-9328-f759717a4f87.21287.10568997384167473470",
+            "flags": 3,
+            "pending_map": [],
+            "versioned_epoch": 2
+        }
+    },
+    {
+        "type": "olh",
+        "idx": "�1001_test.txt",
+        "entry": {
+            "key": {
+                "name": "test.txt",
+                "instance": "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m"
+            },
+            "delete_marker": false,
+            "epoch": 2,
+            "pending_log": [
+                {
+                    "key": 8,
+                    "val": [
+                        {
+                            "epoch": 8,
+                            "op": "unlink_olh",
+                            "op_tag": "0000000069bed2c9j72b5dsbtjdv7bdp",
+                            "key": {
+                                "name": "1247/500220/500220m-06.mp4",
+                                "instance": ""
+                            },
+                            "delete_marker": false
+                        },
+                        {
+                            "epoch": 8,
+                            "op": "remove_instance",
+                            "op_tag": "0000000069bed2c9j72b5dsbtjdv7bdp",
+                            "key": {
+                                "name": "1247/500220/500220m-06.mp4",
+                                "instance": "mCjmBvZAJ4e2ktsdN051IBEVjQHlOMg"
+                            },
+                            "delete_marker": false
+                        }
+                    ]
+                }
+            ],
+            "tag": "62gtg7q9f2es6f05o6w87w50qhhwobne",
+            "exists": true,
+            "pending_removal": false
+        }
+    }
+]

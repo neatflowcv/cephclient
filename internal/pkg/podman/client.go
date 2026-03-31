@@ -31,6 +31,41 @@ func NewClientWithRunner(runner Runner) *Client {
 	return &Client{runner: runner}
 }
 
+func (c *Client) BIList(
+	ctx context.Context,
+	containerName, bucketName, objectName string,
+	shardID int,
+) (*domain.BIList, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"radosgw-admin",
+		"bi",
+		"list",
+		"--bucket=" + bucketName,
+		"--object=" + objectName,
+		fmt.Sprintf("--shard-id=%d", shardID),
+	}
+
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	biList, err := decodeBIList(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("parse bi list output: %w", err)
+	}
+
+	return biList, nil
+}
+
 func (c *Client) BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
 	commandArgs := []string{
 		"exec",
@@ -132,6 +167,17 @@ func decodeBucketStats(data []byte) (*domain.BucketStats, error) {
 	}
 
 	return domain.NewBucketStats(raw.ID, raw.NumShards), nil
+}
+
+func decodeBIList(data []byte) (*domain.BIList, error) {
+	var raw biListResponse
+
+	err := json.Unmarshal(data, &raw)
+	if err != nil {
+		return nil, fmt.Errorf("decode bi list response: %w", err)
+	}
+
+	return raw.toDomain()
 }
 
 func decodeBucketList(data []byte) ([]string, error) {

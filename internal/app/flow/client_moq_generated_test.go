@@ -15,6 +15,9 @@ import (
 //
 //		// make and configure a mocked client.Client
 //		mockedClient := &ClientMock{
+//			BIListFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
+//				panic("mock out the BIList method")
+//			},
 //			BucketStatsFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
 //				panic("mock out the BucketStats method")
 //			},
@@ -31,6 +34,9 @@ import (
 //
 //	}
 type ClientMock struct {
+	// BIListFunc mocks the BIList method.
+	BIListFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error)
+
 	// BucketStatsFunc mocks the BucketStats method.
 	BucketStatsFunc func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error)
 
@@ -42,6 +48,19 @@ type ClientMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// BIList holds details about calls to the BIList method.
+		BIList []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// BucketName is the bucketName argument value.
+			BucketName string
+			// ObjectName is the objectName argument value.
+			ObjectName string
+			// ShardID is the shardID argument value.
+			ShardID int
+		}
 		// BucketStats holds details about calls to the BucketStats method.
 		BucketStats []struct {
 			// Ctx is the ctx argument value.
@@ -70,9 +89,58 @@ type ClientMock struct {
 			TotalShards int
 		}
 	}
+	lockBIList      sync.RWMutex
 	lockBucketStats sync.RWMutex
 	lockListBuckets sync.RWMutex
 	lockObjectShard sync.RWMutex
+}
+
+// BIList calls BIListFunc.
+func (mock *ClientMock) BIList(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
+	if mock.BIListFunc == nil {
+		panic("ClientMock.BIListFunc: method is nil but Client.BIList was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ObjectName    string
+		ShardID       int
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		BucketName:    bucketName,
+		ObjectName:    objectName,
+		ShardID:       shardID,
+	}
+	mock.lockBIList.Lock()
+	mock.calls.BIList = append(mock.calls.BIList, callInfo)
+	mock.lockBIList.Unlock()
+	return mock.BIListFunc(ctx, containerName, bucketName, objectName, shardID)
+}
+
+// BIListCalls gets all the calls that were made to BIList.
+// Check the length with:
+//
+//	len(mockedClient.BIListCalls())
+func (mock *ClientMock) BIListCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	BucketName    string
+	ObjectName    string
+	ShardID       int
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ObjectName    string
+		ShardID       int
+	}
+	mock.lockBIList.RLock()
+	calls = mock.calls.BIList
+	mock.lockBIList.RUnlock()
+	return calls
 }
 
 // BucketStats calls BucketStatsFunc.

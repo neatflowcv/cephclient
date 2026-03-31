@@ -40,6 +40,77 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 
+func TestServiceBIListDelegatesToClient(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantList := domain.NewBIList([]domain.BIEntry{
+		domain.NewPlainBIEntry(
+			domain.NewBIIndex("test.txt"),
+			domain.NewBIObjectEntry(
+				"test.txt",
+				"",
+				domain.NewBIVersion(-1, 0),
+				"",
+				false,
+				domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+				"",
+				8,
+				nil,
+				0,
+			),
+		),
+	})
+
+	var mockClient ClientMock
+
+	mockClient.BIListFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName, objectName string,
+		shardID int,
+	) (*domain.BIList, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, 3, shardID)
+
+		return wantList, nil
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	biList, err := service.BIList(ctx, "rgw", "bucket-a", "test.txt", 3)
+
+	// Assert
+	require.NoError(t, err)
+	require.Same(t, wantList, biList)
+	require.Len(t, mockClient.BIListCalls(), 1)
+}
+
+func TestServiceBIListReturnsClientError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantErr := errClientFailed
+
+	var mockClient ClientMock
+
+	mockClient.BIListFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
+		return nil, wantErr
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	_, err := service.BIList(ctx, "rgw", "bucket-a", "test.txt", 3)
+
+	// Assert
+	require.ErrorIs(t, err, wantErr)
+	require.Len(t, mockClient.BIListCalls(), 1)
+}
+
 func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 	t.Parallel()
 
