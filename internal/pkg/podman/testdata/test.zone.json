@@ -1,0 +1,40 @@
+{
+    "id": "20135590-8915-4c5e-9328-f759717a4f87",
+    "name": "test",
+    "domain_root": "test.rgw.meta:root",
+    "control_pool": "test.rgw.control",
+    "gc_pool": "test.rgw.log:gc",
+    "lc_pool": "test.rgw.log:lc",
+    "log_pool": "test.rgw.log",
+    "intent_log_pool": "test.rgw.log:intent",
+    "usage_log_pool": "test.rgw.log:usage",
+    "roles_pool": "test.rgw.meta:roles",
+    "reshard_pool": "test.rgw.log:reshard",
+    "user_keys_pool": "test.rgw.meta:users.keys",
+    "user_email_pool": "test.rgw.meta:users.email",
+    "user_swift_pool": "test.rgw.meta:users.swift",
+    "user_uid_pool": "test.rgw.meta:users.uid",
+    "otp_pool": "test.rgw.otp",
+    "system_key": {
+        "access_key": "PE4GV0IM89MYMT4URJIN",
+        "secret_key": "7px1kOB9mGErtk6mfPMGO81TOvp4TepgM8VRDAhJ"
+    },
+    "placement_pools": [
+        {
+            "key": "default-placement",
+            "val": {
+                "index_pool": "test.rgw.buckets.index",
+                "storage_classes": {
+                    "STANDARD": {
+                        "data_pool": "test.rgw.buckets.data"
+                    }
+                },
+                "data_extra_pool": "test.rgw.buckets.non-ec",
+                "index_type": 0,
+                "inline_data": true
+            }
+        }
+    ],
+    "realm_id": "658009b1-3861-40d8-9306-41657fe31c4e",
+    "notif_pool": "test.rgw.log:notif"
+}

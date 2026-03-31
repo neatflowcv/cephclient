@@ -27,6 +27,9 @@ import (
 //			BucketStatsFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
 //				panic("mock out the BucketStats method")
 //			},
+//			GetDefaultZoneFunc: func(ctx context.Context, containerName string) (*domain.Zone, error) {
+//				panic("mock out the GetDefaultZone method")
+//			},
 //			ListBucketsFunc: func(ctx context.Context, containerName string) ([]string, error) {
 //				panic("mock out the ListBuckets method")
 //			},
@@ -51,6 +54,9 @@ type ClientMock struct {
 
 	// BucketStatsFunc mocks the BucketStats method.
 	BucketStatsFunc func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error)
+
+	// GetDefaultZoneFunc mocks the GetDefaultZone method.
+	GetDefaultZoneFunc func(ctx context.Context, containerName string) (*domain.Zone, error)
 
 	// ListBucketsFunc mocks the ListBuckets method.
 	ListBucketsFunc func(ctx context.Context, containerName string) ([]string, error)
@@ -102,6 +108,13 @@ type ClientMock struct {
 			// BucketName is the bucketName argument value.
 			BucketName string
 		}
+		// GetDefaultZone holds details about calls to the GetDefaultZone method.
+		GetDefaultZone []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+		}
 		// ListBuckets holds details about calls to the ListBuckets method.
 		ListBuckets []struct {
 			// Ctx is the ctx argument value.
@@ -125,6 +138,7 @@ type ClientMock struct {
 	lockBIListByShard  sync.RWMutex
 	lockBucketLayout   sync.RWMutex
 	lockBucketStats    sync.RWMutex
+	lockGetDefaultZone sync.RWMutex
 	lockListBuckets    sync.RWMutex
 	lockObjectShard    sync.RWMutex
 }
@@ -298,6 +312,42 @@ func (mock *ClientMock) BucketStatsCalls() []struct {
 	mock.lockBucketStats.RLock()
 	calls = mock.calls.BucketStats
 	mock.lockBucketStats.RUnlock()
+	return calls
+}
+
+// GetDefaultZone calls GetDefaultZoneFunc.
+func (mock *ClientMock) GetDefaultZone(ctx context.Context, containerName string) (*domain.Zone, error) {
+	if mock.GetDefaultZoneFunc == nil {
+		panic("ClientMock.GetDefaultZoneFunc: method is nil but Client.GetDefaultZone was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+	}
+	mock.lockGetDefaultZone.Lock()
+	mock.calls.GetDefaultZone = append(mock.calls.GetDefaultZone, callInfo)
+	mock.lockGetDefaultZone.Unlock()
+	return mock.GetDefaultZoneFunc(ctx, containerName)
+}
+
+// GetDefaultZoneCalls gets all the calls that were made to GetDefaultZone.
+// Check the length with:
+//
+//	len(mockedClient.GetDefaultZoneCalls())
+func (mock *ClientMock) GetDefaultZoneCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+	}
+	mock.lockGetDefaultZone.RLock()
+	calls = mock.calls.GetDefaultZone
+	mock.lockGetDefaultZone.RUnlock()
 	return calls
 }
 

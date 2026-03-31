@@ -158,6 +158,34 @@ func (c *Client) BucketLayout(ctx context.Context, containerName, bucketName str
 	return layout, nil
 }
 
+func (c *Client) GetDefaultZone(ctx context.Context, containerName string) (*domain.Zone, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"radosgw-admin",
+		"zone",
+		"get",
+	}
+
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	zone, err := decodeZone(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("parse zone get output: %w", err)
+	}
+
+	return zone, nil
+}
+
 func (c *Client) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
 	commandArgs := []string{
 		"exec",
@@ -241,6 +269,17 @@ func decodeBucketLayout(data []byte) (*domain.Layout, error) {
 	}
 
 	return raw.toDomain(), nil
+}
+
+func decodeZone(data []byte) (*domain.Zone, error) {
+	var raw zoneResponse
+
+	err := json.Unmarshal(data, &raw)
+	if err != nil {
+		return nil, fmt.Errorf("decode zone get response: %w", err)
+	}
+
+	return raw.toDomain()
 }
 
 func decodeBIList(data []byte) (*domain.BIList, error) {

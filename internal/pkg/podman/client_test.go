@@ -338,6 +338,133 @@ func TestClientBucketLayoutReturnsJSONError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestClientGetDefaultZoneRunsPodmanCommand(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "zone", "get"}
+			require.Equal(t, wantArgs, args)
+
+			return []byte(
+				`{
+					"placement_pools": [{
+						"val": {
+							"index_pool": "test.rgw.buckets.index",
+							"storage_classes": {"STANDARD": {"data_pool": "test.rgw.buckets.data"}}
+						}
+					}]
+				}`,
+			), "", nil
+		}),
+	)
+
+	// Act
+	zone, err := client.GetDefaultZone(t.Context(), "rgw")
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, "test.rgw.buckets.data", zone.DataPool())
+	require.Equal(t, "test.rgw.buckets.index", zone.IndexPool())
+}
+
+func TestClientGetDefaultZoneParsesFixture(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	fixture, err := os.ReadFile(filepath.Join("testdata", "test.zone.json"))
+	require.NoError(t, err)
+
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return fixture, "", nil
+		}),
+	)
+
+	// Act
+	zone, err := client.GetDefaultZone(t.Context(), "rgw")
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, "test.rgw.buckets.data", zone.DataPool())
+	require.Equal(t, "test.rgw.buckets.index", zone.IndexPool())
+}
+
+func TestClientGetDefaultZoneReturnsRunnerErrorWithStderr(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return nil, errPermissionDenied, errExitStatus125
+		}),
+	)
+
+	// Act
+	_, err := client.GetDefaultZone(t.Context(), "rgw")
+
+	// Assert
+	require.Error(t, err)
+	require.Contains(t, err.Error(), errPermissionDenied)
+}
+
+func TestClientGetDefaultZoneReturnsErrorWhenPlacementPoolsAreEmpty(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return []byte(`{"placement_pools":[]}`), "", nil
+		}),
+	)
+
+	// Act
+	_, err := client.GetDefaultZone(t.Context(), "rgw")
+
+	// Assert
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "placement_pools is empty")
+}
+
+func TestClientGetDefaultZoneReturnsErrorWhenStandardStorageClassIsMissing(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return []byte(`{"placement_pools":[{"val":{"index_pool":"test.rgw.buckets.index","storage_classes":{}}}]}`), "", nil
+		}),
+	)
+
+	// Act
+	_, err := client.GetDefaultZone(t.Context(), "rgw")
+
+	// Assert
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "STANDARD storage class not found")
+}
+
+func TestClientGetDefaultZoneReturnsErrorWhenRequiredPoolValuesAreMissing(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return []byte(
+				`{"placement_pools":[{"val":{"index_pool":"","storage_classes":{"STANDARD":{"data_pool":""}}}}]}`,
+			), "", nil
+		}),
+	)
+
+	// Act
+	_, err := client.GetDefaultZone(t.Context(), "rgw")
+
+	// Assert
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "index_pool is empty")
+}
+
 func TestClientListBucketsRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 

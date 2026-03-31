@@ -254,6 +254,54 @@ func TestServiceBucketLayoutReturnsClientError(t *testing.T) {
 	require.Len(t, mockClient.BucketLayoutCalls(), 1)
 }
 
+func TestServiceGetDefaultZoneDelegatesToClient(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+
+	var mockClient ClientMock
+
+	mockClient.GetDefaultZoneFunc = func(gotCtx context.Context, containerName string) (*domain.Zone, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+
+		return domain.NewZone("test.rgw.buckets.data", "test.rgw.buckets.index"), nil
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	zone, err := service.GetDefaultZone(ctx, "rgw")
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, "test.rgw.buckets.data", zone.DataPool())
+	require.Equal(t, "test.rgw.buckets.index", zone.IndexPool())
+	require.Len(t, mockClient.GetDefaultZoneCalls(), 1)
+}
+
+func TestServiceGetDefaultZoneReturnsClientError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantErr := errClientFailed
+
+	var mockClient ClientMock
+
+	mockClient.GetDefaultZoneFunc = func(context.Context, string) (*domain.Zone, error) {
+		return nil, wantErr
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	_, err := service.GetDefaultZone(ctx, "rgw")
+
+	// Assert
+	require.ErrorIs(t, err, wantErr)
+	require.Len(t, mockClient.GetDefaultZoneCalls(), 1)
+}
+
 func TestServiceListBucketsDelegatesToClient(t *testing.T) {
 	t.Parallel()
 

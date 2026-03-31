@@ -60,6 +60,15 @@ func (s *Service) BucketLayout(ctx context.Context, containerName, bucketName st
 	return layout, nil
 }
 
+func (s *Service) GetDefaultZone(ctx context.Context, containerName string) (*domain.Zone, error) {
+	zone, err := s.client.GetDefaultZone(ctx, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("get default zone: %w", err)
+	}
+
+	return zone, nil
+}
+
 func (s *Service) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
 	buckets, err := s.client.ListBuckets(ctx, containerName)
 	if err != nil {
