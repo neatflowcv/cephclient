@@ -15,11 +15,14 @@ import (
 //
 //		// make and configure a mocked client.Client
 //		mockedClient := &ClientMock{
+//			BIListByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
+//				panic("mock out the BIListByObject method")
+//			},
 //			BIListByShardFunc: func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error) {
 //				panic("mock out the BIListByShard method")
 //			},
-//			BIListByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
-//				panic("mock out the BIListByObject method")
+//			BucketLayoutFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error) {
+//				panic("mock out the BucketLayout method")
 //			},
 //			BucketStatsFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
 //				panic("mock out the BucketStats method")
@@ -37,11 +40,14 @@ import (
 //
 //	}
 type ClientMock struct {
+	// BIListByObjectFunc mocks the BIListByObject method.
+	BIListByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error)
+
 	// BIListByShardFunc mocks the BIListByShard method.
 	BIListByShardFunc func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error)
 
-	// BIListByObjectFunc mocks the BIListByObject method.
-	BIListByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error)
+	// BucketLayoutFunc mocks the BucketLayout method.
+	BucketLayoutFunc func(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error)
 
 	// BucketStatsFunc mocks the BucketStats method.
 	BucketStatsFunc func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error)
@@ -54,17 +60,6 @@ type ClientMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// BIListByShard holds details about calls to the BIListByShard method.
-		BIListByShard []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// ContainerName is the containerName argument value.
-			ContainerName string
-			// BucketName is the bucketName argument value.
-			BucketName string
-			// ShardID is the shardID argument value.
-			ShardID int
-		}
 		// BIListByObject holds details about calls to the BIListByObject method.
 		BIListByObject []struct {
 			// Ctx is the ctx argument value.
@@ -77,6 +72,26 @@ type ClientMock struct {
 			ObjectName string
 			// ShardID is the shardID argument value.
 			ShardID int
+		}
+		// BIListByShard holds details about calls to the BIListByShard method.
+		BIListByShard []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// BucketName is the bucketName argument value.
+			BucketName string
+			// ShardID is the shardID argument value.
+			ShardID int
+		}
+		// BucketLayout holds details about calls to the BucketLayout method.
+		BucketLayout []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// BucketName is the bucketName argument value.
+			BucketName string
 		}
 		// BucketStats holds details about calls to the BucketStats method.
 		BucketStats []struct {
@@ -106,55 +121,12 @@ type ClientMock struct {
 			TotalShards int
 		}
 	}
-	lockBIListByShard sync.RWMutex
 	lockBIListByObject sync.RWMutex
-	lockBucketStats sync.RWMutex
-	lockListBuckets sync.RWMutex
-	lockObjectShard sync.RWMutex
-}
-
-// BIListByShard calls BIListByShardFunc.
-func (mock *ClientMock) BIListByShard(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error) {
-	if mock.BIListByShardFunc == nil {
-		panic("ClientMock.BIListByShardFunc: method is nil but Client.BIListByShard was just called")
-	}
-	callInfo := struct {
-		Ctx           context.Context
-		ContainerName string
-		BucketName    string
-		ShardID       int
-	}{
-		Ctx:           ctx,
-		ContainerName: containerName,
-		BucketName:    bucketName,
-		ShardID:       shardID,
-	}
-	mock.lockBIListByShard.Lock()
-	mock.calls.BIListByShard = append(mock.calls.BIListByShard, callInfo)
-	mock.lockBIListByShard.Unlock()
-	return mock.BIListByShardFunc(ctx, containerName, bucketName, shardID)
-}
-
-// BIListByShardCalls gets all the calls that were made to BIListByShard.
-// Check the length with:
-//
-//	len(mockedClient.BIListByShardCalls())
-func (mock *ClientMock) BIListByShardCalls() []struct {
-	Ctx           context.Context
-	ContainerName string
-	BucketName    string
-	ShardID       int
-} {
-	var calls []struct {
-		Ctx           context.Context
-		ContainerName string
-		BucketName    string
-		ShardID       int
-	}
-	mock.lockBIListByShard.RLock()
-	calls = mock.calls.BIListByShard
-	mock.lockBIListByShard.RUnlock()
-	return calls
+	lockBIListByShard  sync.RWMutex
+	lockBucketLayout   sync.RWMutex
+	lockBucketStats    sync.RWMutex
+	lockListBuckets    sync.RWMutex
+	lockObjectShard    sync.RWMutex
 }
 
 // BIListByObject calls BIListByObjectFunc.
@@ -202,6 +174,90 @@ func (mock *ClientMock) BIListByObjectCalls() []struct {
 	mock.lockBIListByObject.RLock()
 	calls = mock.calls.BIListByObject
 	mock.lockBIListByObject.RUnlock()
+	return calls
+}
+
+// BIListByShard calls BIListByShardFunc.
+func (mock *ClientMock) BIListByShard(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error) {
+	if mock.BIListByShardFunc == nil {
+		panic("ClientMock.BIListByShardFunc: method is nil but Client.BIListByShard was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ShardID       int
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		BucketName:    bucketName,
+		ShardID:       shardID,
+	}
+	mock.lockBIListByShard.Lock()
+	mock.calls.BIListByShard = append(mock.calls.BIListByShard, callInfo)
+	mock.lockBIListByShard.Unlock()
+	return mock.BIListByShardFunc(ctx, containerName, bucketName, shardID)
+}
+
+// BIListByShardCalls gets all the calls that were made to BIListByShard.
+// Check the length with:
+//
+//	len(mockedClient.BIListByShardCalls())
+func (mock *ClientMock) BIListByShardCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	BucketName    string
+	ShardID       int
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ShardID       int
+	}
+	mock.lockBIListByShard.RLock()
+	calls = mock.calls.BIListByShard
+	mock.lockBIListByShard.RUnlock()
+	return calls
+}
+
+// BucketLayout calls BucketLayoutFunc.
+func (mock *ClientMock) BucketLayout(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error) {
+	if mock.BucketLayoutFunc == nil {
+		panic("ClientMock.BucketLayoutFunc: method is nil but Client.BucketLayout was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		BucketName:    bucketName,
+	}
+	mock.lockBucketLayout.Lock()
+	mock.calls.BucketLayout = append(mock.calls.BucketLayout, callInfo)
+	mock.lockBucketLayout.Unlock()
+	return mock.BucketLayoutFunc(ctx, containerName, bucketName)
+}
+
+// BucketLayoutCalls gets all the calls that were made to BucketLayout.
+// Check the length with:
+//
+//	len(mockedClient.BucketLayoutCalls())
+func (mock *ClientMock) BucketLayoutCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	BucketName    string
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+	}
+	mock.lockBucketLayout.RLock()
+	calls = mock.calls.BucketLayout
+	mock.lockBucketLayout.RUnlock()
 	return calls
 }
 

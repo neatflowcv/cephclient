@@ -129,6 +129,35 @@ func (c *Client) BucketStats(ctx context.Context, containerName, bucketName stri
 	return stats, nil
 }
 
+func (c *Client) BucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"radosgw-admin",
+		"bucket",
+		"layout",
+		"--bucket=" + bucketName,
+	}
+
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	layout, err := decodeBucketLayout(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("parse bucket layout output: %w", err)
+	}
+
+	return layout, nil
+}
+
 func (c *Client) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
 	commandArgs := []string{
 		"exec",
@@ -201,6 +230,17 @@ func decodeBucketStats(data []byte) (*domain.BucketStats, error) {
 	}
 
 	return domain.NewBucketStats(raw.ID, raw.NumShards), nil
+}
+
+func decodeBucketLayout(data []byte) (*domain.Layout, error) {
+	var raw bucketLayoutResponse
+
+	err := json.Unmarshal(data, &raw)
+	if err != nil {
+		return nil, fmt.Errorf("decode bucket layout response: %w", err)
+	}
+
+	return raw.toDomain(), nil
 }
 
 func decodeBIList(data []byte) (*domain.BIList, error) {

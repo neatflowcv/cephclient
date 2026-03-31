@@ -36,6 +36,27 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 	require.Equal(t, 11, stats.TotalShards())
 }
 
+func TestClientBucketLayoutRunsPodmanCommand(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "bucket", "layout", "--bucket=test"}
+			require.Equal(t, wantArgs, args)
+
+			return []byte(`{"layout":{"current_index":{"gen":1}}}`), "", nil
+		}),
+	)
+
+	// Act
+	layout, err := client.BucketLayout(t.Context(), "rgw", "test")
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, 1, layout.Generation())
+}
+
 func TestClientBIListByShardRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
@@ -256,6 +277,62 @@ func TestClientBucketStatsReturnsJSONError(t *testing.T) {
 
 	// Act
 	_, err := client.BucketStats(t.Context(), "rgw", "test")
+
+	// Assert
+	require.Error(t, err)
+}
+
+func TestClientBucketLayoutParsesFixture(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	fixture, err := os.ReadFile(filepath.Join("testdata", "test.layout.json"))
+	require.NoError(t, err)
+
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return fixture, "", nil
+		}),
+	)
+
+	// Act
+	layout, err := client.BucketLayout(t.Context(), "rgw", "test")
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, 1, layout.Generation())
+}
+
+func TestClientBucketLayoutReturnsRunnerErrorWithStderr(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return nil, errPermissionDenied, errExitStatus125
+		}),
+	)
+
+	// Act
+	_, err := client.BucketLayout(t.Context(), "rgw", "test")
+
+	// Assert
+	require.Error(t, err)
+	require.Contains(t, err.Error(), errPermissionDenied)
+}
+
+func TestClientBucketLayoutReturnsJSONError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return []byte("{"), "", nil
+		}),
+	)
+
+	// Act
+	_, err := client.BucketLayout(t.Context(), "rgw", "test")
 
 	// Assert
 	require.Error(t, err)

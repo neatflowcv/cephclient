@@ -40,6 +40,35 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 
+func TestServiceBucketLayoutDelegatesToClient(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+
+	var mockClient ClientMock
+
+	mockClient.BucketLayoutFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.Layout, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "test", bucketName)
+
+		return domain.NewLayout(1), nil
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	layout, err := service.BucketLayout(ctx, "rgw", "test")
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, 1, layout.Generation())
+	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+}
+
 func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 	t.Parallel()
 
@@ -201,6 +230,28 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 	// Assert
 	require.ErrorIs(t, err, wantErr)
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
+}
+
+func TestServiceBucketLayoutReturnsClientError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantErr := errClientFailed
+
+	var mockClient ClientMock
+
+	mockClient.BucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
+		return nil, wantErr
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	_, err := service.BucketLayout(ctx, "rgw", "test")
+
+	// Assert
+	require.ErrorIs(t, err, wantErr)
+	require.Len(t, mockClient.BucketLayoutCalls(), 1)
 }
 
 func TestServiceListBucketsDelegatesToClient(t *testing.T) {

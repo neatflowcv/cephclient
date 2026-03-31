@@ -51,6 +51,15 @@ func (s *Service) BucketStats(ctx context.Context, containerName, bucketName str
 	return stats, nil
 }
 
+func (s *Service) BucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error) {
+	layout, err := s.client.BucketLayout(ctx, containerName, bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("get bucket layout: %w", err)
+	}
+
+	return layout, nil
+}
+
 func (s *Service) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
 	buckets, err := s.client.ListBuckets(ctx, containerName)
 	if err != nil {

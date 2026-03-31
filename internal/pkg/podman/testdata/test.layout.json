@@ -1,0 +1,30 @@
+{
+    "layout": {
+        "resharding": "None",
+        "current_index": {
+            "gen": 1,
+            "layout": {
+                "type": "Normal",
+                "normal": {
+                    "num_shards": 3001,
+                    "hash_type": "Mod"
+                }
+            }
+        },
+        "logs": [
+            {
+                "gen": 1,
+                "layout": {
+                    "type": "InIndex",
+                    "in_index": {
+                        "gen": 1,
+                        "layout": {
+                            "num_shards": 3001,
+                            "hash_type": "Mod"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
