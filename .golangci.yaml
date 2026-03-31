@@ -5,3 +5,4 @@ linters:
     - revive
     - depguard
     - wsl # deprecated
+    - tagliatelle # 외부 서비스 반환 형식을 그대로 사용해야 한다.
