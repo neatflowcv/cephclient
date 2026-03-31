@@ -15,12 +15,21 @@ var errUnsupportedBIEntryFormat = errors.New("format bucket index entry: unsuppo
 type biListCommand struct {
 	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
 	BucketName    string `arg:"" help:"Bucket name."            name:"bucket"`
-	ObjectName    string `arg:"" help:"Object name."            name:"object"`
 	ShardID       int    `arg:"" help:"Shard ID."               name:"shard-id"`
+	ObjectName    string `help:"Object name."                   name:"object"`
 }
 
 func (c *biListCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	biList, err := service.BIListByObject(ctx, c.ContainerName, c.BucketName, c.ObjectName, c.ShardID)
+	var (
+		biList *domain.BIList
+		err    error
+	)
+
+	if c.ObjectName == "" {
+		biList, err = service.BIListByShard(ctx, c.ContainerName, c.BucketName, c.ShardID)
+	} else {
+		biList, err = service.BIListByObject(ctx, c.ContainerName, c.BucketName, c.ObjectName, c.ShardID)
+	}
 	if err != nil {
 		return fmt.Errorf("read bucket index list: %w", err)
 	}
