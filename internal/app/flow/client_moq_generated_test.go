@@ -21,6 +21,9 @@ import (
 //			ListBucketsFunc: func(ctx context.Context, containerName string) ([]string, error) {
 //				panic("mock out the ListBuckets method")
 //			},
+//			ObjectShardFunc: func(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error) {
+//				panic("mock out the ObjectShard method")
+//			},
 //		}
 //
 //		// use mockedClient in code that requires client.Client
@@ -33,6 +36,9 @@ type ClientMock struct {
 
 	// ListBucketsFunc mocks the ListBuckets method.
 	ListBucketsFunc func(ctx context.Context, containerName string) ([]string, error)
+
+	// ObjectShardFunc mocks the ObjectShard method.
+	ObjectShardFunc func(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -52,9 +58,21 @@ type ClientMock struct {
 			// ContainerName is the containerName argument value.
 			ContainerName string
 		}
+		// ObjectShard holds details about calls to the ObjectShard method.
+		ObjectShard []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// ObjectName is the objectName argument value.
+			ObjectName string
+			// TotalShards is the totalShards argument value.
+			TotalShards int
+		}
 	}
 	lockBucketStats sync.RWMutex
 	lockListBuckets sync.RWMutex
+	lockObjectShard sync.RWMutex
 }
 
 // BucketStats calls BucketStatsFunc.
@@ -130,5 +148,49 @@ func (mock *ClientMock) ListBucketsCalls() []struct {
 	mock.lockListBuckets.RLock()
 	calls = mock.calls.ListBuckets
 	mock.lockListBuckets.RUnlock()
+	return calls
+}
+
+// ObjectShard calls ObjectShardFunc.
+func (mock *ClientMock) ObjectShard(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error) {
+	if mock.ObjectShardFunc == nil {
+		panic("ClientMock.ObjectShardFunc: method is nil but Client.ObjectShard was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		ObjectName    string
+		TotalShards   int
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		ObjectName:    objectName,
+		TotalShards:   totalShards,
+	}
+	mock.lockObjectShard.Lock()
+	mock.calls.ObjectShard = append(mock.calls.ObjectShard, callInfo)
+	mock.lockObjectShard.Unlock()
+	return mock.ObjectShardFunc(ctx, containerName, objectName, totalShards)
+}
+
+// ObjectShardCalls gets all the calls that were made to ObjectShard.
+// Check the length with:
+//
+//	len(mockedClient.ObjectShardCalls())
+func (mock *ClientMock) ObjectShardCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	ObjectName    string
+	TotalShards   int
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		ObjectName    string
+		TotalShards   int
+	}
+	mock.lockObjectShard.RLock()
+	calls = mock.calls.ObjectShard
+	mock.lockObjectShard.RUnlock()
 	return calls
 }

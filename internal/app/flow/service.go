@@ -33,3 +33,16 @@ func (s *Service) ListBuckets(ctx context.Context, containerName string) ([]stri
 
 	return buckets, nil
 }
+
+func (s *Service) ObjectShard(
+	ctx context.Context,
+	containerName, objectName string,
+	totalShards int,
+) (*domain.ObjectShard, error) {
+	shard, err := s.client.ObjectShard(ctx, containerName, objectName, totalShards)
+	if err != nil {
+		return nil, fmt.Errorf("get object shard: %w", err)
+	}
+
+	return shard, nil
+}

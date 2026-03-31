@@ -88,6 +88,41 @@ func (c *Client) ListBuckets(ctx context.Context, containerName string) ([]strin
 	return buckets, nil
 }
 
+func (c *Client) ObjectShard(
+	ctx context.Context,
+	containerName, objectName string,
+	totalShards int,
+) (*domain.ObjectShard, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"radosgw-admin",
+		"bucket",
+		"object",
+		"shard",
+		"--object=" + objectName,
+		fmt.Sprintf("--num-shards=%d", totalShards),
+	}
+
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	shard, err := decodeObjectShard(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("parse object shard output: %w", err)
+	}
+
+	return shard, nil
+}
+
 func decodeBucketStats(data []byte) (*domain.BucketStats, error) {
 	var raw bucketStatsResponse
 
@@ -108,4 +143,15 @@ func decodeBucketList(data []byte) ([]string, error) {
 	}
 
 	return []string(raw), nil
+}
+
+func decodeObjectShard(data []byte) (*domain.ObjectShard, error) {
+	var raw objectShardResponse
+
+	err := json.Unmarshal(data, &raw)
+	if err != nil {
+		return nil, fmt.Errorf("decode object shard response: %w", err)
+	}
+
+	return domain.NewObjectShard(raw.Shard), nil
 }

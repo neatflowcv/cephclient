@@ -46,12 +46,13 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 	// Arrange
 	ctx := t.Context()
 	wantErr := errClientFailed
-	mockClient := &ClientMock{
-		BucketStatsFunc: func(context.Context, string, string) (*domain.BucketStats, error) {
-			return nil, wantErr
-		},
+
+	var mockClient ClientMock
+
+	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
+		return nil, wantErr
 	}
-	service := flow.NewService(mockClient)
+	service := flow.NewService(&mockClient)
 
 	// Act
 	_, err := service.BucketStats(ctx, "rgw", "test")
@@ -66,14 +67,16 @@ func TestServiceListBucketsDelegatesToClient(t *testing.T) {
 
 	// Arrange
 	ctx := t.Context()
-	mockClient := &ClientMock{
-		ListBucketsFunc: func(gotCtx context.Context, containerName string) ([]string, error) {
-			require.Equal(t, ctx, gotCtx)
-			require.Equal(t, "rgw", containerName)
-			return []string{"alpha", "beta"}, nil
-		},
+
+	var mockClient ClientMock
+
+	mockClient.ListBucketsFunc = func(gotCtx context.Context, containerName string) ([]string, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+
+		return []string{"alpha", "beta"}, nil
 	}
-	service := flow.NewService(mockClient)
+	service := flow.NewService(&mockClient)
 
 	// Act
 	buckets, err := service.ListBuckets(ctx, "rgw")
@@ -90,12 +93,13 @@ func TestServiceListBucketsReturnsClientError(t *testing.T) {
 	// Arrange
 	ctx := t.Context()
 	wantErr := errClientFailed
-	mockClient := &ClientMock{
-		ListBucketsFunc: func(context.Context, string) ([]string, error) {
-			return nil, wantErr
-		},
+
+	var mockClient ClientMock
+
+	mockClient.ListBucketsFunc = func(context.Context, string) ([]string, error) {
+		return nil, wantErr
 	}
-	service := flow.NewService(mockClient)
+	service := flow.NewService(&mockClient)
 
 	// Act
 	_, err := service.ListBuckets(ctx, "rgw")
@@ -103,6 +107,59 @@ func TestServiceListBucketsReturnsClientError(t *testing.T) {
 	// Assert
 	require.ErrorIs(t, err, wantErr)
 	require.Len(t, mockClient.ListBucketsCalls(), 1)
+}
+
+func TestServiceObjectShardDelegatesToClient(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+
+	var mockClient ClientMock
+
+	mockClient.ObjectShardFunc = func(
+		gotCtx context.Context,
+		containerName, objectName string,
+		totalShards int,
+	) (*domain.ObjectShard, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "test-object", objectName)
+		require.Equal(t, 11, totalShards)
+
+		return domain.NewObjectShard(3), nil
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	shard, err := service.ObjectShard(ctx, "rgw", "test-object", 11)
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, 3, shard.Shard())
+	require.Len(t, mockClient.ObjectShardCalls(), 1)
+}
+
+func TestServiceObjectShardReturnsClientError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantErr := errClientFailed
+
+	var mockClient ClientMock
+
+	mockClient.ObjectShardFunc = func(context.Context, string, string, int) (*domain.ObjectShard, error) {
+		return nil, wantErr
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	_, err := service.ObjectShard(ctx, "rgw", "test-object", 11)
+
+	// Assert
+	require.ErrorIs(t, err, wantErr)
+	require.Len(t, mockClient.ObjectShardCalls(), 1)
 }
 
 var errClientFailed = errors.New("client failed")

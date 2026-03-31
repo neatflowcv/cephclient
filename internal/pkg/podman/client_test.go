@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const errPermissionDenied = "permission denied"
+
 func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
@@ -52,6 +54,7 @@ func TestClientBucketStatsParsesFixture(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, "20135590-8915-4c5e-9328-f759717a4f87.21289.1", stats.ID())
+	require.Equal(t, 11, stats.TotalShards())
 }
 
 func TestClientBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {
@@ -60,7 +63,7 @@ func TestClientBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {
 	// Arrange
 	client := podman.NewClientWithRunner(
 		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
-			return nil, "permission denied", errExitStatus125
+			return nil, errPermissionDenied, errExitStatus125
 		}),
 	)
 
@@ -69,7 +72,7 @@ func TestClientBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {
 
 	// Assert
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "permission denied")
+	require.Contains(t, err.Error(), errPermissionDenied)
 }
 
 func TestClientBucketStatsReturnsJSONError(t *testing.T) {
@@ -116,7 +119,7 @@ func TestClientListBucketsReturnsRunnerErrorWithStderr(t *testing.T) {
 	// Arrange
 	client := podman.NewClientWithRunner(
 		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
-			return nil, "permission denied", errExitStatus125
+			return nil, errPermissionDenied, errExitStatus125
 		}),
 	)
 
@@ -125,7 +128,7 @@ func TestClientListBucketsReturnsRunnerErrorWithStderr(t *testing.T) {
 
 	// Assert
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "permission denied")
+	require.Contains(t, err.Error(), errPermissionDenied)
 }
 
 func TestClientListBucketsReturnsJSONError(t *testing.T) {
@@ -140,6 +143,93 @@ func TestClientListBucketsReturnsJSONError(t *testing.T) {
 
 	// Act
 	_, err := client.ListBuckets(t.Context(), "rgw")
+
+	// Assert
+	require.Error(t, err)
+}
+
+func TestClientObjectShardRunsPodmanCommand(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+			wantArgs := []string{
+				"exec",
+				"-i",
+				"rgw",
+				"radosgw-admin",
+				"bucket",
+				"object",
+				"shard",
+				"--object=test-object",
+				"--num-shards=11",
+			}
+			require.Equal(t, wantArgs, args)
+
+			return []byte(`{"shard":0}`), "", nil
+		}),
+	)
+
+	// Act
+	shard, err := client.ObjectShard(t.Context(), "rgw", "test-object", 11)
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, 0, shard.Shard())
+}
+
+func TestClientObjectShardParsesFixture(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	fixture, err := os.ReadFile(filepath.Join("testdata", "test.shard.json"))
+	require.NoError(t, err)
+
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return fixture, "", nil
+		}),
+	)
+
+	// Act
+	shard, err := client.ObjectShard(t.Context(), "rgw", "test-object", 11)
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(t, 0, shard.Shard())
+}
+
+func TestClientObjectShardReturnsRunnerErrorWithStderr(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return nil, errPermissionDenied, errExitStatus125
+		}),
+	)
+
+	// Act
+	_, err := client.ObjectShard(t.Context(), "rgw", "test-object", 11)
+
+	// Assert
+	require.Error(t, err)
+	require.Contains(t, err.Error(), errPermissionDenied)
+}
+
+func TestClientObjectShardReturnsJSONError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return []byte("{"), "", nil
+		}),
+	)
+
+	// Act
+	_, err := client.ObjectShard(t.Context(), "rgw", "test-object", 11)
 
 	// Assert
 	require.Error(t, err)
