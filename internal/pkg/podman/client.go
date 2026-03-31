@@ -31,6 +31,40 @@ func NewClientWithRunner(runner Runner) *Client {
 	return &Client{runner: runner}
 }
 
+func (c *Client) BIListByShard(
+	ctx context.Context,
+	containerName, bucketName string,
+	shardID int,
+) (*domain.BIList, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"radosgw-admin",
+		"bi",
+		"list",
+		"--bucket=" + bucketName,
+		fmt.Sprintf("--shard-id=%d", shardID),
+	}
+
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	biList, err := decodeBIList(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("parse bi list output: %w", err)
+	}
+
+	return biList, nil
+}
+
 func (c *Client) BIListByObject(
 	ctx context.Context,
 	containerName, bucketName, objectName string,

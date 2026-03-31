@@ -40,6 +40,54 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 
+func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantList := domain.NewBIList([]domain.BIEntry{
+		domain.NewPlainBIEntry(
+			domain.NewBIIndex("test.txt"),
+			domain.NewBIObjectEntry(
+				"test.txt",
+				"",
+				domain.NewBIVersion(-1, 0),
+				"",
+				false,
+				domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+				"",
+				8,
+				nil,
+				0,
+			),
+		),
+	})
+
+	var mockClient ClientMock
+
+	mockClient.BIListByShardFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+		shardID int,
+	) (*domain.BIList, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, 3, shardID)
+
+		return wantList, nil
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	biList, err := service.BIListByShard(ctx, "rgw", "bucket-a", 3)
+
+	// Assert
+	require.NoError(t, err)
+	require.Same(t, wantList, biList)
+	require.Len(t, mockClient.BIListByShardCalls(), 1)
+}
+
 func TestServiceBIListByObjectDelegatesToClient(t *testing.T) {
 	t.Parallel()
 
@@ -87,6 +135,28 @@ func TestServiceBIListByObjectDelegatesToClient(t *testing.T) {
 	require.NoError(t, err)
 	require.Same(t, wantList, biList)
 	require.Len(t, mockClient.BIListByObjectCalls(), 1)
+}
+
+func TestServiceBIListByShardReturnsClientError(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantErr := errClientFailed
+
+	var mockClient ClientMock
+
+	mockClient.BIListByShardFunc = func(context.Context, string, string, int) (*domain.BIList, error) {
+		return nil, wantErr
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	_, err := service.BIListByShard(ctx, "rgw", "bucket-a", 3)
+
+	// Assert
+	require.ErrorIs(t, err, wantErr)
+	require.Len(t, mockClient.BIListByShardCalls(), 1)
 }
 
 func TestServiceBIListByObjectReturnsClientError(t *testing.T) {

@@ -16,6 +16,19 @@ func NewService(client client.Client) *Service {
 	return &Service{client: client}
 }
 
+func (s *Service) BIListByShard(
+	ctx context.Context,
+	containerName, bucketName string,
+	shardID int,
+) (*domain.BIList, error) {
+	biList, err := s.client.BIListByShard(ctx, containerName, bucketName, shardID)
+	if err != nil {
+		return nil, fmt.Errorf("get bucket index list: %w", err)
+	}
+
+	return biList, nil
+}
+
 func (s *Service) BIListByObject(
 	ctx context.Context,
 	containerName, bucketName, objectName string,

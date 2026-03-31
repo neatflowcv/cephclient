@@ -36,6 +36,36 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 	require.Equal(t, 11, stats.TotalShards())
 }
 
+func TestClientBIListByShardRunsPodmanCommand(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	client := podman.NewClientWithRunner(
+		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+			wantArgs := []string{
+				"exec",
+				"-i",
+				"rgw",
+				"radosgw-admin",
+				"bi",
+				"list",
+				"--bucket=test-bucket",
+				"--shard-id=7",
+			}
+			require.Equal(t, wantArgs, args)
+
+			return []byte(`[]`), "", nil
+		}),
+	)
+
+	// Act
+	biList, err := client.BIListByShard(t.Context(), "rgw", "test-bucket", 7)
+
+	// Assert
+	require.NoError(t, err)
+	require.Empty(t, biList.Entries())
+}
+
 func TestClientBIListByObjectRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
