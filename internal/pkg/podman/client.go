@@ -257,7 +257,7 @@ func decodeBucketStats(data []byte) (*domain.BucketStats, error) {
 		return nil, fmt.Errorf("decode bucket stats response: %w", err)
 	}
 
-	stats, err := domain.NewBucketStats(raw.ID, raw.NumShards, domain.VersioningStatus(raw.Versioning))
+	stats, err := domain.NewBucketStats(raw.ID, raw.NumShards, raw.Marker, domain.VersioningStatus(raw.Versioning))
 	if err != nil {
 		return nil, fmt.Errorf("build bucket stats domain: %w", err)
 	}

@@ -24,9 +24,10 @@ func TestNewBucketStatsAcceptsAllowedVersioningStatuses(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			stats, err := domain.NewBucketStats("bucket-id", 11, testCase.want)
+			stats, err := domain.NewBucketStats("bucket-id", 11, "bucket-marker", testCase.want)
 
 			require.NoError(t, err)
+			require.Equal(t, "bucket-marker", stats.Marker())
 			require.Equal(t, testCase.want, stats.Versioning())
 		})
 	}
@@ -35,7 +36,7 @@ func TestNewBucketStatsAcceptsAllowedVersioningStatuses(t *testing.T) {
 func TestNewBucketStatsRejectsUnknownVersioningStatus(t *testing.T) {
 	t.Parallel()
 
-	stats, err := domain.NewBucketStats("bucket-id", 11, domain.VersioningStatus("mystery"))
+	stats, err := domain.NewBucketStats("bucket-id", 11, "bucket-marker", domain.VersioningStatus("mystery"))
 
 	require.Error(t, err)
 	require.Nil(t, stats)
@@ -44,18 +45,19 @@ func TestNewBucketStatsRejectsUnknownVersioningStatus(t *testing.T) {
 func TestNewBucketStatsStoresVersioning(t *testing.T) {
 	t.Parallel()
 
-	stats, err := domain.NewBucketStats("bucket-id", 11, domain.VersioningStatusSuspended)
+	stats, err := domain.NewBucketStats("bucket-id", 11, "bucket-marker", domain.VersioningStatusSuspended)
 
 	require.NoError(t, err)
 	require.Equal(t, "bucket-id", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
+	require.Equal(t, "bucket-marker", stats.Marker())
 	require.Equal(t, domain.VersioningStatusSuspended, stats.Versioning())
 }
 
 func TestNewBucketStatsRejectsInvalidVersioning(t *testing.T) {
 	t.Parallel()
 
-	stats, err := domain.NewBucketStats("bucket-id", 11, domain.VersioningStatus("mystery"))
+	stats, err := domain.NewBucketStats("bucket-id", 11, "bucket-marker", domain.VersioningStatus("mystery"))
 
 	require.Error(t, err)
 	require.Nil(t, stats)

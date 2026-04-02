@@ -23,7 +23,7 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "bucket", "stats", "--bucket=test"}
 			require.Equal(t, wantArgs, args)
 
-			return []byte(`{"id":"bucket-id","num_shards":11,"versioning":"enabled"}`), "", nil
+			return []byte(`{"id":"bucket-id","num_shards":11,"marker":"bucket-marker","versioning":"enabled"}`), "", nil
 		}),
 	)
 
@@ -34,6 +34,7 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "bucket-id", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
+	require.Equal(t, "bucket-marker", stats.Marker())
 	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning())
 }
 
@@ -246,6 +247,7 @@ func TestClientBucketStatsParsesFixture(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "20135590-8915-4c5e-9328-f759717a4f87.21289.1", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
+	require.Equal(t, "20135590-8915-4c5e-9328-f759717a4f87.21289.1", stats.Marker())
 	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning())
 }
 
@@ -290,7 +292,7 @@ func TestClientBucketStatsReturnsInvalidVersioningError(t *testing.T) {
 	// Arrange
 	client := podman.NewClientWithRunner(
 		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
-			return []byte(`{"id":"bucket-id","num_shards":11,"versioning":"mystery"}`), "", nil
+			return []byte(`{"id":"bucket-id","num_shards":11,"marker":"bucket-marker","versioning":"mystery"}`), "", nil
 		}),
 	)
 
