@@ -5,6 +5,7 @@ type app struct {
 	BucketLayout bucketLayoutCommand `cmd:"" help:"Read bucket layout from RGW."                   name:"bucket-layout"`
 	BucketStats  bucketStatsCommand  `cmd:"" help:"Read bucket stats from RGW."                    name:"bucket-stats"`
 	ListBuckets  listBucketsCommand  `cmd:"" help:"List buckets from RGW."                         name:"list-buckets"`
+	ListOmapKeys listOmapKeysCommand `cmd:"" help:"List OMAP keys from an index object."           name:"list-omap-keys"`
 	ObjectShard  objectShardCommand  `cmd:"" help:"Read an object's shard number from RGW."        name:"object-shard"`
 	ZoneGet      zoneGetCommand      `cmd:"" help:"Read the default zone from RGW."                name:"zone-get"`
 }
@@ -27,6 +28,12 @@ func newApp() *app {
 		},
 		ListBuckets: listBucketsCommand{
 			ContainerName: "",
+		},
+		ListOmapKeys: listOmapKeysCommand{
+			ContainerName: "",
+			IndexPool:     "",
+			Marker:        "",
+			Shard:         0,
 		},
 		ObjectShard: objectShardCommand{
 			ContainerName: "",

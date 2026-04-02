@@ -33,6 +33,9 @@ import (
 //			ListBucketsFunc: func(ctx context.Context, containerName string) ([]string, error) {
 //				panic("mock out the ListBuckets method")
 //			},
+//			ListOmapKeysFunc: func(ctx context.Context, containerName string, indexPool string, marker string, shard int) ([]*domain.BIIndex, error) {
+//				panic("mock out the ListOmapKeys method")
+//			},
 //			ObjectShardFunc: func(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error) {
 //				panic("mock out the ObjectShard method")
 //			},
@@ -60,6 +63,9 @@ type ClientMock struct {
 
 	// ListBucketsFunc mocks the ListBuckets method.
 	ListBucketsFunc func(ctx context.Context, containerName string) ([]string, error)
+
+	// ListOmapKeysFunc mocks the ListOmapKeys method.
+	ListOmapKeysFunc func(ctx context.Context, containerName string, indexPool string, marker string, shard int) ([]*domain.BIIndex, error)
 
 	// ObjectShardFunc mocks the ObjectShard method.
 	ObjectShardFunc func(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error)
@@ -122,6 +128,19 @@ type ClientMock struct {
 			// ContainerName is the containerName argument value.
 			ContainerName string
 		}
+		// ListOmapKeys holds details about calls to the ListOmapKeys method.
+		ListOmapKeys []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// IndexPool is the indexPool argument value.
+			IndexPool string
+			// Marker is the marker argument value.
+			Marker string
+			// Shard is the shard argument value.
+			Shard int
+		}
 		// ObjectShard holds details about calls to the ObjectShard method.
 		ObjectShard []struct {
 			// Ctx is the ctx argument value.
@@ -140,6 +159,7 @@ type ClientMock struct {
 	lockBucketStats    sync.RWMutex
 	lockGetDefaultZone sync.RWMutex
 	lockListBuckets    sync.RWMutex
+	lockListOmapKeys   sync.RWMutex
 	lockObjectShard    sync.RWMutex
 }
 
@@ -384,6 +404,54 @@ func (mock *ClientMock) ListBucketsCalls() []struct {
 	mock.lockListBuckets.RLock()
 	calls = mock.calls.ListBuckets
 	mock.lockListBuckets.RUnlock()
+	return calls
+}
+
+// ListOmapKeys calls ListOmapKeysFunc.
+func (mock *ClientMock) ListOmapKeys(ctx context.Context, containerName string, indexPool string, marker string, shard int) ([]*domain.BIIndex, error) {
+	if mock.ListOmapKeysFunc == nil {
+		panic("ClientMock.ListOmapKeysFunc: method is nil but Client.ListOmapKeys was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		IndexPool     string
+		Marker        string
+		Shard         int
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		IndexPool:     indexPool,
+		Marker:        marker,
+		Shard:         shard,
+	}
+	mock.lockListOmapKeys.Lock()
+	mock.calls.ListOmapKeys = append(mock.calls.ListOmapKeys, callInfo)
+	mock.lockListOmapKeys.Unlock()
+	return mock.ListOmapKeysFunc(ctx, containerName, indexPool, marker, shard)
+}
+
+// ListOmapKeysCalls gets all the calls that were made to ListOmapKeys.
+// Check the length with:
+//
+//	len(mockedClient.ListOmapKeysCalls())
+func (mock *ClientMock) ListOmapKeysCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	IndexPool     string
+	Marker        string
+	Shard         int
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		IndexPool     string
+		Marker        string
+		Shard         int
+	}
+	mock.lockListOmapKeys.RLock()
+	calls = mock.calls.ListOmapKeys
+	mock.lockListOmapKeys.RUnlock()
 	return calls
 }
 

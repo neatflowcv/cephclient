@@ -1,6 +1,7 @@
 package podman
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -186,6 +187,37 @@ func (c *Client) GetDefaultZone(ctx context.Context, containerName string) (*dom
 	return zone, nil
 }
 
+func (c *Client) ListOmapKeys(
+	ctx context.Context,
+	containerName, indexPool, marker string,
+	shard int,
+) ([]*domain.BIIndex, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"rados",
+		"-p",
+		indexPool,
+		"listomapkeys",
+		fmt.Sprintf(".dir.%s.%d", marker, shard),
+	}
+
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	indexes := decodeListOmapKeys(stdout)
+
+	return indexes, nil
+}
+
 func (c *Client) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
 	commandArgs := []string{
 		"exec",
@@ -263,6 +295,21 @@ func decodeBucketStats(data []byte) (*domain.BucketStats, error) {
 	}
 
 	return stats, nil
+}
+
+func decodeListOmapKeys(data []byte) []*domain.BIIndex {
+	lines := bytes.Split(data, []byte{'\n'})
+	indexes := make([]*domain.BIIndex, 0, len(lines))
+
+	for _, line := range lines {
+		if len(line) == 0 {
+			continue
+		}
+
+		indexes = append(indexes, domain.NewBIIndex(string(line)))
+	}
+
+	return indexes
 }
 
 func decodeBucketLayout(data []byte) (*domain.Layout, error) {

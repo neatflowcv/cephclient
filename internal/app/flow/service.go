@@ -69,6 +69,19 @@ func (s *Service) GetDefaultZone(ctx context.Context, containerName string) (*do
 	return zone, nil
 }
 
+func (s *Service) ListOmapKeys(
+	ctx context.Context,
+	containerName, indexPool, marker string,
+	shard int,
+) ([]*domain.BIIndex, error) {
+	indexes, err := s.client.ListOmapKeys(ctx, containerName, indexPool, marker, shard)
+	if err != nil {
+		return nil, fmt.Errorf("get omap keys: %w", err)
+	}
+
+	return indexes, nil
+}
+
 func (s *Service) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
 	buckets, err := s.client.ListBuckets(ctx, containerName)
 	if err != nil {
