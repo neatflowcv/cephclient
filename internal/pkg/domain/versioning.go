@@ -5,23 +5,21 @@ import (
 	"fmt"
 )
 
-type Versioning string
+type VersioningStatus string
 
 const (
-	VersioningOff       Versioning = "off"
-	VersioningSuspended Versioning = "suspended"
-	VersioningEnabled   Versioning = "enabled"
+	VersioningStatusOff       VersioningStatus = "off"
+	VersioningStatusSuspended VersioningStatus = "suspended"
+	VersioningStatusEnabled   VersioningStatus = "enabled"
 )
 
 var errInvalidVersioning = errors.New("invalid versioning")
 
-func NewVersioning(value string) (Versioning, error) {
-	versioning := Versioning(value)
-
-	switch versioning {
-	case VersioningOff, VersioningSuspended, VersioningEnabled:
-		return versioning, nil
+func (status VersioningStatus) Validate() error {
+	switch status {
+	case VersioningStatusOff, VersioningStatusSuspended, VersioningStatusEnabled:
+		return nil
 	default:
-		return "", fmt.Errorf("%w: %q", errInvalidVersioning, value)
+		return fmt.Errorf("%w: %q", errInvalidVersioning, status)
 	}
 }

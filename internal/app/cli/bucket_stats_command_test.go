@@ -12,7 +12,7 @@ import (
 func TestWriteBucketStatsIncludesVersioning(t *testing.T) {
 	t.Parallel()
 
-	stats, err := domain.NewBucketStats("bucket-id", 11, "enabled")
+	stats, err := domain.NewBucketStats("bucket-id", 11, domain.VersioningStatusEnabled)
 	require.NoError(t, err)
 
 	var stdout bytes.Buffer

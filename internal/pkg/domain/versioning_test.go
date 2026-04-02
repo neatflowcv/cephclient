@@ -7,56 +7,55 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewVersioningAcceptsAllowedValues(t *testing.T) {
+func TestNewBucketStatsAcceptsAllowedVersioningStatuses(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		name  string
 		value string
-		want  domain.Versioning
+		want  domain.VersioningStatus
 	}{
-		{name: "off", value: "off", want: domain.VersioningOff},
-		{name: "suspended", value: "suspended", want: domain.VersioningSuspended},
-		{name: "enabled", value: "enabled", want: domain.VersioningEnabled},
+		{name: "off", value: "off", want: domain.VersioningStatusOff},
+		{name: "suspended", value: "suspended", want: domain.VersioningStatusSuspended},
+		{name: "enabled", value: "enabled", want: domain.VersioningStatusEnabled},
 	}
 
 	for _, testCase := range testCases {
-
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := domain.NewVersioning(testCase.value)
+			stats, err := domain.NewBucketStats("bucket-id", 11, testCase.want)
 
 			require.NoError(t, err)
-			require.Equal(t, testCase.want, got)
+			require.Equal(t, testCase.want, stats.Versioning())
 		})
 	}
 }
 
-func TestNewVersioningRejectsUnknownValue(t *testing.T) {
+func TestNewBucketStatsRejectsUnknownVersioningStatus(t *testing.T) {
 	t.Parallel()
 
-	got, err := domain.NewVersioning("mystery")
+	stats, err := domain.NewBucketStats("bucket-id", 11, domain.VersioningStatus("mystery"))
 
 	require.Error(t, err)
-	require.Empty(t, got)
+	require.Nil(t, stats)
 }
 
 func TestNewBucketStatsStoresVersioning(t *testing.T) {
 	t.Parallel()
 
-	stats, err := domain.NewBucketStats("bucket-id", 11, "suspended")
+	stats, err := domain.NewBucketStats("bucket-id", 11, domain.VersioningStatusSuspended)
 
 	require.NoError(t, err)
 	require.Equal(t, "bucket-id", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
-	require.Equal(t, domain.VersioningSuspended, stats.Versioning())
+	require.Equal(t, domain.VersioningStatusSuspended, stats.Versioning())
 }
 
 func TestNewBucketStatsRejectsInvalidVersioning(t *testing.T) {
 	t.Parallel()
 
-	stats, err := domain.NewBucketStats("bucket-id", 11, "mystery")
+	stats, err := domain.NewBucketStats("bucket-id", 11, domain.VersioningStatus("mystery"))
 
 	require.Error(t, err)
 	require.Nil(t, stats)

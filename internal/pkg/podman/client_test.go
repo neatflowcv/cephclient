@@ -34,7 +34,7 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "bucket-id", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
-	require.Equal(t, domain.VersioningEnabled, stats.Versioning())
+	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning())
 }
 
 func TestClientBucketLayoutRunsPodmanCommand(t *testing.T) {
@@ -246,7 +246,7 @@ func TestClientBucketStatsParsesFixture(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "20135590-8915-4c5e-9328-f759717a4f87.21289.1", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
-	require.Equal(t, domain.VersioningEnabled, stats.Versioning())
+	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning())
 }
 
 func TestClientBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {

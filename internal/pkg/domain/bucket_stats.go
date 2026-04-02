@@ -3,11 +3,11 @@ package domain
 type BucketStats struct {
 	id          string
 	totalShards int
-	versioning  Versioning
+	versioning  VersioningStatus
 }
 
-func NewBucketStats(bucketID string, totalShards int, versioning string) (*BucketStats, error) {
-	bucketVersioning, err := NewVersioning(versioning)
+func NewBucketStats(bucketID string, totalShards int, versioningStatus VersioningStatus) (*BucketStats, error) {
+	err := versioningStatus.Validate()
 	if err != nil {
 		return nil, err
 	}
@@ -15,7 +15,7 @@ func NewBucketStats(bucketID string, totalShards int, versioning string) (*Bucke
 	return &BucketStats{
 		id:          bucketID,
 		totalShards: totalShards,
-		versioning:  bucketVersioning,
+		versioning:  versioningStatus,
 	}, nil
 }
 
@@ -27,6 +27,6 @@ func (b *BucketStats) TotalShards() int {
 	return b.totalShards
 }
 
-func (b *BucketStats) Versioning() Versioning {
+func (b *BucketStats) Versioning() VersioningStatus {
 	return b.versioning
 }
