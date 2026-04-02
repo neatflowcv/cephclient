@@ -64,5 +64,6 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
+	require.EqualError(t, err, "get omap keys: client failed")
 	require.Len(t, mockClient.ListOmapKeysCalls(), 1)
 }

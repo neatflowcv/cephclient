@@ -33,8 +33,7 @@ type biListEntryResponse struct {
 	Type  string          `json:"type"`
 }
 
-//nolint:ireturn // The domain model exposes BIEntry as the public polymorphic boundary.
-func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
+func (r biListEntryResponse) toDomain() (domain.BIEntry, error) { //nolint:ireturn
 	idx := domain.NewBIIndex(r.IDX)
 
 	switch r.Type {

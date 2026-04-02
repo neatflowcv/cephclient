@@ -1,21 +1,22 @@
-package podman
+package podman_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
+	"github.com/neatflowcv/cephclient/internal/pkg/podman"
 	"github.com/stretchr/testify/require"
 )
 
-const errPermissionDenied = "permission denied"
+const listOmapKeysErrPermissionDenied = "permission denied"
 
 func TestClientListOmapKeysRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	client := NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(
+		listOmapKeysStubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
 			wantArgs := []string{
 				"exec",
 				"-i",
@@ -46,8 +47,8 @@ func TestClientListOmapKeysReturnsEmptySliceForEmptyOutput(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	client := NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(
+		listOmapKeysStubRunner(func(context.Context, ...string) ([]byte, string, error) {
 			return nil, "", nil
 		}),
 	)
@@ -64,9 +65,9 @@ func TestClientListOmapKeysReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
-	client := NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
-			return nil, errPermissionDenied, errExitStatus125
+	client := podman.NewClientWithRunner(
+		listOmapKeysStubRunner(func(context.Context, ...string) ([]byte, string, error) {
+			return nil, listOmapKeysErrPermissionDenied, errListOmapKeysExitStatus125
 		}),
 	)
 
@@ -75,28 +76,13 @@ func TestClientListOmapKeysReturnsRunnerErrorWithStderr(t *testing.T) {
 
 	// Assert
 	require.Error(t, err)
-	require.Contains(t, err.Error(), errPermissionDenied)
+	require.Contains(t, err.Error(), listOmapKeysErrPermissionDenied)
 }
 
-func TestDecodeListOmapKeysSkipsEmptyLines(t *testing.T) {
-	t.Parallel()
+type listOmapKeysStubRunner func(context.Context, ...string) ([]byte, string, error)
 
-	// Arrange
-	data := []byte("first\n\nsecond\n")
-
-	// Act
-	indexes := decodeListOmapKeys(data)
-
-	// Assert
-	require.Len(t, indexes, 2)
-	require.Equal(t, "first", indexes[0].Raw())
-	require.Equal(t, "second", indexes[1].Raw())
-}
-
-type stubRunner func(context.Context, ...string) ([]byte, string, error)
-
-func (s stubRunner) Run(ctx context.Context, args ...string) ([]byte, string, error) {
+func (s listOmapKeysStubRunner) Run(ctx context.Context, args ...string) ([]byte, string, error) {
 	return s(ctx, args...)
 }
 
-var errExitStatus125 = errors.New("exit status 125")
+var errListOmapKeysExitStatus125 = errors.New("exit status 125")

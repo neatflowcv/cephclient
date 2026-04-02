@@ -103,3 +103,40 @@ func (s *Service) ObjectShard(
 
 	return shard, nil
 }
+
+func (s *Service) RMSupportPlan(
+	ctx context.Context,
+	containerName, bucketName, objectName string,
+	includeOmap bool,
+) (*RMSupportPlan, error) {
+	stats, err := s.BucketStats(ctx, containerName, bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("read bucket stats: %w", err)
+	}
+
+	shard, err := s.ObjectShard(ctx, containerName, objectName, stats.TotalShards())
+	if err != nil {
+		return nil, fmt.Errorf("read object shard: %w", err)
+	}
+
+	biList, err := s.BIListByObject(ctx, containerName, bucketName, objectName, shard.Shard())
+	if err != nil {
+		return nil, fmt.Errorf("read bucket index list: %w", err)
+	}
+
+	if !includeOmap {
+		return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), "", nil), nil
+	}
+
+	zone, err := s.GetDefaultZone(ctx, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("read default zone: %w", err)
+	}
+
+	omapKeys, err := s.ListOmapKeys(ctx, containerName, zone.IndexPool(), stats.Marker(), shard.Shard())
+	if err != nil {
+		return nil, fmt.Errorf("list omap keys: %w", err)
+	}
+
+	return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), zone.IndexPool(), omapKeys), nil
+}

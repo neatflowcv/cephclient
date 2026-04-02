@@ -1,13 +1,14 @@
 package cli
 
 type app struct {
-	BIList       biListCommand       `cmd:"" help:"List bucket index entries for an object shard." name:"bi-list"`
-	BucketLayout bucketLayoutCommand `cmd:"" help:"Read bucket layout from RGW."                   name:"bucket-layout"`
-	BucketStats  bucketStatsCommand  `cmd:"" help:"Read bucket stats from RGW."                    name:"bucket-stats"`
-	ListBuckets  listBucketsCommand  `cmd:"" help:"List buckets from RGW."                         name:"list-buckets"`
-	ListOmapKeys listOmapKeysCommand `cmd:"" help:"List OMAP keys from an index object."           name:"list-omap-keys"`
-	ObjectShard  objectShardCommand  `cmd:"" help:"Read an object's shard number from RGW."        name:"object-shard"`
-	ZoneGet      zoneGetCommand      `cmd:"" help:"Read the default zone from RGW."                name:"zone-get"`
+	BIList       biListCommand       `cmd:"" help:"List bucket index entries for an object shard."  name:"bi-list"`
+	BucketLayout bucketLayoutCommand `cmd:"" help:"Read bucket layout from RGW."                    name:"bucket-layout"`
+	BucketStats  bucketStatsCommand  `cmd:"" help:"Read bucket stats from RGW."                     name:"bucket-stats"`
+	ListBuckets  listBucketsCommand  `cmd:"" help:"List buckets from RGW."                          name:"list-buckets"`
+	ListOmapKeys listOmapKeysCommand `cmd:"" help:"List OMAP keys from an index object."            name:"list-omap-keys"`
+	ObjectShard  objectShardCommand  `cmd:"" help:"Read an object's shard number from RGW."         name:"object-shard"`
+	RMSupport    rmSupportCommand    `cmd:"" help:"Interactively select BI idx values for removal." name:"rm-support"`
+	ZoneGet      zoneGetCommand      `cmd:"" help:"Read the default zone from RGW."                 name:"zone-get"`
 }
 
 func newApp() *app {
@@ -39,6 +40,12 @@ func newApp() *app {
 			ContainerName: "",
 			ObjectName:    "",
 			Shards:        0,
+		},
+		RMSupport: rmSupportCommand{
+			ContainerName: "",
+			BucketName:    "",
+			ObjectName:    "",
+			ShowOmap:      false,
 		},
 		ZoneGet: zoneGetCommand{
 			ContainerName: "",

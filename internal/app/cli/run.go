@@ -12,10 +12,10 @@ import (
 )
 
 func Run() error {
-	return RunWithArgs(context.Background(), os.Args[1:], os.Stdout)
+	return RunWithArgs(context.Background(), os.Args[1:], os.Stdin, os.Stdout)
 }
 
-func RunWithArgs(ctx context.Context, args []string, stdout io.Writer) error {
+func RunWithArgs(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) error {
 	client, err := podman.NewClient()
 	if err != nil {
 		return fmt.Errorf("create podman client: %w", err)
@@ -28,6 +28,7 @@ func RunWithArgs(ctx context.Context, args []string, stdout io.Writer) error {
 		app,
 		kong.Bind(service),
 		kong.BindTo(ctx, (*context.Context)(nil)),
+		kong.BindTo(stdin, (*io.Reader)(nil)),
 		kong.BindTo(stdout, (*io.Writer)(nil)),
 	)
 	if err != nil {
