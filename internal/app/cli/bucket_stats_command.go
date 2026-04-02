@@ -24,7 +24,13 @@ func (c *bucketStatsCommand) Run(ctx context.Context, service *flow.Service, std
 }
 
 func writeBucketStats(stdout io.Writer, stats *domain.BucketStats) error {
-	_, err := fmt.Fprintf(stdout, "id=%s\ntotal_shards=%d\n", stats.ID(), stats.TotalShards())
+	_, err := fmt.Fprintf(
+		stdout,
+		"id=%s\ntotal_shards=%d\nversioning=%s\n",
+		stats.ID(),
+		stats.TotalShards(),
+		stats.Versioning(),
+	)
 	if err != nil {
 		return fmt.Errorf("write bucket stats: %w", err)
 	}

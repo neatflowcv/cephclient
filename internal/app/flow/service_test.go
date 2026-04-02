@@ -26,7 +26,7 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "test", bucketName)
 
-		return domain.NewBucketStats("bucket-id", 11), nil
+		return domain.NewBucketStats("bucket-id", 11, "enabled")
 	}
 	service := flow.NewService(&mockClient)
 
@@ -37,6 +37,7 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "bucket-id", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
+	require.Equal(t, domain.VersioningEnabled, stats.Versioning())
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 
