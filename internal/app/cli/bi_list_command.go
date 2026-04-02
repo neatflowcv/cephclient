@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/neatflowcv/cephclient/internal/app/flow"
 	"github.com/neatflowcv/cephclient/internal/pkg/domain"
@@ -92,8 +91,4 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 	default:
 		return "", fmt.Errorf("%w: %T", errUnsupportedBIEntryFormat, entry)
 	}
-}
-
-func quoteField(value string) string {
-	return `"` + strings.ReplaceAll(value, `"`, `\"`) + `"`
 }
