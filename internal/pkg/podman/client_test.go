@@ -17,21 +17,20 @@ const errPermissionDenied = "permission denied"
 func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+	runner := newRunnerMock(
+		func(_ context.Context, args ...string) ([]byte, string, error) {
 			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "bucket", "stats", "--bucket=test"}
 			require.Equal(t, wantArgs, args)
 
 			return []byte(`{"id":"bucket-id","num_shards":11,"marker":"bucket-marker","versioning":"enabled"}`), "", nil
-		}),
+		},
 	)
+	client := podman.NewClientWithRunner(runner)
 
-	// Act
 	stats, err := client.BucketStats(t.Context(), "rgw", "test")
 
-	// Assert
 	require.NoError(t, err)
+	require.Len(t, runner.RunCalls(), 1)
 	require.Equal(t, "bucket-id", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
 	require.Equal(t, "bucket-marker", stats.Marker())
@@ -41,30 +40,28 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 func TestClientBucketLayoutRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+	runner := newRunnerMock(
+		func(_ context.Context, args ...string) ([]byte, string, error) {
 			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "bucket", "layout", "--bucket=test"}
 			require.Equal(t, wantArgs, args)
 
 			return []byte(`{"layout":{"current_index":{"gen":1}}}`), "", nil
-		}),
+		},
 	)
+	client := podman.NewClientWithRunner(runner)
 
-	// Act
 	layout, err := client.BucketLayout(t.Context(), "rgw", "test")
 
-	// Assert
 	require.NoError(t, err)
+	require.Len(t, runner.RunCalls(), 1)
 	require.Equal(t, 1, layout.Generation())
 }
 
 func TestClientBIListByShardRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+	runner := newRunnerMock(
+		func(_ context.Context, args ...string) ([]byte, string, error) {
 			wantArgs := []string{
 				"exec",
 				"-i",
@@ -78,23 +75,22 @@ func TestClientBIListByShardRunsPodmanCommand(t *testing.T) {
 			require.Equal(t, wantArgs, args)
 
 			return []byte(`[]`), "", nil
-		}),
+		},
 	)
+	client := podman.NewClientWithRunner(runner)
 
-	// Act
 	biList, err := client.BIListByShard(t.Context(), "rgw", "test-bucket", 7)
 
-	// Assert
 	require.NoError(t, err)
+	require.Len(t, runner.RunCalls(), 1)
 	require.Empty(t, biList.Entries())
 }
 
 func TestClientBIListByObjectRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+	runner := newRunnerMock(
+		func(_ context.Context, args ...string) ([]byte, string, error) {
 			wantArgs := []string{
 				"exec",
 				"-i",
@@ -109,34 +105,31 @@ func TestClientBIListByObjectRunsPodmanCommand(t *testing.T) {
 			require.Equal(t, wantArgs, args)
 
 			return []byte(`[]`), "", nil
-		}),
+		},
 	)
+	client := podman.NewClientWithRunner(runner)
 
-	// Act
 	biList, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
-	// Assert
 	require.NoError(t, err)
+	require.Len(t, runner.RunCalls(), 1)
 	require.Empty(t, biList.Entries())
 }
 
 func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
 	fixture, err := os.ReadFile(filepath.Join("testdata", "test.bilist.json"))
 	require.NoError(t, err)
 
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return fixture, "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	biList, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test.txt", 3)
 
-	// Assert
 	require.NoError(t, err)
 
 	entries := biList.Entries()
@@ -177,17 +170,14 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 func TestClientBIListByObjectReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return nil, errPermissionDenied, errExitStatus125
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 }
@@ -195,34 +185,28 @@ func TestClientBIListByObjectReturnsRunnerErrorWithStderr(t *testing.T) {
 func TestClientBIListByObjectReturnsJSONError(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte("{"), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
-	// Assert
 	require.Error(t, err)
 }
 
 func TestClientBIListByObjectRejectsUnknownType(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte(`[{"type":"mystery","idx":"x","entry":{}}]`), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported bi entry type")
 }
@@ -230,20 +214,17 @@ func TestClientBIListByObjectRejectsUnknownType(t *testing.T) {
 func TestClientBucketStatsParsesFixture(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
 	fixture, err := os.ReadFile(filepath.Join("testdata", "test.stats.json"))
 	require.NoError(t, err)
 
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return fixture, "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	stats, err := client.BucketStats(t.Context(), "rgw", "test")
 
-	// Assert
 	require.NoError(t, err)
 	require.Equal(t, "20135590-8915-4c5e-9328-f759717a4f87.21289.1", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
@@ -254,17 +235,14 @@ func TestClientBucketStatsParsesFixture(t *testing.T) {
 func TestClientBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return nil, errPermissionDenied, errExitStatus125
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.BucketStats(t.Context(), "rgw", "test")
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 }
@@ -272,34 +250,28 @@ func TestClientBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {
 func TestClientBucketStatsReturnsJSONError(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte("{"), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.BucketStats(t.Context(), "rgw", "test")
 
-	// Assert
 	require.Error(t, err)
 }
 
 func TestClientBucketStatsReturnsInvalidVersioningError(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte(`{"id":"bucket-id","num_shards":11,"marker":"bucket-marker","versioning":"mystery"}`), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.BucketStats(t.Context(), "rgw", "test")
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid versioning")
 }
@@ -307,20 +279,17 @@ func TestClientBucketStatsReturnsInvalidVersioningError(t *testing.T) {
 func TestClientBucketLayoutParsesFixture(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
 	fixture, err := os.ReadFile(filepath.Join("testdata", "test.layout.json"))
 	require.NoError(t, err)
 
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return fixture, "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	layout, err := client.BucketLayout(t.Context(), "rgw", "test")
 
-	// Assert
 	require.NoError(t, err)
 	require.Equal(t, 1, layout.Generation())
 }
@@ -328,17 +297,14 @@ func TestClientBucketLayoutParsesFixture(t *testing.T) {
 func TestClientBucketLayoutReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return nil, errPermissionDenied, errExitStatus125
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.BucketLayout(t.Context(), "rgw", "test")
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 }
@@ -346,26 +312,22 @@ func TestClientBucketLayoutReturnsRunnerErrorWithStderr(t *testing.T) {
 func TestClientBucketLayoutReturnsJSONError(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte("{"), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.BucketLayout(t.Context(), "rgw", "test")
 
-	// Assert
 	require.Error(t, err)
 }
 
 func TestClientGetDefaultZoneRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+	runner := newRunnerMock(
+		func(_ context.Context, args ...string) ([]byte, string, error) {
 			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "zone", "get"}
 			require.Equal(t, wantArgs, args)
 
@@ -379,14 +341,14 @@ func TestClientGetDefaultZoneRunsPodmanCommand(t *testing.T) {
 					}]
 				}`,
 			), "", nil
-		}),
+		},
 	)
+	client := podman.NewClientWithRunner(runner)
 
-	// Act
 	zone, err := client.GetDefaultZone(t.Context(), "rgw")
 
-	// Assert
 	require.NoError(t, err)
+	require.Len(t, runner.RunCalls(), 1)
 	require.Equal(t, "test.rgw.buckets.data", zone.DataPool())
 	require.Equal(t, "test.rgw.buckets.index", zone.IndexPool())
 }
@@ -394,20 +356,17 @@ func TestClientGetDefaultZoneRunsPodmanCommand(t *testing.T) {
 func TestClientGetDefaultZoneParsesFixture(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
 	fixture, err := os.ReadFile(filepath.Join("testdata", "test.zone.json"))
 	require.NoError(t, err)
 
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return fixture, "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	zone, err := client.GetDefaultZone(t.Context(), "rgw")
 
-	// Assert
 	require.NoError(t, err)
 	require.Equal(t, "test.rgw.buckets.data", zone.DataPool())
 	require.Equal(t, "test.rgw.buckets.index", zone.IndexPool())
@@ -416,17 +375,14 @@ func TestClientGetDefaultZoneParsesFixture(t *testing.T) {
 func TestClientGetDefaultZoneReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return nil, errPermissionDenied, errExitStatus125
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.GetDefaultZone(t.Context(), "rgw")
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 }
@@ -434,17 +390,14 @@ func TestClientGetDefaultZoneReturnsRunnerErrorWithStderr(t *testing.T) {
 func TestClientGetDefaultZoneReturnsErrorWhenPlacementPoolsAreEmpty(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte(`{"placement_pools":[]}`), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.GetDefaultZone(t.Context(), "rgw")
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "placement_pools is empty")
 }
@@ -452,17 +405,14 @@ func TestClientGetDefaultZoneReturnsErrorWhenPlacementPoolsAreEmpty(t *testing.T
 func TestClientGetDefaultZoneReturnsErrorWhenStandardStorageClassIsMissing(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte(`{"placement_pools":[{"val":{"index_pool":"test.rgw.buckets.index","storage_classes":{}}}]}`), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.GetDefaultZone(t.Context(), "rgw")
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "STANDARD storage class not found")
 }
@@ -470,19 +420,16 @@ func TestClientGetDefaultZoneReturnsErrorWhenStandardStorageClassIsMissing(t *te
 func TestClientGetDefaultZoneReturnsErrorWhenRequiredPoolValuesAreMissing(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte(
 				`{"placement_pools":[{"val":{"index_pool":"","storage_classes":{"STANDARD":{"data_pool":""}}}}]}`,
 			), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.GetDefaultZone(t.Context(), "rgw")
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "index_pool is empty")
 }
@@ -490,38 +437,34 @@ func TestClientGetDefaultZoneReturnsErrorWhenRequiredPoolValuesAreMissing(t *tes
 func TestClientListBucketsRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+	runner := newRunnerMock(
+		func(_ context.Context, args ...string) ([]byte, string, error) {
 			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "bucket", "list"}
 			require.Equal(t, wantArgs, args)
 
 			return []byte(`["alpha","beta"]`), "", nil
-		}),
+		},
 	)
+	client := podman.NewClientWithRunner(runner)
 
-	// Act
 	buckets, err := client.ListBuckets(t.Context(), "rgw")
 
-	// Assert
 	require.NoError(t, err)
+	require.Len(t, runner.RunCalls(), 1)
 	require.Equal(t, []string{"alpha", "beta"}, buckets)
 }
 
 func TestClientListBucketsReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return nil, errPermissionDenied, errExitStatus125
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.ListBuckets(t.Context(), "rgw")
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 }
@@ -529,26 +472,22 @@ func TestClientListBucketsReturnsRunnerErrorWithStderr(t *testing.T) {
 func TestClientListBucketsReturnsJSONError(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte("{"), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.ListBuckets(t.Context(), "rgw")
 
-	// Assert
 	require.Error(t, err)
 }
 
 func TestClientObjectShardRunsPodmanCommand(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
+	runner := newRunnerMock(
+		func(_ context.Context, args ...string) ([]byte, string, error) {
 			wantArgs := []string{
 				"exec",
 				"-i",
@@ -563,34 +502,31 @@ func TestClientObjectShardRunsPodmanCommand(t *testing.T) {
 			require.Equal(t, wantArgs, args)
 
 			return []byte(`{"shard":0}`), "", nil
-		}),
+		},
 	)
+	client := podman.NewClientWithRunner(runner)
 
-	// Act
 	shard, err := client.ObjectShard(t.Context(), "rgw", "test-object", 11)
 
-	// Assert
 	require.NoError(t, err)
+	require.Len(t, runner.RunCalls(), 1)
 	require.Equal(t, 0, shard.Shard())
 }
 
 func TestClientObjectShardParsesFixture(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
 	fixture, err := os.ReadFile(filepath.Join("testdata", "test.shard.json"))
 	require.NoError(t, err)
 
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return fixture, "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	shard, err := client.ObjectShard(t.Context(), "rgw", "test-object", 11)
 
-	// Assert
 	require.NoError(t, err)
 	require.Equal(t, 0, shard.Shard())
 }
@@ -598,17 +534,14 @@ func TestClientObjectShardParsesFixture(t *testing.T) {
 func TestClientObjectShardReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return nil, errPermissionDenied, errExitStatus125
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.ObjectShard(t.Context(), "rgw", "test-object", 11)
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 }
@@ -616,27 +549,25 @@ func TestClientObjectShardReturnsRunnerErrorWithStderr(t *testing.T) {
 func TestClientObjectShardReturnsJSONError(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return []byte("{"), "", nil
-		}),
-	)
+		},
+	))
 
-	// Act
 	_, err := client.ObjectShard(t.Context(), "rgw", "test-object", 11)
 
-	// Assert
 	require.Error(t, err)
 }
 
-type stubRunner func(context.Context, ...string) ([]byte, string, error)
+var errExitStatus125 = errors.New("exit status 125")
 
-func (s stubRunner) Run(ctx context.Context, args ...string) ([]byte, string, error) {
-	return s(ctx, args...)
+//nolint:exhaustruct
+func newRunnerMock(runFunc func(context.Context, ...string) ([]byte, string, error)) *RunnerMock {
+	return &RunnerMock{RunFunc: runFunc}
 }
 
-var (
-	_                podman.Runner = stubRunner(nil)
-	errExitStatus125               = errors.New("exit status 125")
-)
+//nolint:exhaustruct
+func newUnsetRunnerMock() *RunnerMock {
+	return &RunnerMock{}
+}

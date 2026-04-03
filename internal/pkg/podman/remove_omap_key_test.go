@@ -11,51 +11,46 @@ import (
 func TestClientRemoveOmapKeyRunsPodmanCommandsInOrder(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	callCount := 0
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
-			callCount++
+	runner := newUnsetRunnerMock()
+	runner.RunFunc = func(_ context.Context, args ...string) ([]byte, string, error) {
+		switch len(runner.RunCalls()) {
+		case 1:
+			require.Equal(t, []string{"exec", "-i", "rgw", "mktemp"}, args)
 
-			switch callCount {
-			case 1:
-				require.Equal(t, []string{"exec", "-i", "rgw", "mktemp"}, args)
+			return []byte("/tmp/remove-omap-key\n"), "", nil
+		case 2:
+			require.Equal(t, []string{
+				"exec",
+				"-i",
+				"rgw",
+				"sh",
+				"-c",
+				`printf "plain-key" > "/tmp/remove-omap-key"`,
+			}, args)
 
-				return []byte("/tmp/remove-omap-key\n"), "", nil
-			case 2:
-				require.Equal(t, []string{
-					"exec",
-					"-i",
-					"rgw",
-					"sh",
-					"-c",
-					`printf "plain-key" > "/tmp/remove-omap-key"`,
-				}, args)
+			return nil, "", nil
+		case 3:
+			require.Equal(t, []string{
+				"exec",
+				"-i",
+				"rgw",
+				"rados",
+				"-p",
+				"default.rgw.buckets.index",
+				"rmomapkey",
+				".dir.bucket-marker.7",
+				"--omap-key-file=/tmp/remove-omap-key",
+			}, args)
 
-				return nil, "", nil
-			case 3:
-				require.Equal(t, []string{
-					"exec",
-					"-i",
-					"rgw",
-					"rados",
-					"-p",
-					"default.rgw.buckets.index",
-					"rmomapkey",
-					".dir.bucket-marker.7",
-					"--omap-key-file=/tmp/remove-omap-key",
-				}, args)
+			return nil, "", nil
+		default:
+			t.Fatalf("unexpected extra runner call %d", len(runner.RunCalls()))
 
-				return nil, "", nil
-			default:
-				t.Fatalf("unexpected extra runner call %d", callCount)
+			return nil, "", nil
+		}
+	}
+	client := podman.NewClientWithRunner(runner)
 
-				return nil, "", nil
-			}
-		}),
-	)
-
-	// Act
 	err := client.RemoveOmapKey(
 		t.Context(),
 		"rgw",
@@ -65,22 +60,19 @@ func TestClientRemoveOmapKeyRunsPodmanCommandsInOrder(t *testing.T) {
 		"plain-key",
 	)
 
-	// Assert
 	require.NoError(t, err)
-	require.Equal(t, 3, callCount)
+	require.Len(t, runner.RunCalls(), 3)
 }
 
 func TestClientRemoveOmapKeyReturnsMktempErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	client := podman.NewClientWithRunner(
-		stubRunner(func(context.Context, ...string) ([]byte, string, error) {
+	client := podman.NewClientWithRunner(newRunnerMock(
+		func(context.Context, ...string) ([]byte, string, error) {
 			return nil, errPermissionDenied, errExitStatus125
-		}),
-	)
+		},
+	))
 
-	// Act
 	err := client.RemoveOmapKey(
 		t.Context(),
 		"rgw",
@@ -90,7 +82,6 @@ func TestClientRemoveOmapKeyReturnsMktempErrorWithStderr(t *testing.T) {
 		"plain-key",
 	)
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 	require.Contains(t, err.Error(), "mktemp")
@@ -99,28 +90,23 @@ func TestClientRemoveOmapKeyReturnsMktempErrorWithStderr(t *testing.T) {
 func TestClientRemoveOmapKeyReturnsWriteKeyErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	callCount := 0
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
-			callCount++
+	runner := newUnsetRunnerMock()
+	runner.RunFunc = func(_ context.Context, args ...string) ([]byte, string, error) {
+		switch len(runner.RunCalls()) {
+		case 1:
+			require.Equal(t, []string{"exec", "-i", "rgw", "mktemp"}, args)
 
-			switch callCount {
-			case 1:
-				require.Equal(t, []string{"exec", "-i", "rgw", "mktemp"}, args)
+			return []byte("/tmp/remove-omap-key\n"), "", nil
+		case 2:
+			return nil, errPermissionDenied, errExitStatus125
+		default:
+			t.Fatalf("unexpected runner call %d", len(runner.RunCalls()))
 
-				return []byte("/tmp/remove-omap-key\n"), "", nil
-			case 2:
-				return nil, errPermissionDenied, errExitStatus125
-			default:
-				t.Fatalf("unexpected runner call %d", callCount)
+			return nil, "", nil
+		}
+	}
+	client := podman.NewClientWithRunner(runner)
 
-				return nil, "", nil
-			}
-		}),
-	)
-
-	// Act
 	err := client.RemoveOmapKey(
 		t.Context(),
 		"rgw",
@@ -130,7 +116,6 @@ func TestClientRemoveOmapKeyReturnsWriteKeyErrorWithStderr(t *testing.T) {
 		"plain-key",
 	)
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 	require.Contains(t, err.Error(), `printf "plain-key" > "/tmp/remove-omap-key"`)
@@ -139,40 +124,35 @@ func TestClientRemoveOmapKeyReturnsWriteKeyErrorWithStderr(t *testing.T) {
 func TestClientRemoveOmapKeyReturnsRemoveErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	callCount := 0
-	client := podman.NewClientWithRunner(
-		stubRunner(func(_ context.Context, args ...string) ([]byte, string, error) {
-			callCount++
+	runner := newUnsetRunnerMock()
+	runner.RunFunc = func(_ context.Context, args ...string) ([]byte, string, error) {
+		switch len(runner.RunCalls()) {
+		case 1:
+			return []byte("/tmp/remove-omap-key\n"), "", nil
+		case 2:
+			return nil, "", nil
+		case 3:
+			require.Equal(t, []string{
+				"exec",
+				"-i",
+				"rgw",
+				"rados",
+				"-p",
+				"default.rgw.buckets.index",
+				"rmomapkey",
+				".dir.bucket-marker.7",
+				"--omap-key-file=/tmp/remove-omap-key",
+			}, args)
 
-			switch callCount {
-			case 1:
-				return []byte("/tmp/remove-omap-key\n"), "", nil
-			case 2:
-				return nil, "", nil
-			case 3:
-				require.Equal(t, []string{
-					"exec",
-					"-i",
-					"rgw",
-					"rados",
-					"-p",
-					"default.rgw.buckets.index",
-					"rmomapkey",
-					".dir.bucket-marker.7",
-					"--omap-key-file=/tmp/remove-omap-key",
-				}, args)
+			return nil, errPermissionDenied, errExitStatus125
+		default:
+			t.Fatalf("unexpected runner call %d", len(runner.RunCalls()))
 
-				return nil, errPermissionDenied, errExitStatus125
-			default:
-				t.Fatalf("unexpected runner call %d", callCount)
+			return nil, "", nil
+		}
+	}
+	client := podman.NewClientWithRunner(runner)
 
-				return nil, "", nil
-			}
-		}),
-	)
-
-	// Act
 	err := client.RemoveOmapKey(
 		t.Context(),
 		"rgw",
@@ -182,7 +162,6 @@ func TestClientRemoveOmapKeyReturnsRemoveErrorWithStderr(t *testing.T) {
 		"plain-key",
 	)
 
-	// Assert
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 	require.Contains(t, err.Error(), "rmomapkey")
