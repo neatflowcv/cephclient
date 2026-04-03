@@ -2,7 +2,6 @@ package cli
 
 type app struct {
 	Bucket       bucketCommand       `cmd:"" help:"Read bucket data from RGW."                      name:"bucket"`
-	ListBuckets  listBucketsCommand  `cmd:"" help:"List buckets from RGW."                          name:"list-buckets"`
 	ListOmapKeys listOmapKeysCommand `cmd:"" help:"List OMAP keys from an index object."            name:"list-omap-keys"`
 	ObjectShard  objectShardCommand  `cmd:"" help:"Read an object's shard number from RGW."         name:"object-shard"`
 	RmOmapKey    rmOmapKeyCommand    `cmd:"" help:"Remove an OMAP key from an index object."        name:"rm-omap-key"`
@@ -13,6 +12,9 @@ type app struct {
 func newApp() *app {
 	return &app{
 		Bucket: bucketCommand{
+			List: bucketListCommand{
+				ContainerName: "",
+			},
 			Index: bucketIndexCommand{
 				ContainerName: "",
 				BucketName:    "",
@@ -27,9 +29,6 @@ func newApp() *app {
 				ContainerName: "",
 				BucketName:    "",
 			},
-		},
-		ListBuckets: listBucketsCommand{
-			ContainerName: "",
 		},
 		ListOmapKeys: listOmapKeysCommand{
 			ContainerName: "",

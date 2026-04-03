@@ -8,11 +8,11 @@ import (
 	"github.com/neatflowcv/cephclient/internal/app/flow"
 )
 
-type listBucketsCommand struct {
+type bucketListCommand struct {
 	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
 }
 
-func (c *listBucketsCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
+func (c *bucketListCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
 	buckets, err := service.ListBuckets(ctx, c.ContainerName)
 	if err != nil {
 		return fmt.Errorf("list buckets: %w", err)
