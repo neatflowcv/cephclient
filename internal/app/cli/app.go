@@ -1,24 +1,26 @@
 package cli
 
 type app struct {
-	Bucket    bucketCommand    `cmd:"" help:"Read bucket data from RGW."                      name:"bucket"`
-	Omap      omapCommand      `cmd:"" help:"Inspect OMAP data from an index object."         name:"omap"`
-	Object    objectCommand    `cmd:"" help:"Read object data from RGW."                      name:"object"`
-	RMSupport rmSupportCommand `cmd:"" help:"Interactively select BI idx values for removal." name:"rm-support"`
-	Zone      zoneCommand      `cmd:"" help:"Read zone data from RGW."                        name:"zone"`
+	Debug     bool             `help:"Print debug output."`
+	Bucket    bucketCommand    `cmd:""                     help:"Read RGW bucket data."           name:"bucket"`
+	Omap      omapCommand      `cmd:""                     help:"Inspect index OMAP data."        name:"omap"`
+	Object    objectCommand    `cmd:""                     help:"Read RGW object data."           name:"object"`
+	RMSupport rmSupportCommand `cmd:""                     help:"Select BI idx values to remove." name:"rm-support"`
+	Zone      zoneCommand      `cmd:""                     help:"Read RGW zone data."             name:"zone"`
 }
 
 func newApp() *app {
 	return &app{
+		Debug: false,
 		Bucket: bucketCommand{
 			List: bucketListCommand{
 				Container: "",
 			},
 			Index: bucketIndexCommand{
-				Container:  "",
-				Bucket:     "",
-				Object:     "",
-				Shard:      0,
+				Container: "",
+				Bucket:    "",
+				Object:    "",
+				Shard:     0,
 			},
 			Layout: bucketLayoutCommand{
 				Container: "",
@@ -52,10 +54,10 @@ func newApp() *app {
 			},
 		},
 		RMSupport: rmSupportCommand{
-			Container:  "",
-			Bucket:     "",
-			Object:     "",
-			ShowOmap:   false,
+			Container: "",
+			Bucket:    "",
+			Object:    "",
+			ShowOmap:  false,
 		},
 		Zone: zoneCommand{
 			Default: zoneDefaultCommand{

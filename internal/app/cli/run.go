@@ -18,18 +18,13 @@ func Run() error {
 }
 
 func RunWithArgs(ctx context.Context, args []string, stdin io.Reader, stdout io.Writer) error {
-	client, err := podman.NewClient()
-	if err != nil {
-		return fmt.Errorf("create podman client: %w", err)
-	}
-
-	service := flow.NewService(client)
+	cliApp := newApp()
 
 	parser, err := NewParser(
+		cliApp,
 		ctx,
 		stdin,
 		stdout,
-		kong.Bind(service),
 	)
 	if err != nil {
 		return fmt.Errorf("create CLI parser: %w", err)
@@ -40,6 +35,14 @@ func RunWithArgs(ctx context.Context, args []string, stdin io.Reader, stdout io.
 		return fmt.Errorf("parse CLI arguments: %w", err)
 	}
 
+	client, err := podman.NewClient(cliApp.Debug, os.Stderr)
+	if err != nil {
+		return fmt.Errorf("create podman client: %w", err)
+	}
+
+	service := flow.NewService(client)
+	kctx.Bind(service)
+
 	err = kctx.Run()
 	if err != nil {
 		return fmt.Errorf("run CLI command: %w", err)
@@ -48,7 +51,13 @@ func RunWithArgs(ctx context.Context, args []string, stdin io.Reader, stdout io.
 	return nil
 }
 
-func NewParser(ctx context.Context, stdin io.Reader, stdout io.Writer, options ...kong.Option) (*kong.Kong, error) {
+func NewParser(
+	cliApp *app,
+	ctx context.Context,
+	stdin io.Reader,
+	stdout io.Writer,
+	options ...kong.Option,
+) (*kong.Kong, error) {
 	parserOptions := make([]kong.Option, 0, parserBindingCount+len(options))
 	parserOptions = append(parserOptions,
 		kong.BindTo(ctx, (*context.Context)(nil)),
@@ -57,7 +66,7 @@ func NewParser(ctx context.Context, stdin io.Reader, stdout io.Writer, options .
 	)
 	parserOptions = append(parserOptions, options...)
 
-	parser, err := kong.New(newApp(), parserOptions...)
+	parser, err := kong.New(cliApp, parserOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("create kong parser: %w", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	pkgclient "github.com/neatflowcv/cephclient/internal/pkg/client"
@@ -17,8 +18,8 @@ type Client struct {
 	runner Runner
 }
 
-func NewClient() (*Client, error) {
-	runner, err := newExecCommandRunner()
+func NewClient(debug bool, stderr io.Writer) (*Client, error) {
+	runner, err := newExecCommandRunner(debug, stderr)
 	if err != nil {
 		return nil, err
 	}
