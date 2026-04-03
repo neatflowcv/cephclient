@@ -104,6 +104,20 @@ func (s *Service) ObjectShard(
 	return shard, nil
 }
 
+func (s *Service) RemoveOmapKey(
+	ctx context.Context,
+	containerName, indexPool, marker string,
+	shard int,
+	key string,
+) error {
+	err := s.client.RemoveOmapKey(ctx, containerName, indexPool, marker, shard, key)
+	if err != nil {
+		return fmt.Errorf("remove omap key: %w", err)
+	}
+
+	return nil
+}
+
 func (s *Service) RMSupportPlan(
 	ctx context.Context,
 	containerName, bucketName, objectName string,

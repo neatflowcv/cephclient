@@ -7,6 +7,7 @@ type app struct {
 	ListBuckets  listBucketsCommand  `cmd:"" help:"List buckets from RGW."                          name:"list-buckets"`
 	ListOmapKeys listOmapKeysCommand `cmd:"" help:"List OMAP keys from an index object."            name:"list-omap-keys"`
 	ObjectShard  objectShardCommand  `cmd:"" help:"Read an object's shard number from RGW."         name:"object-shard"`
+	RmOmapKey    rmOmapKeyCommand    `cmd:"" help:"Remove an OMAP key from an index object."        name:"rm-omap-key"`
 	RMSupport    rmSupportCommand    `cmd:"" help:"Interactively select BI idx values for removal." name:"rm-support"`
 	ZoneGet      zoneGetCommand      `cmd:"" help:"Read the default zone from RGW."                 name:"zone-get"`
 }
@@ -40,6 +41,13 @@ func newApp() *app {
 			ContainerName: "",
 			ObjectName:    "",
 			Shards:        0,
+		},
+		RmOmapKey: rmOmapKeyCommand{
+			ContainerName: "",
+			IndexPool:     "",
+			Marker:        "",
+			Shard:         0,
+			Key:           "",
 		},
 		RMSupport: rmSupportCommand{
 			ContainerName: "",

@@ -218,6 +218,55 @@ func (c *Client) ListOmapKeys(
 	return indexes, nil
 }
 
+func (c *Client) RemoveOmapKey(
+	ctx context.Context,
+	containerName, indexPool, marker string,
+	shard int,
+	key string,
+) error {
+	stdout, err := c.runPodmanCommand(ctx, []string{
+		"exec",
+		"-i",
+		containerName,
+		"mktemp",
+	})
+	if err != nil {
+		return err
+	}
+
+	tmpFile := strings.TrimSpace(string(stdout))
+	writeKeyCommand := `printf "` + key + `" > "` + tmpFile + `"`
+
+	err = c.runPodmanNoOutput(ctx, []string{
+		"exec",
+		"-i",
+		containerName,
+		"sh",
+		"-c",
+		writeKeyCommand,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.runPodmanNoOutput(ctx, []string{
+		"exec",
+		"-i",
+		containerName,
+		"rados",
+		"-p",
+		indexPool,
+		"rmomapkey",
+		fmt.Sprintf(".dir.%s.%d", marker, shard),
+		"--omap-key-file=" + tmpFile,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
 	commandArgs := []string{
 		"exec",
@@ -279,6 +328,26 @@ func (c *Client) ObjectShard(
 	}
 
 	return shard, nil
+}
+
+func (c *Client) runPodmanNoOutput(ctx context.Context, commandArgs []string) error {
+	_, err := c.runPodmanCommand(ctx, commandArgs)
+
+	return err
+}
+
+func (c *Client) runPodmanCommand(ctx context.Context, commandArgs []string) ([]byte, error) {
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	return stdout, nil
 }
 
 func decodeBucketStats(data []byte) (*domain.BucketStats, error) {

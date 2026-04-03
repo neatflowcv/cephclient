@@ -39,6 +39,9 @@ import (
 //			ObjectShardFunc: func(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error) {
 //				panic("mock out the ObjectShard method")
 //			},
+//			RemoveOmapKeyFunc: func(ctx context.Context, containerName string, indexPool string, marker string, shard int, key string) error {
+//				panic("mock out the RemoveOmapKey method")
+//			},
 //		}
 //
 //		// use mockedClient in code that requires client.Client
@@ -69,6 +72,9 @@ type ClientMock struct {
 
 	// ObjectShardFunc mocks the ObjectShard method.
 	ObjectShardFunc func(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error)
+
+	// RemoveOmapKeyFunc mocks the RemoveOmapKey method.
+	RemoveOmapKeyFunc func(ctx context.Context, containerName string, indexPool string, marker string, shard int, key string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -152,6 +158,21 @@ type ClientMock struct {
 			// TotalShards is the totalShards argument value.
 			TotalShards int
 		}
+		// RemoveOmapKey holds details about calls to the RemoveOmapKey method.
+		RemoveOmapKey []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// IndexPool is the indexPool argument value.
+			IndexPool string
+			// Marker is the marker argument value.
+			Marker string
+			// Shard is the shard argument value.
+			Shard int
+			// Key is the key argument value.
+			Key string
+		}
 	}
 	lockBIListByObject sync.RWMutex
 	lockBIListByShard  sync.RWMutex
@@ -161,6 +182,7 @@ type ClientMock struct {
 	lockListBuckets    sync.RWMutex
 	lockListOmapKeys   sync.RWMutex
 	lockObjectShard    sync.RWMutex
+	lockRemoveOmapKey  sync.RWMutex
 }
 
 // BIListByObject calls BIListByObjectFunc.
@@ -496,5 +518,57 @@ func (mock *ClientMock) ObjectShardCalls() []struct {
 	mock.lockObjectShard.RLock()
 	calls = mock.calls.ObjectShard
 	mock.lockObjectShard.RUnlock()
+	return calls
+}
+
+// RemoveOmapKey calls RemoveOmapKeyFunc.
+func (mock *ClientMock) RemoveOmapKey(ctx context.Context, containerName string, indexPool string, marker string, shard int, key string) error {
+	if mock.RemoveOmapKeyFunc == nil {
+		panic("ClientMock.RemoveOmapKeyFunc: method is nil but Client.RemoveOmapKey was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		IndexPool     string
+		Marker        string
+		Shard         int
+		Key           string
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		IndexPool:     indexPool,
+		Marker:        marker,
+		Shard:         shard,
+		Key:           key,
+	}
+	mock.lockRemoveOmapKey.Lock()
+	mock.calls.RemoveOmapKey = append(mock.calls.RemoveOmapKey, callInfo)
+	mock.lockRemoveOmapKey.Unlock()
+	return mock.RemoveOmapKeyFunc(ctx, containerName, indexPool, marker, shard, key)
+}
+
+// RemoveOmapKeyCalls gets all the calls that were made to RemoveOmapKey.
+// Check the length with:
+//
+//	len(mockedClient.RemoveOmapKeyCalls())
+func (mock *ClientMock) RemoveOmapKeyCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	IndexPool     string
+	Marker        string
+	Shard         int
+	Key           string
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		IndexPool     string
+		Marker        string
+		Shard         int
+		Key           string
+	}
+	mock.lockRemoveOmapKey.RLock()
+	calls = mock.calls.RemoveOmapKey
+	mock.lockRemoveOmapKey.RUnlock()
 	return calls
 }
