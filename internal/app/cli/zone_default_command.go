@@ -9,11 +9,11 @@ import (
 	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 )
 
-type zoneGetCommand struct {
+type zoneDefaultCommand struct {
 	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
 }
 
-func (c *zoneGetCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
+func (c *zoneDefaultCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
 	zone, err := service.GetDefaultZone(ctx, c.ContainerName)
 	if err != nil {
 		return fmt.Errorf("read default zone: %w", err)

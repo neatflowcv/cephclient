@@ -5,7 +5,7 @@ type app struct {
 	Omap        omapCommand        `cmd:"" help:"Inspect OMAP data from an index object."         name:"omap"`
 	ObjectShard objectShardCommand `cmd:"" help:"Read an object's shard number from RGW."         name:"object-shard"`
 	RMSupport   rmSupportCommand   `cmd:"" help:"Interactively select BI idx values for removal." name:"rm-support"`
-	ZoneGet     zoneGetCommand     `cmd:"" help:"Read the default zone from RGW."                 name:"zone-get"`
+	Zone        zoneCommand        `cmd:"" help:"Read zone data from RGW."                        name:"zone"`
 }
 
 func newApp() *app {
@@ -55,8 +55,10 @@ func newApp() *app {
 			ObjectName:    "",
 			ShowOmap:      false,
 		},
-		ZoneGet: zoneGetCommand{
-			ContainerName: "",
+		Zone: zoneCommand{
+			Default: zoneDefaultCommand{
+				ContainerName: "",
+			},
 		},
 	}
 }
