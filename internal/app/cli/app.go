@@ -1,12 +1,12 @@
 package cli
 
 type app struct {
-	Bucket       bucketCommand       `cmd:"" help:"Read bucket data from RGW."                      name:"bucket"`
-	ListOmapKeys listOmapKeysCommand `cmd:"" help:"List OMAP keys from an index object."            name:"list-omap-keys"`
-	ObjectShard  objectShardCommand  `cmd:"" help:"Read an object's shard number from RGW."         name:"object-shard"`
-	RmOmapKey    rmOmapKeyCommand    `cmd:"" help:"Remove an OMAP key from an index object."        name:"rm-omap-key"`
-	RMSupport    rmSupportCommand    `cmd:"" help:"Interactively select BI idx values for removal." name:"rm-support"`
-	ZoneGet      zoneGetCommand      `cmd:"" help:"Read the default zone from RGW."                 name:"zone-get"`
+	Bucket      bucketCommand      `cmd:"" help:"Read bucket data from RGW."                      name:"bucket"`
+	Omap        omapCommand        `cmd:"" help:"Inspect OMAP data from an index object."         name:"omap"`
+	ObjectShard objectShardCommand `cmd:"" help:"Read an object's shard number from RGW."         name:"object-shard"`
+	RmOmapKey   rmOmapKeyCommand   `cmd:"" help:"Remove an OMAP key from an index object."        name:"rm-omap-key"`
+	RMSupport   rmSupportCommand   `cmd:"" help:"Interactively select BI idx values for removal." name:"rm-support"`
+	ZoneGet     zoneGetCommand     `cmd:"" help:"Read the default zone from RGW."                 name:"zone-get"`
 }
 
 func newApp() *app {
@@ -30,11 +30,13 @@ func newApp() *app {
 				BucketName:    "",
 			},
 		},
-		ListOmapKeys: listOmapKeysCommand{
-			ContainerName: "",
-			IndexPool:     "",
-			Marker:        "",
-			Shard:         0,
+		Omap: omapCommand{
+			List: omapListCommand{
+				ContainerName: "",
+				IndexPool:     "",
+				Marker:        "",
+				Shard:         0,
+			},
 		},
 		ObjectShard: objectShardCommand{
 			ContainerName: "",
