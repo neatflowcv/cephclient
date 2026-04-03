@@ -62,16 +62,7 @@ func (c *rmSupportCommand) Run(
 		return writeRMSupportCancelled(stdout)
 	}
 
-	err = writeRMSupportIDXList(stdout, selections)
-	if err != nil {
-		return err
-	}
-
-	if !c.ShowOmap {
-		return nil
-	}
-
-	return writeRMSupportOmapKeys(stdout, plan)
+	return c.runConfirmedRemoval(ctx, service, stdout, plan, selections)
 }
 
 func readRMSupportSelections(
@@ -114,4 +105,65 @@ func readRMSupportConfirmation(reader *bufio.Reader, stdout io.Writer) (bool, er
 	}
 
 	return confirmed, nil
+}
+
+func selectedRMSupportKeys(selections []rmSupportSelection) []string {
+	keys := make([]string, 0, len(selections))
+	for _, selection := range selections {
+		keys = append(keys, selection.entry.IDX().Escaped())
+	}
+
+	return keys
+}
+
+func (c *rmSupportCommand) runConfirmedRemoval(
+	ctx context.Context,
+	service *flow.Service,
+	stdout io.Writer,
+	plan *flow.RMSupportPlan,
+	selections []rmSupportSelection,
+) error {
+	err := writeRMSupportIDXList(stdout, selections)
+	if err != nil {
+		return err
+	}
+
+	if c.ShowOmap {
+		err = writeRMSupportOmapKeys(
+			stdout,
+			"before removal",
+			plan.IndexPool(),
+			plan.Marker(),
+			plan.ShardID(),
+			plan.OmapKeys(),
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	result, err := service.RemoveRMSupportOmapKeys(
+		ctx,
+		c.ContainerName,
+		plan.IndexPool(),
+		plan.Marker(),
+		plan.ShardID(),
+		selectedRMSupportKeys(selections),
+	)
+	if err != nil {
+		return fmt.Errorf("execute rm-support removal: %w", err)
+	}
+
+	if !c.ShowOmap {
+		return nil
+	}
+
+	return writeRMSupportOmapKeys(
+		stdout,
+		"after removal",
+		plan.IndexPool(),
+		plan.Marker(),
+		plan.ShardID(),
+		result.OmapKeys(),
+	)
 }

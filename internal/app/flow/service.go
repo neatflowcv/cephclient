@@ -139,7 +139,12 @@ func (s *Service) RMSupportPlan(
 	}
 
 	if !includeOmap {
-		return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), "", nil), nil
+		zone, zoneErr := s.GetDefaultZone(ctx, containerName)
+		if zoneErr != nil {
+			return nil, fmt.Errorf("read default zone: %w", zoneErr)
+		}
+
+		return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), zone.IndexPool(), nil), nil
 	}
 
 	zone, err := s.GetDefaultZone(ctx, containerName)

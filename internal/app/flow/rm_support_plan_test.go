@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestServiceRMSupportPlanDelegatesWithoutOmap(t *testing.T) {
+func TestServiceRMSupportPlanDelegatesWithoutOmap(t *testing.T) { //nolint:funlen
 	t.Parallel()
 
 	ctx := t.Context()
@@ -53,6 +53,12 @@ func TestServiceRMSupportPlanDelegatesWithoutOmap(t *testing.T) {
 
 		return wantList, nil
 	}
+	mockClient.GetDefaultZoneFunc = func(gotCtx context.Context, containerName string) (*domain.Zone, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+
+		return domain.NewZone("data-pool", "index-pool"), nil
+	}
 	service := flow.NewService(&mockClient)
 
 	plan, err := service.RMSupportPlan(ctx, "rgw", "bucket-a", "test.txt", false)
@@ -61,12 +67,12 @@ func TestServiceRMSupportPlanDelegatesWithoutOmap(t *testing.T) {
 	require.Same(t, wantList, plan.BIList())
 	require.Equal(t, 3, plan.ShardID())
 	require.Equal(t, "bucket-marker", plan.Marker())
-	require.Empty(t, plan.IndexPool())
+	require.Equal(t, "index-pool", plan.IndexPool())
 	require.Empty(t, plan.OmapKeys())
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.BIListByObjectCalls(), 1)
-	require.Empty(t, mockClient.GetDefaultZoneCalls())
+	require.Len(t, mockClient.GetDefaultZoneCalls(), 1)
 	require.Empty(t, mockClient.ListOmapKeysCalls())
 }
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/neatflowcv/cephclient/internal/app/flow"
 	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 )
 
@@ -70,17 +69,23 @@ func writeRMSupportCancelled(stdout io.Writer) error {
 	return nil
 }
 
-func writeRMSupportOmapKeys(stdout io.Writer, plan *flow.RMSupportPlan) error {
+func writeRMSupportOmapKeys(
+	stdout io.Writer,
+	phase, indexPool, marker string,
+	shardID int,
+	omapKeys []*domain.BIIndex,
+) error {
 	_, err := fmt.Fprintf(
 		stdout,
-		"omap keys for manual before/after comparison: index_pool=%s marker=%s shard=%d\n",
-		plan.IndexPool(),
-		plan.Marker(),
-		plan.ShardID(),
+		"omap keys %s: index_pool=%s marker=%s shard=%d\n",
+		phase,
+		indexPool,
+		marker,
+		shardID,
 	)
 	if err != nil {
 		return fmt.Errorf("write omap header: %w", err)
 	}
 
-	return writeOmapKeys(stdout, plan.OmapKeys())
+	return writeOmapKeys(stdout, omapKeys)
 }
