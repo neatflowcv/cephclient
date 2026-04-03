@@ -22,10 +22,9 @@ func RunWithArgs(ctx context.Context, args []string, stdin io.Reader, stdout io.
 	}
 
 	service := flow.NewService(client)
-	app := newApp()
 
 	parser, err := kong.New(
-		app,
+		newApp(),
 		kong.Bind(service),
 		kong.BindTo(ctx, (*context.Context)(nil)),
 		kong.BindTo(stdin, (*io.Reader)(nil)),
