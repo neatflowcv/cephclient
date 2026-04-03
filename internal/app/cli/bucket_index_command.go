@@ -13,10 +13,10 @@ import (
 var errUnsupportedBIEntryFormat = errors.New("format bucket index entry: unsupported entry type")
 
 type bucketIndexCommand struct {
-	ContainerName string `arg:""              help:"Running container name." name:"container-name"`
-	BucketName    string `arg:""              help:"Bucket name."            name:"bucket"`
-	ShardID       int    `arg:""              help:"Shard ID."               name:"shard-id"`
-	ObjectName    string `help:"Object name." name:"object"`
+	Container  string `arg:""              help:"Container name." name:"container"`
+	Bucket     string `arg:""              help:"Bucket name."    name:"bucket"`
+	Shard      int    `arg:""              help:"Shard ID."       name:"shard"`
+	Object     string `help:"Object name." name:"object"`
 }
 
 func (c *bucketIndexCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
@@ -25,10 +25,10 @@ func (c *bucketIndexCommand) Run(ctx context.Context, service *flow.Service, std
 		err    error
 	)
 
-	if c.ObjectName == "" {
-		biList, err = service.BIListByShard(ctx, c.ContainerName, c.BucketName, c.ShardID)
+	if c.Object == "" {
+		biList, err = service.BIListByShard(ctx, c.Container, c.Bucket, c.Shard)
 	} else {
-		biList, err = service.BIListByObject(ctx, c.ContainerName, c.BucketName, c.ObjectName, c.ShardID)
+		biList, err = service.BIListByObject(ctx, c.Container, c.Bucket, c.Object, c.Shard)
 	}
 
 	if err != nil {

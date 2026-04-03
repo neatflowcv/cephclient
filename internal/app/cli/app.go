@@ -12,54 +12,54 @@ func newApp() *app {
 	return &app{
 		Bucket: bucketCommand{
 			List: bucketListCommand{
-				ContainerName: "",
+				Container: "",
 			},
 			Index: bucketIndexCommand{
-				ContainerName: "",
-				BucketName:    "",
-				ObjectName:    "",
-				ShardID:       0,
+				Container:  "",
+				Bucket:     "",
+				Object:     "",
+				Shard:      0,
 			},
 			Layout: bucketLayoutCommand{
-				ContainerName: "",
-				BucketName:    "",
+				Container: "",
+				Bucket:    "",
 			},
 			Stats: bucketStatsCommand{
-				ContainerName: "",
-				BucketName:    "",
+				Container: "",
+				Bucket:    "",
 			},
 		},
 		Omap: omapCommand{
 			List: omapListCommand{
-				ContainerName: "",
-				IndexPool:     "",
-				Marker:        "",
-				Shard:         0,
+				Container: "",
+				IndexPool: "",
+				Marker:    "",
+				Shard:     0,
 			},
 			Rm: omapRmCommand{
-				ContainerName: "",
-				IndexPool:     "",
-				Marker:        "",
-				Shard:         0,
-				Key:           "",
+				Container: "",
+				IndexPool: "",
+				Marker:    "",
+				Shard:     0,
+				Key:       "",
 			},
 		},
 		Object: objectCommand{
 			Shard: objectShardCommand{
-				ContainerName: "",
-				ObjectName:    "",
-				TotalShards:   0,
+				Container:   "",
+				Object:      "",
+				TotalShards: 0,
 			},
 		},
 		RMSupport: rmSupportCommand{
-			ContainerName: "",
-			BucketName:    "",
-			ObjectName:    "",
-			ShowOmap:      false,
+			Container:  "",
+			Bucket:     "",
+			Object:     "",
+			ShowOmap:   false,
 		},
 		Zone: zoneCommand{
 			Default: zoneDefaultCommand{
-				ContainerName: "",
+				Container: "",
 			},
 		},
 	}

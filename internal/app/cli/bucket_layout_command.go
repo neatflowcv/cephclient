@@ -10,12 +10,12 @@ import (
 )
 
 type bucketLayoutCommand struct {
-	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
-	BucketName    string `arg:"" help:"Bucket name."            name:"bucket-name"`
+	Container string `arg:"" help:"Container name." name:"container"`
+	Bucket    string `arg:"" help:"Bucket name."    name:"bucket"`
 }
 
 func (c *bucketLayoutCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	layout, err := service.BucketLayout(ctx, c.ContainerName, c.BucketName)
+	layout, err := service.BucketLayout(ctx, c.Container, c.Bucket)
 	if err != nil {
 		return fmt.Errorf("read bucket layout: %w", err)
 	}

@@ -10,11 +10,11 @@ import (
 )
 
 type zoneDefaultCommand struct {
-	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
+	Container string `arg:"" help:"Container name." name:"container"`
 }
 
 func (c *zoneDefaultCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	zone, err := service.GetDefaultZone(ctx, c.ContainerName)
+	zone, err := service.GetDefaultZone(ctx, c.Container)
 	if err != nil {
 		return fmt.Errorf("read default zone: %w", err)
 	}

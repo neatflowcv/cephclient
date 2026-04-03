@@ -9,11 +9,11 @@ import (
 )
 
 type bucketListCommand struct {
-	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
+	Container string `arg:"" help:"Container name." name:"container"`
 }
 
 func (c *bucketListCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	buckets, err := service.ListBuckets(ctx, c.ContainerName)
+	buckets, err := service.ListBuckets(ctx, c.Container)
 	if err != nil {
 		return fmt.Errorf("list buckets: %w", err)
 	}

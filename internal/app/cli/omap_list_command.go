@@ -10,14 +10,14 @@ import (
 )
 
 type omapListCommand struct {
-	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
-	IndexPool     string `arg:"" help:"Index pool name."        name:"index-pool"`
-	Marker        string `arg:"" help:"Bucket marker."          name:"marker"`
-	Shard         int    `arg:"" help:"Shard ID."               name:"shard"`
+	Container string `arg:"" help:"Container name."  name:"container"`
+	IndexPool string `arg:"" help:"Index pool name." name:"index-pool"`
+	Marker    string `arg:"" help:"Bucket marker."   name:"marker"`
+	Shard     int    `arg:"" help:"Shard ID."        name:"shard"`
 }
 
 func (c *omapListCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	indexes, err := service.ListOmapKeys(ctx, c.ContainerName, c.IndexPool, c.Marker, c.Shard)
+	indexes, err := service.ListOmapKeys(ctx, c.Container, c.IndexPool, c.Marker, c.Shard)
 	if err != nil {
 		return fmt.Errorf("list omap keys: %w", err)
 	}

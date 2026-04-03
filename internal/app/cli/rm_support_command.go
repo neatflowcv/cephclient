@@ -14,10 +14,10 @@ import (
 var errRMSupportNoBIEntries = errors.New("no BI entries found for the requested object")
 
 type rmSupportCommand struct {
-	ContainerName string `arg:""                                             help:"Running container name." name:"container-name"` //nolint:lll
-	BucketName    string `arg:""                                             help:"Bucket name."            name:"bucket"`
-	ObjectName    string `arg:""                                             help:"Object name."            name:"object"`
-	ShowOmap      bool   `help:"Show OMAP keys for before/after comparison." name:"show-omap"`
+	Container  string `arg:""                                             help:"Container name." name:"container"` //nolint:lll
+	Bucket     string `arg:""                                             help:"Bucket name."    name:"bucket"`
+	Object     string `arg:""                                             help:"Object name."    name:"object"`
+	ShowOmap   bool   `help:"Show OMAP keys for before/after comparison." name:"show-omap"`
 }
 
 func (c *rmSupportCommand) Run(
@@ -26,7 +26,7 @@ func (c *rmSupportCommand) Run(
 	stdin io.Reader,
 	stdout io.Writer,
 ) error {
-	plan, err := service.RMSupportPlan(ctx, c.ContainerName, c.BucketName, c.ObjectName, c.ShowOmap)
+	plan, err := service.RMSupportPlan(ctx, c.Container, c.Bucket, c.Object, c.ShowOmap)
 	if err != nil {
 		return fmt.Errorf("prepare rm-support flow: %w", err)
 	}
@@ -144,7 +144,7 @@ func (c *rmSupportCommand) runConfirmedRemoval(
 
 	result, err := service.RemoveRMSupportOmapKeys(
 		ctx,
-		c.ContainerName,
+		c.Container,
 		plan.IndexPool(),
 		plan.Marker(),
 		plan.ShardID(),

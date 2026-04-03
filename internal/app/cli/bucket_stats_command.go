@@ -10,12 +10,12 @@ import (
 )
 
 type bucketStatsCommand struct {
-	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
-	BucketName    string `arg:"" help:"Bucket name."            name:"bucket-name"`
+	Container string `arg:"" help:"Container name." name:"container"`
+	Bucket    string `arg:"" help:"Bucket name."    name:"bucket"`
 }
 
 func (c *bucketStatsCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	stats, err := service.BucketStats(ctx, c.ContainerName, c.BucketName)
+	stats, err := service.BucketStats(ctx, c.Container, c.Bucket)
 	if err != nil {
 		return fmt.Errorf("read bucket stats: %w", err)
 	}
