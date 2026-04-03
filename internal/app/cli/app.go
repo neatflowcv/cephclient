@@ -12,47 +12,9 @@ type app struct {
 func newApp() *app {
 	return &app{
 		Debug: false,
-		Bucket: bucketCommand{
-			List: bucketListCommand{
-				Container: "",
-			},
-			Index: bucketIndexCommand{
-				Container: "",
-				Bucket:    "",
-				Object:    "",
-				Shard:     0,
-			},
-			Layout: bucketLayoutCommand{
-				Container: "",
-				Bucket:    "",
-			},
-			Stats: bucketStatsCommand{
-				Container: "",
-				Bucket:    "",
-			},
-		},
-		Omap: omapCommand{
-			List: omapListCommand{
-				Container: "",
-				IndexPool: "",
-				Marker:    "",
-				Shard:     0,
-			},
-			Rm: omapRmCommand{
-				Container: "",
-				IndexPool: "",
-				Marker:    "",
-				Shard:     0,
-				Key:       "",
-			},
-		},
-		Object: objectCommand{
-			Shard: objectShardCommand{
-				Container:   "",
-				Object:      "",
-				TotalShards: 0,
-			},
-		},
+		Bucket:    newBucketCommand(),
+		Omap:      newOmapCommand(),
+		Object:    newObjectCommand(),
 		RMSupport: rmSupportCommand{
 			Container: "",
 			Bucket:    "",
@@ -63,6 +25,62 @@ func newApp() *app {
 			Default: zoneDefaultCommand{
 				Container: "",
 			},
+		},
+	}
+}
+
+func newBucketCommand() bucketCommand {
+	return bucketCommand{
+		List: bucketListCommand{
+			Container: "",
+		},
+		Index: bucketIndexCommand{
+			Container: "",
+			Bucket:    "",
+			Object:    "",
+			Shard:     0,
+		},
+		Layout: bucketLayoutCommand{
+			Container: "",
+			Bucket:    "",
+		},
+		Stats: bucketStatsCommand{
+			Container: "",
+			Bucket:    "",
+		},
+	}
+}
+
+func newOmapCommand() omapCommand {
+	return omapCommand{
+		List: omapListCommand{
+			Container: "",
+			IndexPool: "",
+			Marker:    "",
+			Shard:     0,
+		},
+		Rm: omapRmCommand{
+			Container: "",
+			IndexPool: "",
+			Marker:    "",
+			Shard:     0,
+			Key:       "",
+		},
+	}
+}
+
+func newObjectCommand() objectCommand {
+	return objectCommand{
+		Rm: objectRmCommand{
+			Container: "",
+			Bucket:    "",
+			Object:    "",
+			Version:   "",
+		},
+		Shard: objectShardCommand{
+			Container:   "",
+			Object:      "",
+			TotalShards: 0,
 		},
 	}
 }

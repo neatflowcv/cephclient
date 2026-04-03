@@ -15,5 +15,6 @@ type Client interface {
 	ListOmapKeys(ctx context.Context, containerName, indexPool, marker string, shard int) ([]*domain.BIIndex, error)
 	ListBuckets(ctx context.Context, containerName string) ([]string, error)
 	ObjectShard(ctx context.Context, containerName, objectName string, totalShards int) (*domain.ObjectShard, error)
+	RemoveObject(ctx context.Context, containerName, bucketName, objectName, version string) error
 	RemoveOmapKey(ctx context.Context, containerName, indexPool, marker string, shard int, key string) error
 }

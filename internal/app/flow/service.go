@@ -104,6 +104,18 @@ func (s *Service) ObjectShard(
 	return shard, nil
 }
 
+func (s *Service) RemoveObject(
+	ctx context.Context,
+	containerName, bucketName, objectName, version string,
+) error {
+	err := s.client.RemoveObject(ctx, containerName, bucketName, objectName, version)
+	if err != nil {
+		return fmt.Errorf("remove object: %w", err)
+	}
+
+	return nil
+}
+
 func (s *Service) RemoveOmapKey(
 	ctx context.Context,
 	containerName, indexPool, marker string,

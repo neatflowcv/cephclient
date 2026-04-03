@@ -331,6 +331,23 @@ func (c *Client) ObjectShard(
 	return shard, nil
 }
 
+func (c *Client) RemoveObject(
+	ctx context.Context,
+	containerName, bucketName, objectName, version string,
+) error {
+	return c.runPodmanNoOutput(ctx, []string{
+		"exec",
+		"-i",
+		containerName,
+		"radosgw-admin",
+		"object",
+		"rm",
+		"--bucket=" + bucketName,
+		"--object=" + objectName,
+		"--object-version=" + version,
+	})
+}
+
 func (c *Client) runPodmanNoOutput(ctx context.Context, commandArgs []string) error {
 	_, err := c.runPodmanCommand(ctx, commandArgs)
 
