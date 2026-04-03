@@ -2,8 +2,7 @@ package cli
 
 type app struct {
 	BIList       biListCommand       `cmd:"" help:"List bucket index entries for an object shard."  name:"bi-list"`
-	Bucket       bucketCommand       `cmd:"" help:"Bucket commands."                                name:"bucket"`
-	BucketLayout bucketLayoutCommand `cmd:"" help:"Read bucket layout from RGW."                    name:"bucket-layout"`
+	Bucket       bucketCommand       `cmd:"" help:"Read bucket data from RGW."                      name:"bucket"`
 	ListBuckets  listBucketsCommand  `cmd:"" help:"List buckets from RGW."                          name:"list-buckets"`
 	ListOmapKeys listOmapKeysCommand `cmd:"" help:"List OMAP keys from an index object."            name:"list-omap-keys"`
 	ObjectShard  objectShardCommand  `cmd:"" help:"Read an object's shard number from RGW."         name:"object-shard"`
@@ -21,14 +20,14 @@ func newApp() *app {
 			ShardID:       0,
 		},
 		Bucket: bucketCommand{
+			Layout: bucketLayoutCommand{
+				ContainerName: "",
+				BucketName:    "",
+			},
 			Stats: bucketStatsCommand{
 				ContainerName: "",
 				BucketName:    "",
 			},
-		},
-		BucketLayout: bucketLayoutCommand{
-			ContainerName: "",
-			BucketName:    "",
 		},
 		ListBuckets: listBucketsCommand{
 			ContainerName: "",
