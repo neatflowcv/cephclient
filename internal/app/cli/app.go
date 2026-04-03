@@ -1,11 +1,11 @@
 package cli
 
 type app struct {
-	Bucket      bucketCommand      `cmd:"" help:"Read bucket data from RGW."                      name:"bucket"`
-	Omap        omapCommand        `cmd:"" help:"Inspect OMAP data from an index object."         name:"omap"`
-	ObjectShard objectShardCommand `cmd:"" help:"Read an object's shard number from RGW."         name:"object-shard"`
-	RMSupport   rmSupportCommand   `cmd:"" help:"Interactively select BI idx values for removal." name:"rm-support"`
-	Zone        zoneCommand        `cmd:"" help:"Read zone data from RGW."                        name:"zone"`
+	Bucket    bucketCommand    `cmd:"" help:"Read bucket data from RGW."                      name:"bucket"`
+	Omap      omapCommand      `cmd:"" help:"Inspect OMAP data from an index object."         name:"omap"`
+	Object    objectCommand    `cmd:"" help:"Read object data from RGW."                      name:"object"`
+	RMSupport rmSupportCommand `cmd:"" help:"Interactively select BI idx values for removal." name:"rm-support"`
+	Zone      zoneCommand      `cmd:"" help:"Read zone data from RGW."                        name:"zone"`
 }
 
 func newApp() *app {
@@ -44,10 +44,12 @@ func newApp() *app {
 				Key:           "",
 			},
 		},
-		ObjectShard: objectShardCommand{
-			ContainerName: "",
-			ObjectName:    "",
-			Shards:        0,
+		Object: objectCommand{
+			Shard: objectShardCommand{
+				ContainerName: "",
+				ObjectName:    "",
+				Shards:        0,
+			},
 		},
 		RMSupport: rmSupportCommand{
 			ContainerName: "",
