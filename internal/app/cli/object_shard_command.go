@@ -12,11 +12,11 @@ import (
 type objectShardCommand struct {
 	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
 	ObjectName    string `arg:"" help:"Object name."            name:"object"`
-	Shards        int    `arg:"" help:"Total shard count."      name:"shards"`
+	TotalShards   int    `arg:"" help:"Total shard count."      name:"total-shards"`
 }
 
 func (c *objectShardCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	shard, err := service.ObjectShard(ctx, c.ContainerName, c.ObjectName, c.Shards)
+	shard, err := service.ObjectShard(ctx, c.ContainerName, c.ObjectName, c.TotalShards)
 	if err != nil {
 		return fmt.Errorf("read object shard: %w", err)
 	}

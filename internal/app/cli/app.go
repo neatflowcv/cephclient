@@ -48,7 +48,7 @@ func newApp() *app {
 			Shard: objectShardCommand{
 				ContainerName: "",
 				ObjectName:    "",
-				Shards:        0,
+				TotalShards:   0,
 			},
 		},
 		RMSupport: rmSupportCommand{
