@@ -12,14 +12,14 @@ import (
 
 var errUnsupportedBIEntryFormat = errors.New("format bucket index entry: unsupported entry type")
 
-type biListCommand struct {
+type bucketIndexCommand struct {
 	ContainerName string `arg:""              help:"Running container name." name:"container-name"`
 	BucketName    string `arg:""              help:"Bucket name."            name:"bucket"`
 	ShardID       int    `arg:""              help:"Shard ID."               name:"shard-id"`
 	ObjectName    string `help:"Object name." name:"object"`
 }
 
-func (c *biListCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
+func (c *bucketIndexCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
 	var (
 		biList *domain.BIList
 		err    error
