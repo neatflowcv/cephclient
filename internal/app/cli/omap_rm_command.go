@@ -8,7 +8,7 @@ import (
 	"github.com/neatflowcv/cephclient/internal/app/flow"
 )
 
-type rmOmapKeyCommand struct {
+type omapRmCommand struct {
 	ContainerName string `arg:"" help:"Running container name." name:"container-name"`
 	IndexPool     string `arg:"" help:"Index pool name."        name:"index-pool"`
 	Marker        string `arg:"" help:"Bucket marker."          name:"marker"`
@@ -16,7 +16,7 @@ type rmOmapKeyCommand struct {
 	Key           string `arg:"" help:"OMAP key to remove."     name:"key"`
 }
 
-func (c *rmOmapKeyCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
+func (c *omapRmCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
 	err := service.RemoveOmapKey(ctx, c.ContainerName, c.IndexPool, c.Marker, c.Shard, c.Key)
 	if err != nil {
 		return fmt.Errorf("remove omap key: %w", err)
@@ -24,7 +24,7 @@ func (c *rmOmapKeyCommand) Run(ctx context.Context, service *flow.Service, stdou
 
 	_, err = fmt.Fprintf(stdout, "removed idx=%s\n", quoteField(c.Key))
 	if err != nil {
-		return fmt.Errorf("write remove omap key result: %w", err)
+		return fmt.Errorf("write omap rm result: %w", err)
 	}
 
 	return nil
