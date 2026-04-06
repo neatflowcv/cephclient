@@ -73,6 +73,11 @@ func newOmapCommand() omapCommand {
 
 func newObjectCommand() objectCommand {
 	return objectCommand{
+		Inspect: objectInspectCommand{
+			Container: "",
+			Bucket:    "",
+			Object:    "",
+		},
 		Rm: objectRmCommand{
 			Container: "",
 			Bucket:    "",

@@ -116,6 +116,45 @@ func (s *Service) ObjectShard(
 	return shard, nil
 }
 
+func (s *Service) ObjectInspect(
+	ctx context.Context,
+	containerName, bucketName, objectName string,
+) (*ObjectInspectResult, error) {
+	zone, err := s.GetDefaultZone(ctx, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("read default zone: %w", err)
+	}
+
+	stats, err := s.BucketStats(ctx, containerName, bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("read bucket stats: %w", err)
+	}
+
+	shard, err := s.ObjectShard(ctx, containerName, objectName, stats.TotalShards())
+	if err != nil {
+		return nil, fmt.Errorf("read object shard: %w", err)
+	}
+
+	biList, err := s.BIListByObject(ctx, containerName, bucketName, objectName, shard.Shard())
+	if err != nil {
+		return nil, fmt.Errorf("read bucket index list: %w", err)
+	}
+
+	rawObjects, err := s.inspectRawObjects(ctx, containerName, zone.DataPool(), stats.Marker(), objectName, biList)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewObjectInspectResult(
+		zone.DataPool(),
+		stats.Marker(),
+		stats.TotalShards(),
+		shard.Shard(),
+		biList,
+		rawObjects,
+	), nil
+}
+
 func (s *Service) RemoveObject(
 	ctx context.Context,
 	containerName, bucketName, objectName, version string,
@@ -182,4 +221,56 @@ func (s *Service) RMSupportPlan(
 	}
 
 	return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), zone.IndexPool(), omapKeys), nil
+}
+
+func (s *Service) inspectRawObjects(
+	ctx context.Context,
+	containerName, dataPool, marker, objectName string,
+	biList *domain.BIList,
+) ([]*RawObjectExistence, error) {
+	rawNames := rawObjectNames(marker, objectName, biList)
+	results := make([]*RawObjectExistence, 0, len(rawNames))
+
+	for _, rawName := range rawNames {
+		exists, err := s.HasRawObject(ctx, containerName, dataPool, rawName.Value())
+		if err != nil {
+			return nil, fmt.Errorf("check raw object existence: %w", err)
+		}
+
+		results = append(results, NewRawObjectExistence(rawName, exists))
+	}
+
+	return results, nil
+}
+
+func rawObjectNames(marker, objectName string, biList *domain.BIList) []*domain.RawObjectName {
+	names := []*domain.RawObjectName{domain.NewOLHRawObjectName(marker, objectName)}
+	seenVersions := map[string]struct{}{}
+
+	for _, entry := range biList.Entries() {
+		version := rawObjectVersion(entry)
+		if version == "" {
+			continue
+		}
+
+		if _, ok := seenVersions[version]; ok {
+			continue
+		}
+
+		seenVersions[version] = struct{}{}
+		names = append(names, domain.NewVersionRawObjectName(marker, version, objectName))
+	}
+
+	return names
+}
+
+func rawObjectVersion(entry domain.BIEntry) string {
+	switch typed := entry.(type) {
+	case *domain.PlainBIEntry:
+		return typed.Entry().Instance()
+	case *domain.InstanceBIEntry:
+		return typed.Entry().Instance()
+	default:
+		return ""
+	}
 }

@@ -3,6 +3,7 @@ package flow_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/neatflowcv/cephclient/internal/app/flow"
@@ -451,4 +452,180 @@ func TestServiceObjectShardReturnsClientError(t *testing.T) {
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 }
 
+func TestServiceObjectInspectReadsEachStepInOrder(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	biList := domain.NewBIList([]domain.BIEntry{
+		newVersionedPlainEntry("test.txt", "instance-1"),
+		newVersionedInstanceEntry("test.txt", "instance-1"),
+		newVersionedPlainEntry("test.txt", "instance-2"),
+	})
+	callOrder := make([]string, 0, 5)
+	rawCalls := make([]string, 0, 3)
+	mockClient := newObjectInspectClientMock(t, ctx, biList, &callOrder, &rawCalls)
+	service := flow.NewService(mockClient)
+
+	result, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+
+	require.NoError(t, err)
+	require.Equal(t, []string{"zone", "stats", "shard", "bilist", "raw", "raw", "raw"}, callOrder)
+	require.Equal(t, "default.rgw.buckets.data", result.DataPool())
+	require.Equal(t, "bucket-marker", result.Marker())
+	require.Equal(t, 11, result.TotalShards())
+	require.Equal(t, 3, result.ShardID())
+	require.Same(t, biList, result.BIList())
+	require.Equal(
+		t,
+		[]string{
+			"bucket-marker_test.txt",
+			"bucket-marker__:instance-1_test.txt",
+			"bucket-marker__:instance-2_test.txt",
+		},
+		rawCalls,
+	)
+	require.Len(t, result.RawObjects(), 3)
+	require.True(t, result.RawObjects()[0].Exists())
+	require.False(t, result.RawObjects()[1].Exists())
+	require.False(t, result.RawObjects()[2].Exists())
+}
+
+func TestServiceObjectInspectReturnsStepContextForBucketStats(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	wantErr := errClientFailed
+
+	var mockClient ClientMock
+
+	mockClient.GetDefaultZoneFunc = func(context.Context, string) (*domain.Zone, error) {
+		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
+	}
+	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
+		return nil, wantErr
+	}
+
+	service := flow.NewService(&mockClient)
+
+	_, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+
+	require.ErrorIs(t, err, wantErr)
+	require.ErrorContains(t, err, "read bucket stats")
+}
+
+func TestServiceObjectInspectReturnsStepContextForRawExists(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	wantErr := errClientFailed
+
+	var mockClient ClientMock
+
+	mockClient.GetDefaultZoneFunc = func(context.Context, string) (*domain.Zone, error) {
+		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
+	}
+	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
+		return domain.NewBucketStats("bucket-id", 11, "bucket-marker", domain.VersioningStatusEnabled)
+	}
+	mockClient.ObjectShardFunc = func(context.Context, string, string, int) (*domain.ObjectShard, error) {
+		return domain.NewObjectShard(3), nil
+	}
+	mockClient.BIListByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
+		return domain.NewBIList([]domain.BIEntry{newVersionedPlainEntry("test.txt", "instance-1")}), nil
+	}
+	mockClient.HasRawObjectFunc = func(context.Context, string, string, string) (bool, error) {
+		return false, wantErr
+	}
+
+	service := flow.NewService(&mockClient)
+
+	_, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+
+	require.ErrorIs(t, err, wantErr)
+	require.ErrorContains(t, err, "check raw object existence")
+}
+
 var errClientFailed = errors.New("client failed")
+
+func newObjectInspectClientMock(
+	t *testing.T,
+	ctx context.Context,
+	biList *domain.BIList,
+	callOrder, rawCalls *[]string,
+) *ClientMock {
+	t.Helper()
+
+	var mockClient ClientMock
+
+	mockClient.GetDefaultZoneFunc = func(context.Context, string) (*domain.Zone, error) {
+		*callOrder = append(*callOrder, "zone")
+
+		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
+	}
+	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
+		*callOrder = append(*callOrder, "stats")
+
+		return domain.NewBucketStats("bucket-id", 11, "bucket-marker", domain.VersioningStatusEnabled)
+	}
+	mockClient.ObjectShardFunc = func(context.Context, string, string, int) (*domain.ObjectShard, error) {
+		*callOrder = append(*callOrder, "shard")
+
+		return domain.NewObjectShard(3), nil
+	}
+	mockClient.BIListByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
+		*callOrder = append(*callOrder, "bilist")
+
+		return biList, nil
+	}
+	mockClient.HasRawObjectFunc = func(
+		gotCtx context.Context,
+		containerName, pool, rawObject string,
+	) (bool, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "default.rgw.buckets.data", pool)
+
+		*callOrder = append(*callOrder, "raw")
+		*rawCalls = append(*rawCalls, rawObject)
+
+		return rawObject == "bucket-marker_test.txt", nil
+	}
+
+	return &mockClient
+}
+
+func newVersionedPlainEntry(name, instance string) *domain.PlainBIEntry {
+	return domain.NewPlainBIEntry(
+		domain.NewBIIndex(fmt.Sprintf("%s:%s", name, instance)),
+		domain.NewBIObjectEntry(
+			name,
+			instance,
+			domain.NewBIVersion(8, 119),
+			"",
+			true,
+			domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+			"",
+			0,
+			nil,
+			2,
+		),
+	)
+}
+
+func newVersionedInstanceEntry(name, instance string) *domain.InstanceBIEntry {
+	return domain.NewInstanceBIEntry(
+		domain.NewBIIndex(fmt.Sprintf("%s-instance:%s", name, instance)),
+		domain.NewBIObjectEntry(
+			name,
+			instance,
+			domain.NewBIVersion(8, 119),
+			"",
+			true,
+			domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+			"",
+			0,
+			nil,
+			2,
+		),
+	)
+}
