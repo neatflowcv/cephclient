@@ -152,7 +152,7 @@ func newFlowBIList() *domain.BIList {
 				domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
 				"",
 				8,
-				nil,
+				false,
 				0,
 			),
 		),

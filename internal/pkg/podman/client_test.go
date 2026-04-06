@@ -141,8 +141,7 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	require.Equal(t, "test.txt", plain.Entry().Name())
 	require.Empty(t, plain.Entry().Instance())
 	require.Equal(t, 0, plain.Entry().VersionedEpoch())
-	require.Len(t, plain.Entry().PendingMap(), 1)
-	require.Equal(t, "_U-yRh58uJtdkq5PRyYmG5eI7Tpo__5O", plain.Entry().PendingMap()[0].Key())
+	require.True(t, plain.Entry().Pending())
 
 	plainVersioned, okPlainVersioned := entries[1].(*domain.PlainBIEntry)
 	require.True(t, okPlainVersioned)
@@ -150,6 +149,7 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	require.Equal(t, "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", plainVersioned.Entry().Instance())
 	require.Equal(t, 8, plainVersioned.Entry().Ver().Pool())
 	require.Equal(t, 119, plainVersioned.Entry().Ver().Epoch())
+	require.False(t, plainVersioned.Entry().Pending())
 
 	instance, okInstance := entries[2].(*domain.InstanceBIEntry)
 	require.True(t, okInstance)

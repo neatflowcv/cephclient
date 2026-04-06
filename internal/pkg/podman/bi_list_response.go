@@ -71,24 +71,19 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 }
 
 type biObjectEntryResponse struct {
-	Exists         bool                        `json:"exists"`
-	Flags          int                         `json:"flags"`
-	Instance       string                      `json:"instance"`
-	Locator        string                      `json:"locator"`
-	Meta           biObjectMetaResponse        `json:"meta"`
-	Name           string                      `json:"name"`
-	PendingMap     []biPendingMapEntryResponse `json:"pending_map"`
-	Tag            string                      `json:"tag"`
-	Ver            biVersionResponse           `json:"ver"`
-	VersionedEpoch int                         `json:"versioned_epoch"`
+	Exists         bool                 `json:"exists"`
+	Flags          int                  `json:"flags"`
+	Instance       string               `json:"instance"`
+	Locator        string               `json:"locator"`
+	Meta           biObjectMetaResponse `json:"meta"`
+	Name           string               `json:"name"`
+	PendingMap     []json.RawMessage    `json:"pending_map"`
+	Tag            string               `json:"tag"`
+	Ver            biVersionResponse    `json:"ver"`
+	VersionedEpoch int                  `json:"versioned_epoch"`
 }
 
 func (r biObjectEntryResponse) toDomain() *domain.BIObjectEntry {
-	pendingMap := make([]domain.BIPendingMapEntry, 0, len(r.PendingMap))
-	for _, item := range r.PendingMap {
-		pendingMap = append(pendingMap, item.toDomain())
-	}
-
 	return domain.NewBIObjectEntry(
 		r.Name,
 		r.Instance,
@@ -98,7 +93,7 @@ func (r biObjectEntryResponse) toDomain() *domain.BIObjectEntry {
 		r.Meta.toDomain(),
 		r.Tag,
 		r.Flags,
-		pendingMap,
+		len(r.PendingMap) > 0,
 		r.VersionedEpoch,
 	)
 }
@@ -131,25 +126,6 @@ func (r biObjectMetaResponse) toDomain() *domain.BIObjectMeta {
 		r.UserData,
 		r.Appendable,
 	)
-}
-
-type biPendingMapEntryResponse struct {
-	Key string                    `json:"key"`
-	Val biPendingMapValueResponse `json:"val"`
-}
-
-func (r biPendingMapEntryResponse) toDomain() domain.BIPendingMapEntry {
-	return domain.NewBIPendingMapEntry(r.Key, r.Val.toDomain())
-}
-
-type biPendingMapValueResponse struct {
-	Op        int    `json:"op"`
-	State     int    `json:"state"`
-	Timestamp string `json:"timestamp"`
-}
-
-func (r biPendingMapValueResponse) toDomain() *domain.BIPendingMapValue {
-	return domain.NewBIPendingMapValue(r.State, r.Timestamp, r.Op)
 }
 
 type biVersionResponse struct {

@@ -7,7 +7,7 @@ type BIObjectEntry struct {
 	locator        string
 	meta           *BIObjectMeta
 	name           string
-	pendingMap     []BIPendingMapEntry
+	pending        bool
 	tag            string
 	ver            *BIVersion
 	versionedEpoch int
@@ -21,12 +21,9 @@ func NewBIObjectEntry(
 	meta *BIObjectMeta,
 	tag string,
 	flags int,
-	pendingMap []BIPendingMapEntry,
+	pending bool,
 	versionedEpoch int,
 ) *BIObjectEntry {
-	copiedPendingMap := make([]BIPendingMapEntry, len(pendingMap))
-	copy(copiedPendingMap, pendingMap)
-
 	return &BIObjectEntry{
 		exists:         exists,
 		flags:          flags,
@@ -34,7 +31,7 @@ func NewBIObjectEntry(
 		locator:        locator,
 		meta:           meta,
 		name:           name,
-		pendingMap:     copiedPendingMap,
+		pending:        pending,
 		tag:            tag,
 		ver:            ver,
 		versionedEpoch: versionedEpoch,
@@ -65,11 +62,8 @@ func (e *BIObjectEntry) Name() string {
 	return e.name
 }
 
-func (e *BIObjectEntry) PendingMap() []BIPendingMapEntry {
-	copied := make([]BIPendingMapEntry, len(e.pendingMap))
-	copy(copied, e.pendingMap)
-
-	return copied
+func (e *BIObjectEntry) Pending() bool {
+	return e.pending
 }
 
 func (e *BIObjectEntry) Tag() string {
