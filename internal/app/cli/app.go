@@ -12,22 +12,13 @@ type app struct {
 
 func newApp() *app {
 	return &app{
-		Debug:  false,
-		Bucket: newBucketCommand(),
-		Omap:   newOmapCommand(),
-		Object: newObjectCommand(),
-		Raw:    newRawCommand(),
-		RMSupport: rmSupportCommand{
-			Container: "",
-			Bucket:    "",
-			Object:    "",
-			ShowOmap:  false,
-		},
-		Zone: zoneCommand{
-			Default: zoneDefaultCommand{
-				Container: "",
-			},
-		},
+		Debug:     false,
+		Bucket:    newBucketCommand(),
+		Omap:      newOmapCommand(),
+		Object:    newObjectCommand(),
+		Raw:       newRawCommand(),
+		RMSupport: newRMSupportCommand(),
+		Zone:      newZoneCommand(),
 	}
 }
 
@@ -98,6 +89,23 @@ func newRawCommand() rawCommand {
 			Container: "",
 			Pool:      "",
 			Object:    "",
+		},
+	}
+}
+
+func newRMSupportCommand() rmSupportCommand {
+	return rmSupportCommand{
+		Container: "",
+		Bucket:    "",
+		Object:    "",
+		ShowOmap:  false,
+	}
+}
+
+func newZoneCommand() zoneCommand {
+	return zoneCommand{
+		Default: zoneDefaultCommand{
+			Container: "",
 		},
 	}
 }
