@@ -27,7 +27,7 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "test", bucketName)
 
-		return domain.NewBucketStats("bucket-id", 11, "bucket-marker", domain.VersioningStatusEnabled)
+		return domain.NewBucketStats("bucket-id", "test", 11, "bucket-marker", 5, 1, domain.VersioningStatusEnabled)
 	}
 	service := flow.NewService(&mockClient)
 
@@ -37,8 +37,11 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, "bucket-id", stats.ID())
+	require.Equal(t, "test", stats.Name())
 	require.Equal(t, 11, stats.TotalShards())
 	require.Equal(t, "bucket-marker", stats.Marker())
+	require.EqualValues(t, 5, stats.Size())
+	require.Equal(t, 1, stats.ObjectCount())
 	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning())
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
@@ -457,9 +460,9 @@ func TestServiceObjectInspectReadsEachStepInOrder(t *testing.T) {
 
 	ctx := t.Context()
 	biList := domain.NewBIList([]domain.BIEntry{
-		newVersionedPlainEntry("test.txt", "instance-1"),
+		newVersionedPlainEntry("instance-1"),
 		newVersionedInstanceEntry("test.txt", "instance-1"),
-		newVersionedPlainEntry("test.txt", "instance-2"),
+		newVersionedPlainEntry("instance-2"),
 	})
 	callOrder := make([]string, 0, 5)
 	rawCalls := make([]string, 0, 3)
@@ -495,14 +498,20 @@ func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing
 
 	ctx := t.Context()
 	biList := domain.NewBIList([]domain.BIEntry{
-		newVersionedPlainEntry("test.txt", "instance-1"),
+		newVersionedPlainEntry("instance-1"),
 		newOLHEntry(
 			"test.txt",
 			"instance-olh",
 			[]domain.BIPendingLogEntry{
 				domain.NewBIPendingLogEntry(8, []domain.BIPendingLogItem{
 					domain.NewBIPendingLogItem(8, "unlink_olh", "tag-1", domain.NewBIOLHKey("test.txt", ""), false),
-					domain.NewBIPendingLogItem(8, "remove_instance", "tag-1", domain.NewBIOLHKey("test.txt", "instance-pending"), false),
+					domain.NewBIPendingLogItem(
+						8,
+						"remove_instance",
+						"tag-1",
+						domain.NewBIOLHKey("test.txt", "instance-pending"),
+						false,
+					),
 				}),
 			},
 		),
@@ -563,13 +572,13 @@ func TestServiceObjectInspectReturnsStepContextForRawExists(t *testing.T) {
 		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
 	}
 	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
-		return domain.NewBucketStats("bucket-id", 11, "bucket-marker", domain.VersioningStatusEnabled)
+		return domain.NewBucketStats("bucket-id", "test", 11, "bucket-marker", 5, 1, domain.VersioningStatusEnabled)
 	}
 	mockClient.ObjectShardFunc = func(context.Context, string, string, int) (*domain.ObjectShard, error) {
 		return domain.NewObjectShard(3), nil
 	}
 	mockClient.BIListByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
-		return domain.NewBIList([]domain.BIEntry{newVersionedPlainEntry("test.txt", "instance-1")}), nil
+		return domain.NewBIList([]domain.BIEntry{newVersionedPlainEntry("instance-1")}), nil
 	}
 	mockClient.HasRawObjectFunc = func(context.Context, string, string, string) (bool, error) {
 		return false, wantErr
@@ -603,7 +612,7 @@ func newObjectInspectClientMock(
 	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
 		*callOrder = append(*callOrder, "stats")
 
-		return domain.NewBucketStats("bucket-id", 11, "bucket-marker", domain.VersioningStatusEnabled)
+		return domain.NewBucketStats("bucket-id", "test", 11, "bucket-marker", 5, 1, domain.VersioningStatusEnabled)
 	}
 	mockClient.ObjectShardFunc = func(context.Context, string, string, int) (*domain.ObjectShard, error) {
 		*callOrder = append(*callOrder, "shard")
@@ -632,11 +641,11 @@ func newObjectInspectClientMock(
 	return &mockClient
 }
 
-func newVersionedPlainEntry(name, instance string) *domain.PlainBIEntry {
+func newVersionedPlainEntry(instance string) *domain.PlainBIEntry {
 	return domain.NewPlainBIEntry(
-		domain.NewBIIndex(fmt.Sprintf("%s:%s", name, instance)),
+		domain.NewBIIndex(fmt.Sprintf("%s:%s", "test.txt", instance)),
 		domain.NewBIObjectEntry(
-			name,
+			"test.txt",
 			instance,
 			domain.NewBIVersion(8, 119),
 			"",

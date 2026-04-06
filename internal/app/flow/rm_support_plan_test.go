@@ -133,7 +133,7 @@ func TestServiceRMSupportPlanDelegatesWithOmap(t *testing.T) {
 func mustBucketStats(t *testing.T, bucketID string, totalShards int, marker string) *domain.BucketStats {
 	t.Helper()
 
-	stats, err := domain.NewBucketStats(bucketID, totalShards, marker, domain.VersioningStatusEnabled)
+	stats, err := domain.NewBucketStats(bucketID, "test", totalShards, marker, 5, 1, domain.VersioningStatusEnabled)
 	require.NoError(t, err)
 
 	return stats

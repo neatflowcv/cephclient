@@ -14,7 +14,7 @@ import (
 
 const errPermissionDenied = "permission denied"
 
-func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
+func TestClientBucketStatsMapsBucketAndUsageFieldsFromJSON(t *testing.T) {
 	t.Parallel()
 
 	runner := newRunnerMock(
@@ -22,7 +22,14 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 			wantArgs := []string{"exec", "-i", "rgw", "radosgw-admin", "bucket", "stats", "--bucket=test"}
 			require.Equal(t, wantArgs, args)
 
-			return []byte(`{"id":"bucket-id","num_shards":11,"marker":"bucket-marker","versioning":"enabled"}`), "", nil
+			return []byte(`{
+				"id":"bucket-id",
+				"bucket":"test",
+				"num_shards":11,
+				"marker":"bucket-marker",
+				"usage":{"rgw.main":{"size":5,"num_objects":1}},
+				"versioning":"enabled"
+			}`), "", nil
 		},
 	)
 	client := podman.NewClientWithRunner(runner)
@@ -31,6 +38,9 @@ func TestClientBucketStatsRunsPodmanCommand(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, runner.RunCalls(), 1)
+	require.Equal(t, "test", stats.Name())   // json: bucket
+	require.EqualValues(t, 5, stats.Size())  // json: usage.rgw.main.size
+	require.Equal(t, 1, stats.ObjectCount()) // json: usage.rgw.main.num_objects
 	require.Equal(t, "bucket-id", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
 	require.Equal(t, "bucket-marker", stats.Marker())
@@ -211,7 +221,7 @@ func TestClientBIListByObjectRejectsUnknownType(t *testing.T) {
 	require.Contains(t, err.Error(), "unsupported bi entry type")
 }
 
-func TestClientBucketStatsParsesFixture(t *testing.T) {
+func TestClientBucketStatsParsesFixtureBucketAndUsagePaths(t *testing.T) {
 	t.Parallel()
 
 	fixture, err := os.ReadFile(filepath.Join("testdata", "test.stats.json"))
@@ -226,6 +236,9 @@ func TestClientBucketStatsParsesFixture(t *testing.T) {
 	stats, err := client.BucketStats(t.Context(), "rgw", "test")
 
 	require.NoError(t, err)
+	require.Equal(t, "test", stats.Name())   // json: bucket
+	require.EqualValues(t, 5, stats.Size())  // json: usage.rgw.main.size
+	require.Equal(t, 1, stats.ObjectCount()) // json: usage.rgw.main.num_objects
 	require.Equal(t, "20135590-8915-4c5e-9328-f759717a4f87.21289.1", stats.ID())
 	require.Equal(t, 11, stats.TotalShards())
 	require.Equal(t, "20135590-8915-4c5e-9328-f759717a4f87.21289.1", stats.Marker())
@@ -266,7 +279,14 @@ func TestClientBucketStatsReturnsInvalidVersioningError(t *testing.T) {
 
 	client := podman.NewClientWithRunner(newRunnerMock(
 		func(context.Context, ...string) ([]byte, string, error) {
-			return []byte(`{"id":"bucket-id","num_shards":11,"marker":"bucket-marker","versioning":"mystery"}`), "", nil
+			return []byte(`{
+				"id":"bucket-id",
+				"bucket":"test",
+				"num_shards":11,
+				"marker":"bucket-marker",
+				"usage":{"rgw.main":{"size":5,"num_objects":1}},
+				"versioning":"mystery"
+			}`), "", nil
 		},
 	))
 
