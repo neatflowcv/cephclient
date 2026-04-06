@@ -69,6 +69,18 @@ func (s *Service) GetDefaultZone(ctx context.Context, containerName string) (*do
 	return zone, nil
 }
 
+func (s *Service) HasRawObject(
+	ctx context.Context,
+	containerName, pool, rawObject string,
+) (bool, error) {
+	exists, err := s.client.HasRawObject(ctx, containerName, pool, rawObject)
+	if err != nil {
+		return false, fmt.Errorf("check raw object existence: %w", err)
+	}
+
+	return exists, nil
+}
+
 func (s *Service) ListOmapKeys(
 	ctx context.Context,
 	containerName, indexPool, marker string,

@@ -5,16 +5,18 @@ type app struct {
 	Bucket    bucketCommand    `cmd:""                     help:"Read RGW bucket data."           name:"bucket"`
 	Omap      omapCommand      `cmd:""                     help:"Inspect index OMAP data."        name:"omap"`
 	Object    objectCommand    `cmd:""                     help:"Read RGW object data."           name:"object"`
+	Raw       rawCommand       `cmd:""                     help:"Inspect raw Ceph object data."   name:"raw"`
 	RMSupport rmSupportCommand `cmd:""                     help:"Select BI idx values to remove." name:"rm-support"`
 	Zone      zoneCommand      `cmd:""                     help:"Read RGW zone data."             name:"zone"`
 }
 
 func newApp() *app {
 	return &app{
-		Debug: false,
-		Bucket:    newBucketCommand(),
-		Omap:      newOmapCommand(),
-		Object:    newObjectCommand(),
+		Debug:  false,
+		Bucket: newBucketCommand(),
+		Omap:   newOmapCommand(),
+		Object: newObjectCommand(),
+		Raw:    newRawCommand(),
 		RMSupport: rmSupportCommand{
 			Container: "",
 			Bucket:    "",
@@ -81,6 +83,16 @@ func newObjectCommand() objectCommand {
 			Container:   "",
 			Object:      "",
 			TotalShards: 0,
+		},
+	}
+}
+
+func newRawCommand() rawCommand {
+	return rawCommand{
+		Exists: rawExistsCommand{
+			Container: "",
+			Pool:      "",
+			Object:    "",
 		},
 	}
 }

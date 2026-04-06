@@ -188,6 +188,38 @@ func (c *Client) GetDefaultZone(ctx context.Context, containerName string) (*dom
 	return zone, nil
 }
 
+func (c *Client) HasRawObject(
+	ctx context.Context,
+	containerName, pool, rawObject string,
+) (bool, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"rados",
+		"-p",
+		pool,
+		"stat",
+		rawObject,
+	}
+
+	_, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err == nil {
+		return true, nil
+	}
+
+	if isRadosStatNotFound(err, stderr) {
+		return false, nil
+	}
+
+	return false, fmt.Errorf(
+		"run podman %s: %w: %s",
+		strings.Join(commandArgs, " "),
+		err,
+		strings.TrimSpace(stderr),
+	)
+}
+
 func (c *Client) ListOmapKeys(
 	ctx context.Context,
 	containerName, indexPool, marker string,
@@ -452,4 +484,18 @@ func decodeObjectShard(data []byte) (*domain.ObjectShard, error) {
 	}
 
 	return domain.NewObjectShard(raw.Shard), nil
+}
+
+func isRadosStatNotFound(err error, stderr string) bool {
+	lowerStderr := strings.ToLower(stderr)
+
+	if !strings.Contains(lowerStderr, "error stat-ing ") {
+		return false
+	}
+
+	if !strings.Contains(lowerStderr, "(2) no such file or directory") {
+		return false
+	}
+
+	return err != nil
 }

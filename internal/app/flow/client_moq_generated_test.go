@@ -30,6 +30,9 @@ import (
 //			GetDefaultZoneFunc: func(ctx context.Context, containerName string) (*domain.Zone, error) {
 //				panic("mock out the GetDefaultZone method")
 //			},
+//			HasRawObjectFunc: func(ctx context.Context, containerName string, pool string, rawObject string) (bool, error) {
+//				panic("mock out the HasRawObject method")
+//			},
 //			ListBucketsFunc: func(ctx context.Context, containerName string) ([]string, error) {
 //				panic("mock out the ListBuckets method")
 //			},
@@ -66,6 +69,9 @@ type ClientMock struct {
 
 	// GetDefaultZoneFunc mocks the GetDefaultZone method.
 	GetDefaultZoneFunc func(ctx context.Context, containerName string) (*domain.Zone, error)
+
+	// HasRawObjectFunc mocks the HasRawObject method.
+	HasRawObjectFunc func(ctx context.Context, containerName string, pool string, rawObject string) (bool, error)
 
 	// ListBucketsFunc mocks the ListBuckets method.
 	ListBucketsFunc func(ctx context.Context, containerName string) ([]string, error)
@@ -133,6 +139,17 @@ type ClientMock struct {
 			// ContainerName is the containerName argument value.
 			ContainerName string
 		}
+		// HasRawObject holds details about calls to the HasRawObject method.
+		HasRawObject []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// Pool is the pool argument value.
+			Pool string
+			// RawObject is the rawObject argument value.
+			RawObject string
+		}
 		// ListBuckets holds details about calls to the ListBuckets method.
 		ListBuckets []struct {
 			// Ctx is the ctx argument value.
@@ -198,6 +215,7 @@ type ClientMock struct {
 	lockBucketLayout   sync.RWMutex
 	lockBucketStats    sync.RWMutex
 	lockGetDefaultZone sync.RWMutex
+	lockHasRawObject   sync.RWMutex
 	lockListBuckets    sync.RWMutex
 	lockListOmapKeys   sync.RWMutex
 	lockObjectShard    sync.RWMutex
@@ -410,6 +428,50 @@ func (mock *ClientMock) GetDefaultZoneCalls() []struct {
 	mock.lockGetDefaultZone.RLock()
 	calls = mock.calls.GetDefaultZone
 	mock.lockGetDefaultZone.RUnlock()
+	return calls
+}
+
+// HasRawObject calls HasRawObjectFunc.
+func (mock *ClientMock) HasRawObject(ctx context.Context, containerName string, pool string, rawObject string) (bool, error) {
+	if mock.HasRawObjectFunc == nil {
+		panic("ClientMock.HasRawObjectFunc: method is nil but Client.HasRawObject was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		Pool          string
+		RawObject     string
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		Pool:          pool,
+		RawObject:     rawObject,
+	}
+	mock.lockHasRawObject.Lock()
+	mock.calls.HasRawObject = append(mock.calls.HasRawObject, callInfo)
+	mock.lockHasRawObject.Unlock()
+	return mock.HasRawObjectFunc(ctx, containerName, pool, rawObject)
+}
+
+// HasRawObjectCalls gets all the calls that were made to HasRawObject.
+// Check the length with:
+//
+//	len(mockedClient.HasRawObjectCalls())
+func (mock *ClientMock) HasRawObjectCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	Pool          string
+	RawObject     string
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		Pool          string
+		RawObject     string
+	}
+	mock.lockHasRawObject.RLock()
+	calls = mock.calls.HasRawObject
+	mock.lockHasRawObject.RUnlock()
 	return calls
 }
 

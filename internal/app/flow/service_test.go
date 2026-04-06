@@ -71,6 +71,33 @@ func TestServiceBucketLayoutDelegatesToClient(t *testing.T) {
 	require.Len(t, mockClient.BucketLayoutCalls(), 1)
 }
 
+func TestServiceHasRawObjectDelegatesToClient(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	var mockClient ClientMock
+
+	mockClient.HasRawObjectFunc = func(
+		gotCtx context.Context,
+		containerName, pool, rawObject string,
+	) (bool, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "default.rgw.buckets.data", pool)
+		require.Equal(t, "marker__:version_object", rawObject)
+
+		return true, nil
+	}
+	service := flow.NewService(&mockClient)
+
+	exists, err := service.HasRawObject(ctx, "rgw", "default.rgw.buckets.data", "marker__:version_object")
+
+	require.NoError(t, err)
+	require.True(t, exists)
+	require.Len(t, mockClient.HasRawObjectCalls(), 1)
+}
+
 func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 	t.Parallel()
 
@@ -232,6 +259,26 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 	// Assert
 	require.ErrorIs(t, err, wantErr)
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
+}
+
+func TestServiceHasRawObjectReturnsClientError(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	wantErr := errClientFailed
+
+	var mockClient ClientMock
+
+	mockClient.HasRawObjectFunc = func(context.Context, string, string, string) (bool, error) {
+		return false, wantErr
+	}
+	service := flow.NewService(&mockClient)
+
+	exists, err := service.HasRawObject(ctx, "rgw", "default.rgw.buckets.data", "raw-object")
+
+	require.ErrorIs(t, err, wantErr)
+	require.False(t, exists)
+	require.Len(t, mockClient.HasRawObjectCalls(), 1)
 }
 
 func TestServiceBucketLayoutReturnsClientError(t *testing.T) {
