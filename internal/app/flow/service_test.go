@@ -490,6 +490,44 @@ func TestServiceObjectInspectReadsEachStepInOrder(t *testing.T) {
 	require.False(t, result.RawObjects()[2].Exists())
 }
 
+func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	biList := domain.NewBIList([]domain.BIEntry{
+		newVersionedPlainEntry("test.txt", "instance-1"),
+		newOLHEntry(
+			"test.txt",
+			"instance-olh",
+			[]domain.BIPendingLogEntry{
+				domain.NewBIPendingLogEntry(8, []domain.BIPendingLogItem{
+					domain.NewBIPendingLogItem(8, "unlink_olh", "tag-1", domain.NewBIOLHKey("test.txt", ""), false),
+					domain.NewBIPendingLogItem(8, "remove_instance", "tag-1", domain.NewBIOLHKey("test.txt", "instance-pending"), false),
+				}),
+			},
+		),
+	})
+	callOrder := make([]string, 0, 5)
+	rawCalls := make([]string, 0, 4)
+	mockClient := newObjectInspectClientMock(t, ctx, biList, &callOrder, &rawCalls)
+	service := flow.NewService(mockClient)
+
+	result, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		[]string{
+			"bucket-marker_test.txt",
+			"bucket-marker__:instance-1_test.txt",
+			"bucket-marker__:instance-olh_test.txt",
+			"bucket-marker__:instance-pending_test.txt",
+		},
+		rawCalls,
+	)
+	require.Len(t, result.RawObjects(), 4)
+}
+
 func TestServiceObjectInspectReturnsStepContextForBucketStats(t *testing.T) {
 	t.Parallel()
 
@@ -626,6 +664,24 @@ func newVersionedInstanceEntry(name, instance string) *domain.InstanceBIEntry {
 			0,
 			false,
 			2,
+		),
+	)
+}
+
+func newOLHEntry(
+	name, instance string,
+	pendingLog []domain.BIPendingLogEntry,
+) *domain.OLHBIEntry {
+	return domain.NewOLHBIEntry(
+		domain.NewBIIndex(name),
+		domain.NewBIOLHEntry(
+			domain.NewBIOLHKey(name, instance),
+			false,
+			2,
+			pendingLog,
+			"",
+			true,
+			false,
 		),
 	)
 }

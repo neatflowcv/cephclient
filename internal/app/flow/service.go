@@ -248,29 +248,40 @@ func rawObjectNames(marker, objectName string, biList *domain.BIList) []*domain.
 	seenVersions := map[string]struct{}{}
 
 	for _, entry := range biList.Entries() {
-		version := rawObjectVersion(entry)
-		if version == "" {
-			continue
-		}
+		for _, version := range rawObjectVersions(entry) {
+			if version == "" {
+				continue
+			}
 
-		if _, ok := seenVersions[version]; ok {
-			continue
-		}
+			if _, ok := seenVersions[version]; ok {
+				continue
+			}
 
-		seenVersions[version] = struct{}{}
-		names = append(names, domain.NewVersionRawObjectName(marker, version, objectName))
+			seenVersions[version] = struct{}{}
+			names = append(names, domain.NewVersionRawObjectName(marker, version, objectName))
+		}
 	}
 
 	return names
 }
 
-func rawObjectVersion(entry domain.BIEntry) string {
+func rawObjectVersions(entry domain.BIEntry) []string {
 	switch typed := entry.(type) {
 	case *domain.PlainBIEntry:
-		return typed.Entry().Instance()
+		return []string{typed.Entry().Instance()}
 	case *domain.InstanceBIEntry:
-		return typed.Entry().Instance()
+		return []string{typed.Entry().Instance()}
+	case *domain.OLHBIEntry:
+		versions := []string{typed.Entry().Key().Instance()}
+
+		for _, pending := range typed.Entry().PendingLog() {
+			for _, item := range pending.Val() {
+				versions = append(versions, item.Key().Instance())
+			}
+		}
+
+		return versions
 	default:
-		return ""
+		return nil
 	}
 }
