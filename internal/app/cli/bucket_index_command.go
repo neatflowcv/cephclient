@@ -58,23 +58,25 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 	switch typed := entry.(type) {
 	case *domain.PlainBIEntry:
 		return fmt.Sprintf(
-			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d",
+			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d mtime=%s",
 			typed.Type(),
 			quoteField(typed.IDX().Escaped()),
 			quoteField(typed.Entry().Name()),
 			quoteField(typed.Entry().Instance()),
 			typed.Entry().Exists(),
 			typed.Entry().VersionedEpoch(),
+			quoteField(formatObjectMTime(typed.Entry())),
 		), nil
 	case *domain.InstanceBIEntry:
 		return fmt.Sprintf(
-			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d",
+			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d mtime=%s",
 			typed.Type(),
 			quoteField(typed.IDX().Escaped()),
 			quoteField(typed.Entry().Name()),
 			quoteField(typed.Entry().Instance()),
 			typed.Entry().Exists(),
 			typed.Entry().VersionedEpoch(),
+			quoteField(formatObjectMTime(typed.Entry())),
 		), nil
 	case *domain.OLHBIEntry:
 		return fmt.Sprintf(
@@ -91,4 +93,12 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 	default:
 		return "", fmt.Errorf("%w: %T", errUnsupportedBIEntryFormat, entry)
 	}
+}
+
+func formatObjectMTime(entry *domain.BIObjectEntry) string {
+	if entry.Meta() == nil {
+		return ""
+	}
+
+	return entry.Meta().MTime()
 }
