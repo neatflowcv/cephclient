@@ -64,6 +64,12 @@ func newOmapCommand() omapCommand {
 
 func newObjectCommand() objectCommand {
 	return objectCommand{
+		Index: objectIndexCommand{
+			Container: "",
+			Bucket:    "",
+			Object:    "",
+			Shard:     0,
+		},
 		Inspect: objectInspectCommand{
 			Container: "",
 			Bucket:    "",
