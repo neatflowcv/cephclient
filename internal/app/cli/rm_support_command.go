@@ -14,10 +14,10 @@ import (
 var errRMSupportNoBIEntries = errors.New("no BI entries found for the requested object")
 
 type rmSupportCommand struct {
-	Container  string `arg:""                                             help:"Container name." name:"container"` //nolint:lll
-	Bucket     string `arg:""                                             help:"Bucket name."    name:"bucket"`
-	Object     string `arg:""                                             help:"Object name."    name:"object"`
-	ShowOmap   bool   `help:"Show OMAP keys for before/after comparison." name:"show-omap"`
+	Container string `arg:""                                             help:"Container name." name:"container"` //nolint:lll
+	Bucket    string `arg:""                                             help:"Bucket name."    name:"bucket"`
+	Object    string `arg:""                                             help:"Object name."    name:"object"`
+	ShowOmap  bool   `help:"Show OMAP keys for before/after comparison." name:"show-omap"`
 }
 
 func (c *rmSupportCommand) Run(
