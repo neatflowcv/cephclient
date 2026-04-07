@@ -30,7 +30,6 @@ func newBucketCommand() bucketCommand {
 		Index: bucketIndexCommand{
 			Container: "",
 			Bucket:    "",
-			Object:    "",
 			Shard:     0,
 		},
 		Layout: bucketLayoutCommand{
