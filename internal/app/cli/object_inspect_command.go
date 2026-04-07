@@ -41,7 +41,7 @@ func writeObjectInspect(stdout io.Writer, result *flow.ObjectInspectResult) erro
 		return fmt.Errorf("write object inspect bucket index header: %w", err)
 	}
 
-	err = writeBIList(stdout, result.BIList())
+	err = writeBucketIndexEntries(stdout, result.BIList())
 	if err != nil {
 		return err
 	}

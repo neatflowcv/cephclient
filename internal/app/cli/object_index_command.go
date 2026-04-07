@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/neatflowcv/cephclient/internal/app/flow"
-	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 )
 
 type objectIndexCommand struct {
@@ -22,21 +21,5 @@ func (c *objectIndexCommand) Run(ctx context.Context, service *flow.Service, std
 		return fmt.Errorf("read bucket index list: %w", err)
 	}
 
-	return writeObjectBIList(stdout, biList)
-}
-
-func writeObjectBIList(stdout io.Writer, biList *domain.BIList) error {
-	for _, entry := range biList.Entries() {
-		line, err := formatBIEntry(entry)
-		if err != nil {
-			return err
-		}
-
-		_, err = fmt.Fprintln(stdout, line)
-		if err != nil {
-			return fmt.Errorf("write bucket index list: %w", err)
-		}
-	}
-
-	return nil
+	return writeBucketIndexEntries(stdout, biList)
 }
