@@ -145,14 +145,14 @@ func (s *Service) ObjectInspect(
 		return nil, err
 	}
 
-	return NewObjectInspectResult(
-		zone.DataPool(),
-		stats.Marker(),
-		stats.TotalShards(),
-		shard.Shard(),
-		biList,
-		rawObjects,
-	), nil
+	return &ObjectInspectResult{
+		BIList:      biList,
+		DataPool:    zone.DataPool(),
+		Marker:      stats.Marker(),
+		RawObjects:  rawObjects,
+		ShardID:     shard.Shard(),
+		TotalShards: stats.TotalShards(),
+	}, nil
 }
 
 func (s *Service) RemoveObject(

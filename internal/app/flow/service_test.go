@@ -473,11 +473,11 @@ func TestServiceObjectInspectReadsEachStepInOrder(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, []string{"zone", "stats", "shard", "bilist", "raw", "raw", "raw"}, callOrder)
-	require.Equal(t, "default.rgw.buckets.data", result.DataPool())
-	require.Equal(t, "bucket-marker", result.Marker())
-	require.Equal(t, 11, result.TotalShards())
-	require.Equal(t, 3, result.ShardID())
-	require.Same(t, biList, result.BIList())
+	require.Equal(t, "default.rgw.buckets.data", result.DataPool)
+	require.Equal(t, "bucket-marker", result.Marker)
+	require.Equal(t, 11, result.TotalShards)
+	require.Equal(t, 3, result.ShardID)
+	require.Same(t, biList, result.BIList)
 	require.Equal(
 		t,
 		[]string{
@@ -487,10 +487,10 @@ func TestServiceObjectInspectReadsEachStepInOrder(t *testing.T) {
 		},
 		rawCalls,
 	)
-	require.Len(t, result.RawObjects(), 3)
-	require.True(t, result.RawObjects()[0].Exists())
-	require.False(t, result.RawObjects()[1].Exists())
-	require.False(t, result.RawObjects()[2].Exists())
+	require.Len(t, result.RawObjects, 3)
+	require.True(t, result.RawObjects[0].Exists())
+	require.False(t, result.RawObjects[1].Exists())
+	require.False(t, result.RawObjects[2].Exists())
 }
 
 func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing.T) {
@@ -534,7 +534,32 @@ func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing
 		},
 		rawCalls,
 	)
-	require.Len(t, result.RawObjects(), 4)
+	require.Len(t, result.RawObjects, 4)
+}
+
+func TestServiceObjectInspectExposesRawObjectsWithoutCopy(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	biList := domain.NewBIList([]domain.BIEntry{
+		newVersionedPlainEntry("instance-1"),
+		newVersionedInstanceEntry("test.txt", "instance-1"),
+	})
+	callOrder := make([]string, 0, 5)
+	rawCalls := make([]string, 0, 2)
+	mockClient := newObjectInspectClientMock(t, ctx, biList, &callOrder, &rawCalls)
+	service := flow.NewService(mockClient)
+
+	result, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+
+	require.NoError(t, err)
+	require.Len(t, result.RawObjects, 2)
+
+	original := result.RawObjects[0]
+	replacement := flow.NewRawObjectExistence(original.Name(), false)
+	result.RawObjects[0] = replacement
+
+	require.Same(t, replacement, result.RawObjects[0])
 }
 
 func TestServiceObjectInspectReturnsStepContextForBucketStats(t *testing.T) {
