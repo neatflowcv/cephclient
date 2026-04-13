@@ -27,10 +27,10 @@ func writeObjectInspect(stdout io.Writer, result *flow.ObjectInspectResult) erro
 	_, err := fmt.Fprintf(
 		stdout,
 		"data_pool=%s\nmarker=%s\ntotal_shards=%d\nshard=%d\n",
-		result.DataPool(),
-		result.Marker(),
-		result.TotalShards(),
-		result.ShardID(),
+		result.DataPool,
+		result.Marker,
+		result.TotalShards,
+		result.ShardID,
 	)
 	if err != nil {
 		return fmt.Errorf("write object inspect header: %w", err)
@@ -41,7 +41,7 @@ func writeObjectInspect(stdout io.Writer, result *flow.ObjectInspectResult) erro
 		return fmt.Errorf("write object inspect bucket index header: %w", err)
 	}
 
-	err = writeBucketIndexEntries(stdout, result.BIList())
+	err = writeBucketIndexEntries(stdout, result.BIList)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func writeObjectInspect(stdout io.Writer, result *flow.ObjectInspectResult) erro
 		return fmt.Errorf("write object inspect raw objects header: %w", err)
 	}
 
-	for _, rawObject := range result.RawObjects() {
+	for _, rawObject := range result.RawObjects {
 		_, err = fmt.Fprintf(
 			stdout,
 			"type=%s exists=%t object=%s\n",
