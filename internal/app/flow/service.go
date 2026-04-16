@@ -116,7 +116,7 @@ func (s *Service) ObjectShard(
 	return shard, nil
 }
 
-func (s *Service) ObjectInspect(
+func (s *Service) InspectObject(
 	ctx context.Context,
 	containerName, bucketName, objectName string,
 ) (*ObjectInspectResult, error) {

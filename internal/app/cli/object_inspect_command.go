@@ -15,7 +15,7 @@ type objectInspectCommand struct {
 }
 
 func (c *objectInspectCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	result, err := service.ObjectInspect(ctx, c.Container, c.Bucket, c.Object)
+	result, err := service.InspectObject(ctx, c.Container, c.Bucket, c.Object)
 	if err != nil {
 		return fmt.Errorf("inspect object: %w", err)
 	}

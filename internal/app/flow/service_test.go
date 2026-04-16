@@ -469,7 +469,7 @@ func TestServiceObjectInspectReadsEachStepInOrder(t *testing.T) {
 	mockClient := newObjectInspectClientMock(t, ctx, biList, &callOrder, &rawCalls)
 	service := flow.NewService(mockClient)
 
-	result, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+	result, err := service.InspectObject(ctx, "rgw", "bucket-a", "test.txt")
 
 	require.NoError(t, err)
 	require.Equal(t, []string{"zone", "stats", "shard", "bilist", "raw", "raw", "raw"}, callOrder)
@@ -521,7 +521,7 @@ func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing
 	mockClient := newObjectInspectClientMock(t, ctx, biList, &callOrder, &rawCalls)
 	service := flow.NewService(mockClient)
 
-	result, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+	result, err := service.InspectObject(ctx, "rgw", "bucket-a", "test.txt")
 
 	require.NoError(t, err)
 	require.Equal(
@@ -554,7 +554,7 @@ func TestServiceObjectInspectReturnsStepContextForBucketStats(t *testing.T) {
 
 	service := flow.NewService(&mockClient)
 
-	_, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+	_, err := service.InspectObject(ctx, "rgw", "bucket-a", "test.txt")
 
 	require.ErrorIs(t, err, wantErr)
 	require.ErrorContains(t, err, "read bucket stats")
@@ -586,7 +586,7 @@ func TestServiceObjectInspectReturnsStepContextForRawExists(t *testing.T) {
 
 	service := flow.NewService(&mockClient)
 
-	_, err := service.ObjectInspect(ctx, "rgw", "bucket-a", "test.txt")
+	_, err := service.InspectObject(ctx, "rgw", "bucket-a", "test.txt")
 
 	require.ErrorIs(t, err, wantErr)
 	require.ErrorContains(t, err, "check raw object existence")
