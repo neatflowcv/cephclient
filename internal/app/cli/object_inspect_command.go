@@ -15,7 +15,11 @@ type objectInspectCommand struct {
 }
 
 func (c *objectInspectCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	result, err := service.InspectObject(ctx, c.Container, c.Bucket, c.Object)
+	result, err := service.InspectObject(ctx, flow.InspectObjectRequest{
+		ContainerName: c.Container,
+		BucketName:    c.Bucket,
+		ObjectName:    c.Object,
+	})
 	if err != nil {
 		return fmt.Errorf("inspect object: %w", err)
 	}
@@ -23,7 +27,7 @@ func (c *objectInspectCommand) Run(ctx context.Context, service *flow.Service, s
 	return writeObjectInspect(stdout, result)
 }
 
-func writeObjectInspect(stdout io.Writer, result *flow.ObjectInspectResult) error {
+func writeObjectInspect(stdout io.Writer, result *flow.InspectObjectResponse) error {
 	_, err := fmt.Fprintf(
 		stdout,
 		"data_pool=%s\nmarker=%s\ntotal_shards=%d\nshard=%d\n",

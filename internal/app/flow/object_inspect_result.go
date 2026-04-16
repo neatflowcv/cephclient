@@ -2,7 +2,13 @@ package flow
 
 import "github.com/neatflowcv/cephclient/internal/pkg/domain"
 
-type ObjectInspectResult struct {
+type InspectObjectRequest struct {
+	ContainerName string
+	BucketName    string
+	ObjectName    string
+}
+
+type InspectObjectResponse struct {
 	biList      *domain.BIList
 	dataPool    string
 	marker      string
@@ -11,16 +17,16 @@ type ObjectInspectResult struct {
 	totalShards int
 }
 
-func NewObjectInspectResult(
+func NewInspectObjectResponse(
 	dataPool, marker string,
 	totalShards, shardID int,
 	biList *domain.BIList,
 	rawObjects []*RawObjectExistence,
-) *ObjectInspectResult {
+) *InspectObjectResponse {
 	copiedRawObjects := make([]*RawObjectExistence, len(rawObjects))
 	copy(copiedRawObjects, rawObjects)
 
-	return &ObjectInspectResult{
+	return &InspectObjectResponse{
 		biList:      biList,
 		dataPool:    dataPool,
 		marker:      marker,
@@ -30,29 +36,29 @@ func NewObjectInspectResult(
 	}
 }
 
-func (r *ObjectInspectResult) BIList() *domain.BIList {
+func (r *InspectObjectResponse) BIList() *domain.BIList {
 	return r.biList
 }
 
-func (r *ObjectInspectResult) DataPool() string {
+func (r *InspectObjectResponse) DataPool() string {
 	return r.dataPool
 }
 
-func (r *ObjectInspectResult) Marker() string {
+func (r *InspectObjectResponse) Marker() string {
 	return r.marker
 }
 
-func (r *ObjectInspectResult) RawObjects() []*RawObjectExistence {
+func (r *InspectObjectResponse) RawObjects() []*RawObjectExistence {
 	copied := make([]*RawObjectExistence, len(r.rawObjects))
 	copy(copied, r.rawObjects)
 
 	return copied
 }
 
-func (r *ObjectInspectResult) ShardID() int {
+func (r *InspectObjectResponse) ShardID() int {
 	return r.shardID
 }
 
-func (r *ObjectInspectResult) TotalShards() int {
+func (r *InspectObjectResponse) TotalShards() int {
 	return r.totalShards
 }

@@ -127,34 +127,41 @@ func (s *Service) ObjectShard(
 
 func (s *Service) InspectObject(
 	ctx context.Context,
-	containerName, bucketName, objectName string,
-) (*ObjectInspectResult, error) {
-	zone, err := s.GetDefaultZone(ctx, containerName)
+	req InspectObjectRequest,
+) (*InspectObjectResponse, error) {
+	zone, err := s.GetDefaultZone(ctx, req.ContainerName)
 	if err != nil {
 		return nil, fmt.Errorf("read default zone: %w", err)
 	}
 
-	stats, err := s.BucketStats(ctx, containerName, bucketName)
+	stats, err := s.BucketStats(ctx, req.ContainerName, req.BucketName)
 	if err != nil {
 		return nil, fmt.Errorf("read bucket stats: %w", err)
 	}
 
-	shard, err := s.ObjectShard(ctx, containerName, objectName, stats.TotalShards())
+	shard, err := s.ObjectShard(ctx, req.ContainerName, req.ObjectName, stats.TotalShards())
 	if err != nil {
 		return nil, fmt.Errorf("read object shard: %w", err)
 	}
 
-	biList, err := s.BIListByObject(ctx, containerName, bucketName, objectName, shard.Shard())
+	biList, err := s.BIListByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shard.Shard())
 	if err != nil {
 		return nil, fmt.Errorf("read bucket index list: %w", err)
 	}
 
-	rawObjects, err := s.inspectRawObjects(ctx, containerName, zone.DataPool(), stats.Marker(), objectName, biList)
+	rawObjects, err := s.inspectRawObjects(
+		ctx,
+		req.ContainerName,
+		zone.DataPool(),
+		stats.Marker(),
+		req.ObjectName,
+		biList,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewObjectInspectResult(
+	return NewInspectObjectResponse(
 		zone.DataPool(),
 		stats.Marker(),
 		stats.TotalShards(),
