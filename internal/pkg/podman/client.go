@@ -102,6 +102,64 @@ func (c *Client) BIListByObject(
 	return biList, nil
 }
 
+func (c *Client) ListBucketIndexByObject(
+	ctx context.Context,
+	containerName, bucketName, objectName string,
+	shardID int,
+) (*domain.EntryGroup, error) {
+	commandArgs := []string{
+		"exec",
+		"-i",
+		containerName,
+		"radosgw-admin",
+		"bi",
+		"list",
+		"--bucket=" + bucketName,
+		"--object=" + objectName,
+		fmt.Sprintf("--shard-id=%d", shardID),
+	}
+
+	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"run podman %s: %w: %s",
+			strings.Join(commandArgs, " "),
+			err,
+			strings.TrimSpace(stderr),
+		)
+	}
+
+	biList, err := decodeBIList(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("parse bi list output: %w", err)
+	}
+
+	return toEntryGroup(biList), nil
+}
+
+func toEntryGroup(biList *domain.BIList) *domain.EntryGroup {
+	if biList == nil {
+		return domain.NewEntryGroup(nil, nil, nil)
+	}
+
+	var olhs []*domain.OLHBIEntry
+	var plains []*domain.PlainBIEntry
+	var instances []*domain.InstanceBIEntry
+
+	for _, entry := range biList.Entries() {
+		switch typed := entry.(type) {
+		case *domain.OLHBIEntry:
+			olhs = append(olhs, typed)
+		case *domain.PlainBIEntry:
+			plains = append(plains, typed)
+		case *domain.InstanceBIEntry:
+			instances = append(instances, typed)
+		}
+	}
+
+	return domain.NewEntryGroup(olhs, plains, instances)
+}
+
 func (c *Client) BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
 	commandArgs := []string{
 		"exec",

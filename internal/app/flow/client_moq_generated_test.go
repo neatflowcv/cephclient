@@ -18,6 +18,9 @@ import (
 //			BIListByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
 //				panic("mock out the BIListByObject method")
 //			},
+//			ListBucketIndexByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error) {
+//				panic("mock out the ListBucketIndexByObject method")
+//			},
 //			BIListByShardFunc: func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error) {
 //				panic("mock out the BIListByShard method")
 //			},
@@ -58,6 +61,9 @@ type ClientMock struct {
 	// BIListByObjectFunc mocks the BIListByObject method.
 	BIListByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error)
 
+	// ListBucketIndexByObjectFunc mocks the ListBucketIndexByObject method.
+	ListBucketIndexByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error)
+
 	// BIListByShardFunc mocks the BIListByShard method.
 	BIListByShardFunc func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error)
 
@@ -92,6 +98,19 @@ type ClientMock struct {
 	calls struct {
 		// BIListByObject holds details about calls to the BIListByObject method.
 		BIListByObject []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// BucketName is the bucketName argument value.
+			BucketName string
+			// ObjectName is the objectName argument value.
+			ObjectName string
+			// ShardID is the shardID argument value.
+			ShardID int
+		}
+		// ListBucketIndexByObject holds details about calls to the ListBucketIndexByObject method.
+		ListBucketIndexByObject []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ContainerName is the containerName argument value.
@@ -211,6 +230,7 @@ type ClientMock struct {
 		}
 	}
 	lockBIListByObject sync.RWMutex
+	lockListBucketIndexByObject sync.RWMutex
 	lockBIListByShard  sync.RWMutex
 	lockBucketLayout   sync.RWMutex
 	lockBucketStats    sync.RWMutex
@@ -268,6 +288,54 @@ func (mock *ClientMock) BIListByObjectCalls() []struct {
 	mock.lockBIListByObject.RLock()
 	calls = mock.calls.BIListByObject
 	mock.lockBIListByObject.RUnlock()
+	return calls
+}
+
+// ListBucketIndexByObject calls ListBucketIndexByObjectFunc.
+func (mock *ClientMock) ListBucketIndexByObject(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error) {
+	if mock.ListBucketIndexByObjectFunc == nil {
+		panic("ClientMock.ListBucketIndexByObjectFunc: method is nil but Client.ListBucketIndexByObject was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ObjectName    string
+		ShardID       int
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		BucketName:    bucketName,
+		ObjectName:    objectName,
+		ShardID:       shardID,
+	}
+	mock.lockListBucketIndexByObject.Lock()
+	mock.calls.ListBucketIndexByObject = append(mock.calls.ListBucketIndexByObject, callInfo)
+	mock.lockListBucketIndexByObject.Unlock()
+	return mock.ListBucketIndexByObjectFunc(ctx, containerName, bucketName, objectName, shardID)
+}
+
+// ListBucketIndexByObjectCalls gets all the calls that were made to ListBucketIndexByObject.
+// Check the length with:
+//
+//	len(mockedClient.ListBucketIndexByObjectCalls())
+func (mock *ClientMock) ListBucketIndexByObjectCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	BucketName    string
+	ObjectName    string
+	ShardID       int
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ObjectName    string
+		ShardID       int
+	}
+	mock.lockListBucketIndexByObject.RLock()
+	calls = mock.calls.ListBucketIndexByObject
+	mock.lockListBucketIndexByObject.RUnlock()
 	return calls
 }
 

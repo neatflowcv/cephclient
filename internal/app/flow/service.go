@@ -3,6 +3,9 @@ package flow
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"slices"
+	"time"
 
 	"github.com/neatflowcv/cephclient/internal/pkg/client"
 	"github.com/neatflowcv/cephclient/internal/pkg/domain"
@@ -10,6 +13,12 @@ import (
 
 type Service struct {
 	client client.Client
+}
+
+type PurgeObjectRequest struct {
+	ContainerName string
+	BucketName    string
+	ObjectName    string
 }
 
 func NewService(client client.Client) *Service {
@@ -162,6 +171,62 @@ func (s *Service) RemoveObject(
 	err := s.client.RemoveObject(ctx, containerName, bucketName, objectName, version)
 	if err != nil {
 		return fmt.Errorf("remove object: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) PurgeObject(
+	ctx context.Context,
+	req PurgeObjectRequest,
+) error {
+	stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
+	if err != nil {
+		return fmt.Errorf("read bucket stats: %w", err)
+	}
+
+	shard, err := s.client.ObjectShard(ctx, req.ContainerName, req.ObjectName, stats.TotalShards())
+	if err != nil {
+		return fmt.Errorf("read object shard: %w", err)
+	}
+
+	entryGroup, err := s.client.ListBucketIndexByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shard.Shard())
+	if err != nil {
+		return fmt.Errorf("read bucket index list: %w", err)
+	}
+
+	instances := entryGroup.Instances()
+	slices.SortFunc(instances, func(a, b *domain.InstanceBIEntry) int {
+		aTime, _ := time.Parse(time.RFC3339Nano, a.Entry().Meta().MTime())
+		bTime, _ := time.Parse(time.RFC3339Nano, b.Entry().Meta().MTime())
+
+		switch {
+		case aTime.Before(bTime):
+			return -1
+		case aTime.After(bTime):
+			return 1
+		default:
+			return 0
+		}
+	})
+
+	for _, instance := range instances {
+		err = s.client.RemoveObject(
+			ctx,
+			req.ContainerName,
+			req.BucketName,
+			req.ObjectName,
+			instance.Entry().Instance(),
+		)
+		if err != nil {
+			return fmt.Errorf("remove object: %w", err)
+		}
+
+		slog.Info(
+			"removed object",
+			"object", req.ObjectName,
+			"version", instance.Entry().Instance(),
+		)
 	}
 
 	return nil

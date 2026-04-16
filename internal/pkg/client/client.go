@@ -10,6 +10,7 @@ import (
 type Client interface {
 	BIListByShard(ctx context.Context, containerName, bucketName string, shardID int) (*domain.BIList, error)
 	BIListByObject(ctx context.Context, containerName, bucketName, objectName string, shardID int) (*domain.BIList, error)
+	ListBucketIndexByObject(ctx context.Context, containerName, bucketName, objectName string, shardID int) (*domain.EntryGroup, error)
 	BucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error)
 	BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error)
 	GetDefaultZone(ctx context.Context, containerName string) (*domain.Zone, error)
