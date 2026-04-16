@@ -197,7 +197,13 @@ func (s *Service) PurgeObject(
 		return fmt.Errorf("read object shard: %w", err)
 	}
 
-	entryGroup, err := s.client.ListBucketIndexByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shard.Shard())
+	entryGroup, err := s.client.ListBucketIndexByObject(
+		ctx,
+		req.ContainerName,
+		req.BucketName,
+		req.ObjectName,
+		shard.Shard(),
+	)
 	if err != nil {
 		return fmt.Errorf("read bucket index list: %w", err)
 	}
