@@ -191,11 +191,16 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	biList, err := service.ListBIByObject(ctx, "rgw", "bucket-a", "test.txt", 3)
+	resp, err := service.ListBIByObject(ctx, flow.ListBIByObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		ShardID:       3,
+	})
 
 	// Assert
 	require.NoError(t, err)
-	require.Same(t, wantList, biList)
+	require.Same(t, wantList, resp.BIList())
 	require.Len(t, mockClient.BIListByObjectCalls(), 1)
 }
 
@@ -236,7 +241,12 @@ func TestServiceListBIByObjectReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.ListBIByObject(ctx, "rgw", "bucket-a", "test.txt", 3)
+	_, err := service.ListBIByObject(ctx, flow.ListBIByObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		ShardID:       3,
+	})
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)

@@ -40,15 +40,14 @@ func (s *Service) BIListByShard(
 
 func (s *Service) ListBIByObject(
 	ctx context.Context,
-	containerName, bucketName, objectName string,
-	shardID int,
-) (*domain.BIList, error) {
-	biList, err := s.client.BIListByObject(ctx, containerName, bucketName, objectName, shardID)
+	req ListBIByObjectRequest,
+) (*ListBIByObjectResponse, error) {
+	biList, err := s.client.BIListByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, req.ShardID)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket index list: %w", err)
 	}
 
-	return biList, nil
+	return NewListBIByObjectResponse(biList), nil
 }
 
 func (s *Service) BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
@@ -144,7 +143,12 @@ func (s *Service) InspectObject(
 		return nil, fmt.Errorf("read object shard: %w", err)
 	}
 
-	biList, err := s.ListBIByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shard.Shard())
+	biResponse, err := s.ListBIByObject(ctx, ListBIByObjectRequest{
+		ContainerName: req.ContainerName,
+		BucketName:    req.BucketName,
+		ObjectName:    req.ObjectName,
+		ShardID:       shard.Shard(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("read bucket index list: %w", err)
 	}
@@ -155,7 +159,7 @@ func (s *Service) InspectObject(
 		zone.DataPool(),
 		stats.Marker(),
 		req.ObjectName,
-		biList,
+		biResponse.BIList(),
 	)
 	if err != nil {
 		return nil, err
@@ -166,7 +170,7 @@ func (s *Service) InspectObject(
 		stats.Marker(),
 		stats.TotalShards(),
 		shard.Shard(),
-		biList,
+		biResponse.BIList(),
 		rawObjects,
 	), nil
 }
@@ -274,7 +278,12 @@ func (s *Service) RMSupportPlan(
 		return nil, fmt.Errorf("read object shard: %w", err)
 	}
 
-	biList, err := s.ListBIByObject(ctx, containerName, bucketName, objectName, shard.Shard())
+	biResponse, err := s.ListBIByObject(ctx, ListBIByObjectRequest{
+		ContainerName: containerName,
+		BucketName:    bucketName,
+		ObjectName:    objectName,
+		ShardID:       shard.Shard(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("read bucket index list: %w", err)
 	}
@@ -285,7 +294,7 @@ func (s *Service) RMSupportPlan(
 			return nil, fmt.Errorf("read default zone: %w", zoneErr)
 		}
 
-		return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), zone.IndexPool(), nil), nil
+		return NewRMSupportPlan(biResponse.BIList(), shard.Shard(), stats.Marker(), zone.IndexPool(), nil), nil
 	}
 
 	zone, err := s.GetDefaultZone(ctx, containerName)
@@ -298,7 +307,7 @@ func (s *Service) RMSupportPlan(
 		return nil, fmt.Errorf("list omap keys: %w", err)
 	}
 
-	return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), zone.IndexPool(), omapKeys), nil
+	return NewRMSupportPlan(biResponse.BIList(), shard.Shard(), stats.Marker(), zone.IndexPool(), omapKeys), nil
 }
 
 func (s *Service) inspectRawObjects(

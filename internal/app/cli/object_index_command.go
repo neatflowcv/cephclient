@@ -16,10 +16,15 @@ type objectIndexCommand struct {
 }
 
 func (c *objectIndexCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	biList, err := service.ListBIByObject(ctx, c.Container, c.Bucket, c.Object, c.Shard)
+	resp, err := service.ListBIByObject(ctx, flow.ListBIByObjectRequest{
+		ContainerName: c.Container,
+		BucketName:    c.Bucket,
+		ObjectName:    c.Object,
+		ShardID:       c.Shard,
+	})
 	if err != nil {
 		return fmt.Errorf("read bucket index list: %w", err)
 	}
 
-	return writeBucketIndexEntries(stdout, biList)
+	return writeBucketIndexEntries(stdout, resp.BIList())
 }
