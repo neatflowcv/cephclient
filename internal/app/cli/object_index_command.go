@@ -9,10 +9,11 @@ import (
 )
 
 type objectIndexCommand struct {
-	Container string `arg:"" help:"Container name." name:"container"`
-	Bucket    string `arg:"" help:"Bucket name."    name:"bucket"`
-	Object    string `arg:"" help:"Object name."    name:"object"`
-	Shard     int    `arg:"" help:"Shard ID."       name:"shard"`
+	Container   string `arg:""                    help:"Container name." name:"container"`
+	Bucket      string `arg:""                    help:"Bucket name."    name:"bucket"`
+	Object      string `arg:""                    help:"Object name."    name:"object"`
+	Shard       *int   `help:"Shard ID."          name:"shard"`
+	TotalShards *int   `help:"Total shard count." name:"total-shards"`
 }
 
 func (c *objectIndexCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
@@ -21,6 +22,7 @@ func (c *objectIndexCommand) Run(ctx context.Context, service *flow.Service, std
 		BucketName:    c.Bucket,
 		ObjectName:    c.Object,
 		ShardID:       c.Shard,
+		TotalShards:   c.TotalShards,
 	})
 	if err != nil {
 		return fmt.Errorf("read bucket index list: %w", err)

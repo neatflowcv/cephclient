@@ -191,16 +191,135 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
+	shardID := 3
 	resp, err := service.ListBIByObject(ctx, flow.ListBIByObjectRequest{
 		ContainerName: "rgw",
 		BucketName:    "bucket-a",
 		ObjectName:    "test.txt",
-		ShardID:       3,
+		ShardID:       &shardID,
+		TotalShards:   nil,
 	})
 
 	// Assert
 	require.NoError(t, err)
 	require.Same(t, wantList, resp.BIList())
+	require.Len(t, mockClient.BIListByObjectCalls(), 1)
+}
+
+func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantList := domain.NewBIList([]domain.BIEntry{})
+
+	var mockClient ClientMock
+
+	mockClient.BucketStatsFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.BucketStats, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+
+		return domain.NewBucketStats("bucket-id", "bucket-a", 11, "bucket-marker", 5, 1, domain.VersioningStatusEnabled)
+	}
+	mockClient.ObjectShardFunc = func(
+		gotCtx context.Context,
+		containerName, objectName string,
+		totalShards int,
+	) (*domain.ObjectShard, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, 11, totalShards)
+
+		return domain.NewObjectShard(7), nil
+	}
+	mockClient.BIListByObjectFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName, objectName string,
+		shardID int,
+	) (*domain.BIList, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, 7, shardID)
+
+		return wantList, nil
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	resp, err := service.ListBIByObject(ctx, flow.ListBIByObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		ShardID:       nil,
+		TotalShards:   nil,
+	})
+
+	// Assert
+	require.NoError(t, err)
+	require.Same(t, wantList, resp.BIList())
+	require.Len(t, mockClient.BucketStatsCalls(), 1)
+	require.Len(t, mockClient.ObjectShardCalls(), 1)
+	require.Len(t, mockClient.BIListByObjectCalls(), 1)
+}
+
+func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	wantList := domain.NewBIList([]domain.BIEntry{})
+	totalShards := 13
+
+	var mockClient ClientMock
+
+	mockClient.ObjectShardFunc = func(
+		gotCtx context.Context,
+		containerName, objectName string,
+		gotTotalShards int,
+	) (*domain.ObjectShard, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, totalShards, gotTotalShards)
+
+		return domain.NewObjectShard(5), nil
+	}
+	mockClient.BIListByObjectFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName, objectName string,
+		shardID int,
+	) (*domain.BIList, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, 5, shardID)
+
+		return wantList, nil
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	resp, err := service.ListBIByObject(ctx, flow.ListBIByObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		ShardID:       nil,
+		TotalShards:   &totalShards,
+	})
+
+	// Assert
+	require.NoError(t, err)
+	require.Same(t, wantList, resp.BIList())
+	require.Empty(t, mockClient.BucketStatsCalls())
+	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.BIListByObjectCalls(), 1)
 }
 
@@ -241,11 +360,13 @@ func TestServiceListBIByObjectReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
+	shardID := 3
 	_, err := service.ListBIByObject(ctx, flow.ListBIByObjectRequest{
 		ContainerName: "rgw",
 		BucketName:    "bucket-a",
 		ObjectName:    "test.txt",
-		ShardID:       3,
+		ShardID:       &shardID,
+		TotalShards:   nil,
 	})
 
 	// Assert

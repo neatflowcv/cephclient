@@ -42,7 +42,12 @@ func (s *Service) ListBIByObject(
 	ctx context.Context,
 	req ListBIByObjectRequest,
 ) (*ListBIByObjectResponse, error) {
-	biList, err := s.client.BIListByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, req.ShardID)
+	shardID, err := s.resolveListBIByObjectShard(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	biList, err := s.client.BIListByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shardID)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket index list: %w", err)
 	}
@@ -143,11 +148,15 @@ func (s *Service) InspectObject(
 		return nil, fmt.Errorf("read object shard: %w", err)
 	}
 
+	shardID := shard.Shard()
+	totalShards := stats.TotalShards()
+
 	biResponse, err := s.ListBIByObject(ctx, ListBIByObjectRequest{
 		ContainerName: req.ContainerName,
 		BucketName:    req.BucketName,
 		ObjectName:    req.ObjectName,
-		ShardID:       shard.Shard(),
+		ShardID:       &shardID,
+		TotalShards:   &totalShards,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("read bucket index list: %w", err)
@@ -278,11 +287,15 @@ func (s *Service) RMSupportPlan(
 		return nil, fmt.Errorf("read object shard: %w", err)
 	}
 
+	shardID := shard.Shard()
+	totalShards := stats.TotalShards()
+
 	biResponse, err := s.ListBIByObject(ctx, ListBIByObjectRequest{
 		ContainerName: containerName,
 		BucketName:    bucketName,
 		ObjectName:    objectName,
-		ShardID:       shard.Shard(),
+		ShardID:       &shardID,
+		TotalShards:   &totalShards,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("read bucket index list: %w", err)
@@ -308,6 +321,33 @@ func (s *Service) RMSupportPlan(
 	}
 
 	return NewRMSupportPlan(biResponse.BIList(), shard.Shard(), stats.Marker(), zone.IndexPool(), omapKeys), nil
+}
+
+func (s *Service) resolveListBIByObjectShard(
+	ctx context.Context,
+	req ListBIByObjectRequest,
+) (int, error) {
+	if req.ShardID != nil {
+		return *req.ShardID, nil
+	}
+
+	totalShards := req.TotalShards
+	if totalShards == nil {
+		stats, err := s.BucketStats(ctx, req.ContainerName, req.BucketName)
+		if err != nil {
+			return 0, fmt.Errorf("read bucket stats: %w", err)
+		}
+
+		statsTotalShards := stats.TotalShards()
+		totalShards = &statsTotalShards
+	}
+
+	shard, err := s.ObjectShard(ctx, req.ContainerName, req.ObjectName, *totalShards)
+	if err != nil {
+		return 0, fmt.Errorf("read object shard: %w", err)
+	}
+
+	return shard.Shard(), nil
 }
 
 func (s *Service) inspectRawObjects(

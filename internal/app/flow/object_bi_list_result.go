@@ -6,7 +6,8 @@ type ListBIByObjectRequest struct {
 	ContainerName string
 	BucketName    string
 	ObjectName    string
-	ShardID       int
+	ShardID       *int
+	TotalShards   *int
 }
 
 type ListBIByObjectResponse struct {
