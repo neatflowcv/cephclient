@@ -33,7 +33,6 @@ type biListEntryResponse struct {
 	Type  string          `json:"type"`
 }
 
-//nolint:ireturn // This decoder dispatches to one of several BIEntry implementations by response type.
 func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 	idx := domain.NewBIIndex(r.IDX)
 

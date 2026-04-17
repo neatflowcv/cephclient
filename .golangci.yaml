@@ -6,3 +6,4 @@ linters:
     - depguard
     - wsl # deprecated
     - tagliatelle # 외부 서비스 반환 형식을 그대로 사용해야 한다.
+    - ireturn # nolint 쓸때 버그 존재해서 걍 무시
