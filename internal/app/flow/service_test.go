@@ -150,7 +150,7 @@ func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 	require.Len(t, mockClient.BIListByShardCalls(), 1)
 }
 
-func TestServiceBIListByObjectDelegatesToClient(t *testing.T) {
+func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -191,7 +191,7 @@ func TestServiceBIListByObjectDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	biList, err := service.BIListByObject(ctx, "rgw", "bucket-a", "test.txt", 3)
+	biList, err := service.ListBIByObject(ctx, "rgw", "bucket-a", "test.txt", 3)
 
 	// Assert
 	require.NoError(t, err)
@@ -221,7 +221,7 @@ func TestServiceBIListByShardReturnsClientError(t *testing.T) {
 	require.Len(t, mockClient.BIListByShardCalls(), 1)
 }
 
-func TestServiceBIListByObjectReturnsClientError(t *testing.T) {
+func TestServiceListBIByObjectReturnsClientError(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -236,7 +236,7 @@ func TestServiceBIListByObjectReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.BIListByObject(ctx, "rgw", "bucket-a", "test.txt", 3)
+	_, err := service.ListBIByObject(ctx, "rgw", "bucket-a", "test.txt", 3)
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)

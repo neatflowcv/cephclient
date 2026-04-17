@@ -38,7 +38,7 @@ func (s *Service) BIListByShard(
 	return biList, nil
 }
 
-func (s *Service) BIListByObject(
+func (s *Service) ListBIByObject(
 	ctx context.Context,
 	containerName, bucketName, objectName string,
 	shardID int,
@@ -144,7 +144,7 @@ func (s *Service) InspectObject(
 		return nil, fmt.Errorf("read object shard: %w", err)
 	}
 
-	biList, err := s.BIListByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shard.Shard())
+	biList, err := s.ListBIByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shard.Shard())
 	if err != nil {
 		return nil, fmt.Errorf("read bucket index list: %w", err)
 	}
@@ -274,7 +274,7 @@ func (s *Service) RMSupportPlan(
 		return nil, fmt.Errorf("read object shard: %w", err)
 	}
 
-	biList, err := s.BIListByObject(ctx, containerName, bucketName, objectName, shard.Shard())
+	biList, err := s.ListBIByObject(ctx, containerName, bucketName, objectName, shard.Shard())
 	if err != nil {
 		return nil, fmt.Errorf("read bucket index list: %w", err)
 	}
