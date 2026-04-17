@@ -323,6 +323,93 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 	require.Len(t, mockClient.BIListByObjectCalls(), 1)
 }
 
+func TestServicePurgeObjectResolvesShardWhenRequestTotalShardsIsNil(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	callOrder := make([]string, 0, 4)
+
+	var mockClient ClientMock
+
+	configurePurgeObjectBucketStatsMock(t, ctx, &mockClient, &callOrder, 11)
+	configurePurgeObjectShardMock(t, ctx, &mockClient, &callOrder, 11, 7)
+	configurePurgeObjectListMock(t, ctx, &mockClient, &callOrder, 7)
+	configurePurgeObjectRemoveMock(t, ctx, &mockClient, &callOrder)
+	service := flow.NewService(&mockClient)
+
+	err := service.PurgeObject(ctx, flow.PurgeObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		TotalShards:   nil,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, []string{"stats", "shard", "list", "remove"}, callOrder)
+	require.Len(t, mockClient.BucketStatsCalls(), 1)
+	require.Len(t, mockClient.ObjectShardCalls(), 1)
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
+	require.Len(t, mockClient.RemoveObjectCalls(), 1)
+}
+
+func TestServicePurgeObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	totalShards := 13
+
+	var mockClient ClientMock
+
+	mockClient.ObjectShardFunc = func(
+		gotCtx context.Context,
+		containerName, objectName string,
+		gotTotalShards int,
+	) (*domain.ObjectShard, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, totalShards, gotTotalShards)
+
+		return domain.NewObjectShard(5), nil
+	}
+	mockClient.ListBucketIndexByObjectFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName, objectName string,
+		shardID int,
+	) (*domain.EntryGroup, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, 5, shardID)
+
+		return domain.NewEntryGroup(
+			nil,
+			nil,
+			[]*domain.InstanceBIEntry{
+				newVersionedInstanceEntry("test.txt", "instance-1"),
+			},
+		), nil
+	}
+	mockClient.RemoveObjectFunc = func(context.Context, string, string, string, string) error {
+		return nil
+	}
+	service := flow.NewService(&mockClient)
+
+	err := service.PurgeObject(ctx, flow.PurgeObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		TotalShards:   &totalShards,
+	})
+
+	require.NoError(t, err)
+	require.Empty(t, mockClient.BucketStatsCalls())
+	require.Len(t, mockClient.ObjectShardCalls(), 1)
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
+	require.Len(t, mockClient.RemoveObjectCalls(), 1)
+}
+
 func TestServiceBIListByShardReturnsClientError(t *testing.T) {
 	t.Parallel()
 
@@ -804,6 +891,119 @@ func newVersionedPlainEntry(instance string) *domain.PlainBIEntry {
 			2,
 		),
 	)
+}
+
+func configurePurgeObjectBucketStatsMock(
+	t *testing.T,
+	ctx context.Context,
+	mockClient *ClientMock,
+	callOrder *[]string,
+	totalShards int,
+) {
+	t.Helper()
+
+	mockClient.BucketStatsFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.BucketStats, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+
+		*callOrder = append(*callOrder, "stats")
+
+		return domain.NewBucketStats(
+			"bucket-id",
+			"bucket-a",
+			totalShards,
+			"bucket-marker",
+			5,
+			1,
+			domain.VersioningStatusEnabled,
+		)
+	}
+}
+
+func configurePurgeObjectShardMock(
+	t *testing.T,
+	ctx context.Context,
+	mockClient *ClientMock,
+	callOrder *[]string,
+	totalShards int,
+	shardID int,
+) {
+	t.Helper()
+
+	mockClient.ObjectShardFunc = func(
+		gotCtx context.Context,
+		containerName, objectName string,
+		gotTotalShards int,
+	) (*domain.ObjectShard, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, totalShards, gotTotalShards)
+
+		*callOrder = append(*callOrder, "shard")
+
+		return domain.NewObjectShard(shardID), nil
+	}
+}
+
+func configurePurgeObjectListMock(
+	t *testing.T,
+	ctx context.Context,
+	mockClient *ClientMock,
+	callOrder *[]string,
+	shardID int,
+) {
+	t.Helper()
+
+	mockClient.ListBucketIndexByObjectFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName, objectName string,
+		gotShardID int,
+	) (*domain.EntryGroup, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, shardID, gotShardID)
+
+		*callOrder = append(*callOrder, "list")
+
+		return domain.NewEntryGroup(
+			nil,
+			nil,
+			[]*domain.InstanceBIEntry{
+				newVersionedInstanceEntry("test.txt", "instance-1"),
+			},
+		), nil
+	}
+}
+
+func configurePurgeObjectRemoveMock(
+	t *testing.T,
+	ctx context.Context,
+	mockClient *ClientMock,
+	callOrder *[]string,
+) {
+	t.Helper()
+
+	mockClient.RemoveObjectFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName, objectName, version string,
+	) error {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, "instance-1", version)
+
+		*callOrder = append(*callOrder, "remove")
+
+		return nil
+	}
 }
 
 func newVersionedInstanceEntry(name, instance string) *domain.InstanceBIEntry {

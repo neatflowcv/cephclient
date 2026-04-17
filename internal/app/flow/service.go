@@ -19,6 +19,7 @@ type PurgeObjectRequest struct {
 	ContainerName string
 	BucketName    string
 	ObjectName    string
+	TotalShards   *int
 }
 
 func NewService(client client.Client) *Service {
@@ -200,14 +201,9 @@ func (s *Service) PurgeObject(
 	ctx context.Context,
 	req PurgeObjectRequest,
 ) error {
-	stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
+	shardID, err := s.resolvePurgeObjectShard(ctx, req)
 	if err != nil {
-		return fmt.Errorf("read bucket stats: %w", err)
-	}
-
-	shard, err := s.client.ObjectShard(ctx, req.ContainerName, req.ObjectName, stats.TotalShards())
-	if err != nil {
-		return fmt.Errorf("read object shard: %w", err)
+		return err
 	}
 
 	entryGroup, err := s.client.ListBucketIndexByObject(
@@ -215,7 +211,7 @@ func (s *Service) PurgeObject(
 		req.ContainerName,
 		req.BucketName,
 		req.ObjectName,
-		shard.Shard(),
+		shardID,
 	)
 	if err != nil {
 		return fmt.Errorf("read bucket index list: %w", err)
@@ -343,6 +339,29 @@ func (s *Service) resolveListBIByObjectShard(
 	}
 
 	shard, err := s.ObjectShard(ctx, req.ContainerName, req.ObjectName, *totalShards)
+	if err != nil {
+		return 0, fmt.Errorf("read object shard: %w", err)
+	}
+
+	return shard.Shard(), nil
+}
+
+func (s *Service) resolvePurgeObjectShard(
+	ctx context.Context,
+	req PurgeObjectRequest,
+) (int, error) {
+	totalShards := req.TotalShards
+	if totalShards == nil {
+		stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
+		if err != nil {
+			return 0, fmt.Errorf("read bucket stats: %w", err)
+		}
+
+		statsTotalShards := stats.TotalShards()
+		totalShards = &statsTotalShards
+	}
+
+	shard, err := s.client.ObjectShard(ctx, req.ContainerName, req.ObjectName, *totalShards)
 	if err != nil {
 		return 0, fmt.Errorf("read object shard: %w", err)
 	}
