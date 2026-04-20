@@ -43,3 +43,120 @@ func (g *EntryGroup) Instances() []*InstanceBIEntry {
 
 	return copied
 }
+
+func (g *EntryGroup) IsEmpty() bool {
+	return len(g.olhs) == 0 &&
+		len(g.plains) == 0 &&
+		len(g.instances) == 0
+}
+
+func (g *EntryGroup) Versions() []string {
+	return g.versions()
+}
+
+func (g *EntryGroup) ExtractRawObjectNames(marker, objectName string) []string {
+	var names []string
+
+	name := NewOLHRawObjectName(marker, objectName).Value()
+	names = append(names, name)
+
+	for _, version := range g.versions() {
+		if version == "" { // "" version의 RawObject는 OLH와 동일하다.
+			continue
+		}
+
+		name := NewVersionRawObjectName(marker, version, objectName).Value()
+
+		names = append(names, name)
+	}
+
+	return names
+}
+
+func (g *EntryGroup) ExtractOmapKeys() []string {
+	var keys []string
+
+	seen := map[string]struct{}{}
+
+	for _, entry := range g.olhs {
+		key := entry.IDX().Escaped()
+		if _, ok := seen[key]; ok {
+			continue
+		}
+
+		seen[key] = struct{}{}
+		keys = append(keys, key)
+	}
+
+	for _, entry := range g.plains {
+		key := entry.IDX().Escaped()
+		if _, ok := seen[key]; ok {
+			continue
+		}
+
+		seen[key] = struct{}{}
+		keys = append(keys, key)
+	}
+
+	for _, entry := range g.instances {
+		key := entry.IDX().Escaped()
+		if _, ok := seen[key]; ok {
+			continue
+		}
+
+		seen[key] = struct{}{}
+		keys = append(keys, key)
+	}
+
+	return keys
+}
+
+func (g *EntryGroup) versions() []string {
+	var versions []string
+
+	seen := NewSeen()
+
+	for _, olh := range g.olhs {
+		version := olh.entry.key.instance
+		if seen.Check(version) {
+			continue
+		}
+
+		seen.Set(version)
+		versions = append(versions, version)
+
+		for _, log := range olh.entry.PendingLog() {
+			for _, val := range log.val {
+				valVersion := val.key.instance
+				if seen.Check(valVersion) {
+					continue
+				}
+
+				seen.Set(valVersion)
+				versions = append(versions, valVersion)
+			}
+		}
+	}
+
+	for _, entry := range g.instances {
+		version := entry.Entry().Instance()
+		if seen.Check(version) {
+			continue
+		}
+
+		seen.Set(version)
+		versions = append(versions, version)
+	}
+
+	for _, entry := range g.plains {
+		version := entry.Entry().Instance()
+		if seen.Check(version) {
+			continue
+		}
+
+		seen.Set(version)
+		versions = append(versions, version)
+	}
+
+	return versions
+}

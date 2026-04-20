@@ -209,6 +209,7 @@ func (s *Service) RemoveRawObject(
 	return nil
 }
 
+//nolint:funlen,cyclop // Purge flow intentionally keeps remove, verify, and fallback cleanup in one place.
 func (s *Service) PurgeObject(
 	ctx context.Context,
 	req PurgeObjectRequest,
@@ -258,8 +259,107 @@ func (s *Service) PurgeObject(
 
 		slog.Info(
 			"removed object",
+			"container", req.ContainerName,
+			"bucket", req.BucketName,
 			"object", req.ObjectName,
 			"version", instance.Entry().Instance(),
+		)
+	}
+
+	// RemoveObject succeeded but the underlying raw object or omap entry may still remain.
+	remainingEntryGroup, err := s.client.ListBucketIndexByObject(
+		ctx,
+		req.ContainerName,
+		req.BucketName,
+		req.ObjectName,
+		shardID,
+	)
+	if err != nil {
+		return fmt.Errorf("verify bucket index list after purge: %w", err)
+	}
+
+	if remainingEntryGroup.IsEmpty() {
+		return nil
+	}
+
+	stats, err := s.BucketStats(ctx, req.ContainerName, req.BucketName)
+	if err != nil {
+		return fmt.Errorf("read bucket stats: %w", err)
+	}
+
+	zone, err := s.GetDefaultZone(ctx, req.ContainerName)
+	if err != nil {
+		return fmt.Errorf("read default zone: %w", err)
+	}
+
+	var (
+		rawObjects []string
+		omapKeys   []string
+	)
+
+	rawObjects = remainingEntryGroup.ExtractRawObjectNames(stats.Marker(), req.ObjectName)
+	omapKeys = remainingEntryGroup.ExtractOmapKeys()
+
+	for _, rawObject := range rawObjects {
+		err = s.client.RemoveRawObject(ctx, req.ContainerName, zone.DataPool(), rawObject)
+		if err != nil {
+			slog.Info(
+				"failed to remove raw object",
+				"container", req.ContainerName,
+				"bucket", req.BucketName,
+				"pool", zone.DataPool(),
+				"marker", stats.Marker(),
+				"object", req.ObjectName,
+				"raw_object", rawObject,
+			)
+
+			continue
+		}
+
+		slog.Info(
+			"removed raw object",
+			"container", req.ContainerName,
+			"bucket", req.BucketName,
+			"pool", zone.DataPool(),
+			"marker", stats.Marker(),
+			"object", req.ObjectName,
+			"raw_object", rawObject,
+		)
+	}
+
+	for _, omapKey := range omapKeys {
+		err = s.client.RemoveOmapKey(
+			ctx,
+			req.ContainerName,
+			zone.IndexPool(),
+			stats.Marker(),
+			shardID,
+			omapKey,
+		)
+		if err != nil {
+			slog.Info(
+				"failed to remove omap key",
+				"container", req.ContainerName,
+				"bucket", req.BucketName,
+				"pool", zone.IndexPool(),
+				"marker", stats.Marker(),
+				"shard", shardID,
+				"object", req.ObjectName,
+				"omap_key", omapKey,
+			)
+
+			continue
+		}
+
+		slog.Info(
+			"removed omap key",
+			"container", req.ContainerName,
+			"bucket", req.BucketName,
+			"pool", zone.IndexPool(),
+			"marker", stats.Marker(),
+			"shard", shardID,
+			"object", req.ObjectName,
+			"omap_key", omapKey,
 		)
 	}
 

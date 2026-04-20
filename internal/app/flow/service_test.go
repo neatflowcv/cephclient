@@ -327,14 +327,13 @@ func TestServicePurgeObjectResolvesShardWhenRequestTotalShardsIsNil(t *testing.T
 	t.Parallel()
 
 	ctx := t.Context()
-	callOrder := make([]string, 0, 4)
+	callOrder := make([]string, 0, 5)
 
 	var mockClient ClientMock
 
 	configurePurgeObjectBucketStatsMock(t, ctx, &mockClient, &callOrder, 11)
 	configurePurgeObjectShardMock(t, ctx, &mockClient, &callOrder, 11, 7)
-	configurePurgeObjectListMock(t, ctx, &mockClient, &callOrder, 7)
-	configurePurgeObjectRemoveMock(t, ctx, &mockClient, &callOrder)
+	configurePurgeObjectEmptyListMock(t, ctx, &mockClient, &callOrder, 7)
 	service := flow.NewService(&mockClient)
 
 	err := service.PurgeObject(ctx, flow.PurgeObjectRequest{
@@ -345,16 +344,20 @@ func TestServicePurgeObjectResolvesShardWhenRequestTotalShardsIsNil(t *testing.T
 	})
 
 	require.NoError(t, err)
-	require.Equal(t, []string{"stats", "shard", "list", "remove"}, callOrder)
+	require.Equal(t, []string{"stats", "shard", "list", "list"}, callOrder)
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
-	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
-	require.Len(t, mockClient.RemoveObjectCalls(), 1)
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 2)
+	require.Empty(t, mockClient.RemoveObjectCalls())
+	require.Empty(t, mockClient.RemoveRawObjectCalls())
+	require.Empty(t, mockClient.RemoveOmapKeyCalls())
 }
 
+//nolint:funlen // Mock setup for purge verification requires multiple explicit assertions.
 func TestServicePurgeObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 	t.Parallel()
 
+	// Arrange
 	ctx := t.Context()
 	totalShards := 13
 
@@ -372,6 +375,7 @@ func TestServicePurgeObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 
 		return domain.NewObjectShard(5), nil
 	}
+	listCallCount := 0
 	mockClient.ListBucketIndexByObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName string,
@@ -383,19 +387,46 @@ func TestServicePurgeObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 		require.Equal(t, "test.txt", objectName)
 		require.Equal(t, 5, shardID)
 
-		return domain.NewEntryGroup(
-			nil,
-			nil,
-			[]*domain.InstanceBIEntry{
-				newVersionedInstanceEntry("test.txt", "instance-1"),
-			},
-		), nil
+		listCallCount++
+
+		switch listCallCount {
+		case 1:
+			return domain.NewEntryGroup(nil, nil, nil), nil
+		case 2:
+			return domain.NewEntryGroup(nil, nil, nil), nil
+		default:
+			t.Fatalf("unexpected ListBucketIndexByObject call %d", listCallCount)
+
+			return domain.NewEntryGroup(nil, nil, nil), errClientFailed
+		}
 	}
-	mockClient.RemoveObjectFunc = func(context.Context, string, string, string, string) error {
-		return nil
+	mockClient.BucketStatsFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.BucketStats, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+
+		return domain.NewBucketStats(
+			"bucket-id",
+			"bucket-a",
+			totalShards,
+			"bucket-marker",
+			5,
+			1,
+			domain.VersioningStatusEnabled,
+		)
+	}
+	mockClient.GetDefaultZoneFunc = func(gotCtx context.Context, containerName string) (*domain.Zone, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+
+		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
 	}
 	service := flow.NewService(&mockClient)
 
+	// Act
 	err := service.PurgeObject(ctx, flow.PurgeObjectRequest{
 		ContainerName: "rgw",
 		BucketName:    "bucket-a",
@@ -403,11 +434,54 @@ func TestServicePurgeObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 		TotalShards:   &totalShards,
 	})
 
+	// Assert
 	require.NoError(t, err)
 	require.Empty(t, mockClient.BucketStatsCalls())
+	require.Empty(t, mockClient.GetDefaultZoneCalls())
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
-	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
-	require.Len(t, mockClient.RemoveObjectCalls(), 1)
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 2)
+	require.Empty(t, mockClient.RemoveObjectCalls())
+	require.Empty(t, mockClient.RemoveRawObjectCalls())
+	require.Empty(t, mockClient.RemoveOmapKeyCalls())
+}
+
+func TestServicePurgeObjectRemovesRemainingRawObjectsAndOmapKeysAfterVerification(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	totalShards := 13
+	fixture := newPurgeObjectFallbackFixture(t, ctx)
+	service := flow.NewService(&fixture.mockClient)
+
+	// Act
+	err := service.PurgeObject(ctx, flow.PurgeObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		TotalShards:   &totalShards,
+	})
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		[]string{"shard", "list", "remove", "list", "stats", "zone", "raw", "raw", "omap", "omap"},
+		fixture.callOrder,
+	)
+	require.Equal(
+		t,
+		[]string{"bucket-marker_test.txt", "bucket-marker__:instance-1_test.txt"},
+		fixture.rawObjects,
+	)
+	require.Equal(
+		t,
+		[]string{"test.txt", "test.txt-instance:instance-1"},
+		fixture.omapKeys,
+	)
+	require.Len(t, fixture.mockClient.ListBucketIndexByObjectCalls(), 2)
+	require.Len(t, fixture.mockClient.RemoveRawObjectCalls(), 2)
+	require.Len(t, fixture.mockClient.RemoveOmapKeyCalls(), 2)
 }
 
 func TestServiceBIListByShardReturnsClientError(t *testing.T) {
@@ -679,7 +753,7 @@ func TestServiceObjectInspectReadsEachStepInOrder(t *testing.T) {
 	ctx := t.Context()
 	biList := domain.NewBIList([]domain.BIEntry{
 		newVersionedPlainEntry("instance-1"),
-		newVersionedInstanceEntry("test.txt", "instance-1"),
+		newVersionedInstanceEntry(),
 		newVersionedPlainEntry("instance-2"),
 	})
 	callOrder := make([]string, 0, 5)
@@ -950,7 +1024,7 @@ func configurePurgeObjectShardMock(
 	}
 }
 
-func configurePurgeObjectListMock(
+func configurePurgeObjectEmptyListMock(
 	t *testing.T,
 	ctx context.Context,
 	mockClient *ClientMock,
@@ -972,25 +1046,87 @@ func configurePurgeObjectListMock(
 
 		*callOrder = append(*callOrder, "list")
 
-		return domain.NewEntryGroup(
-			nil,
-			nil,
-			[]*domain.InstanceBIEntry{
-				newVersionedInstanceEntry("test.txt", "instance-1"),
-			},
-		), nil
+		return domain.NewEntryGroup(nil, nil, nil), nil
 	}
 }
 
-func configurePurgeObjectRemoveMock(
+type purgeObjectFallbackFixture struct {
+	callOrder  []string
+	mockClient ClientMock
+	omapKeys   []string
+	rawObjects []string
+}
+
+//nolint:funlen // Centralizes purge fallback mock wiring used by one focused test.
+func newPurgeObjectFallbackFixture(
 	t *testing.T,
 	ctx context.Context,
-	mockClient *ClientMock,
-	callOrder *[]string,
-) {
+) *purgeObjectFallbackFixture {
 	t.Helper()
 
-	mockClient.RemoveObjectFunc = func(
+	//nolint:exhaustruct // Zero-value fixture is populated field-by-field below for readability.
+	fixture := &purgeObjectFallbackFixture{}
+	fixture.callOrder = make([]string, 0, 10)
+	fixture.omapKeys = make([]string, 0, 2)
+	fixture.rawObjects = make([]string, 0, 2)
+	totalShards := 13
+
+	fixture.mockClient.ObjectShardFunc = func(
+		gotCtx context.Context,
+		containerName, objectName string,
+		gotTotalShards int,
+	) (*domain.ObjectShard, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, totalShards, gotTotalShards)
+
+		fixture.callOrder = append(fixture.callOrder, "shard")
+
+		return domain.NewObjectShard(5), nil
+	}
+
+	listCallCount := 0
+	fixture.mockClient.ListBucketIndexByObjectFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName, objectName string,
+		shardID int,
+	) (*domain.EntryGroup, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, 5, shardID)
+
+		fixture.callOrder = append(fixture.callOrder, "list")
+		listCallCount++
+
+		switch listCallCount {
+		case 1:
+			return domain.NewEntryGroup(
+				nil,
+				nil,
+				[]*domain.InstanceBIEntry{
+					newVersionedInstanceEntry(),
+				},
+			), nil
+		case 2:
+			return domain.NewEntryGroup(
+				[]*domain.OLHBIEntry{
+					newOLHEntry("test.txt", "instance-1", nil),
+				},
+				nil,
+				[]*domain.InstanceBIEntry{
+					newVersionedInstanceEntry(),
+				},
+			), nil
+		default:
+			t.Fatalf("unexpected ListBucketIndexByObject call %d", listCallCount)
+
+			return domain.NewEntryGroup(nil, nil, nil), errClientFailed
+		}
+	}
+	fixture.mockClient.RemoveObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName, version string,
 	) error {
@@ -1000,13 +1136,78 @@ func configurePurgeObjectRemoveMock(
 		require.Equal(t, "test.txt", objectName)
 		require.Equal(t, "instance-1", version)
 
-		*callOrder = append(*callOrder, "remove")
+		fixture.callOrder = append(fixture.callOrder, "remove")
 
 		return nil
 	}
+	fixture.mockClient.BucketStatsFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.BucketStats, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+
+		fixture.callOrder = append(fixture.callOrder, "stats")
+
+		return domain.NewBucketStats(
+			"bucket-id",
+			"bucket-a",
+			totalShards,
+			"bucket-marker",
+			5,
+			1,
+			domain.VersioningStatusEnabled,
+		)
+	}
+	fixture.mockClient.GetDefaultZoneFunc = func(gotCtx context.Context, containerName string) (*domain.Zone, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+
+		fixture.callOrder = append(fixture.callOrder, "zone")
+
+		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
+	}
+	fixture.mockClient.RemoveRawObjectFunc = func(
+		gotCtx context.Context,
+		containerName, pool, rawObject string,
+	) error {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "default.rgw.buckets.data", pool)
+
+		fixture.callOrder = append(fixture.callOrder, "raw")
+		fixture.rawObjects = append(fixture.rawObjects, rawObject)
+
+		return nil
+	}
+	fixture.mockClient.RemoveOmapKeyFunc = func(
+		gotCtx context.Context,
+		containerName, indexPool, marker string,
+		shard int,
+		key string,
+	) error {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "default.rgw.buckets.index", indexPool)
+		require.Equal(t, "bucket-marker", marker)
+		require.Equal(t, 5, shard)
+
+		fixture.callOrder = append(fixture.callOrder, "omap")
+		fixture.omapKeys = append(fixture.omapKeys, key)
+
+		return nil
+	}
+
+	return fixture
 }
 
-func newVersionedInstanceEntry(name, instance string) *domain.InstanceBIEntry {
+func newVersionedInstanceEntry() *domain.InstanceBIEntry {
+	const (
+		name     = "test.txt"
+		instance = "instance-1"
+	)
+
 	return domain.NewInstanceBIEntry(
 		domain.NewBIIndex(fmt.Sprintf("%s-instance:%s", name, instance)),
 		domain.NewBIObjectEntry(
