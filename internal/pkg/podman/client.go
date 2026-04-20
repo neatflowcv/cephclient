@@ -440,6 +440,22 @@ func (c *Client) RemoveObject(
 	})
 }
 
+func (c *Client) RemoveRawObject(
+	ctx context.Context,
+	containerName, pool, rawObject string,
+) error {
+	return c.runPodmanNoOutput(ctx, []string{
+		"exec",
+		"-i",
+		containerName,
+		"rados",
+		"-p",
+		pool,
+		"rm",
+		rawObject,
+	})
+}
+
 func (c *Client) runPodmanNoOutput(ctx context.Context, commandArgs []string) error {
 	_, err := c.runPodmanCommand(ctx, commandArgs)
 

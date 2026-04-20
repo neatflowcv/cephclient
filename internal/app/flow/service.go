@@ -197,6 +197,18 @@ func (s *Service) RemoveObject(
 	return nil
 }
 
+func (s *Service) RemoveRawObject(
+	ctx context.Context,
+	containerName, pool, rawObject string,
+) error {
+	err := s.client.RemoveRawObject(ctx, containerName, pool, rawObject)
+	if err != nil {
+		return fmt.Errorf("remove raw object: %w", err)
+	}
+
+	return nil
+}
+
 func (s *Service) PurgeObject(
 	ctx context.Context,
 	req PurgeObjectRequest,

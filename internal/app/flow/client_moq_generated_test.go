@@ -18,9 +18,6 @@ import (
 //			BIListByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
 //				panic("mock out the BIListByObject method")
 //			},
-//			ListBucketIndexByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error) {
-//				panic("mock out the ListBucketIndexByObject method")
-//			},
 //			BIListByShardFunc: func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error) {
 //				panic("mock out the BIListByShard method")
 //			},
@@ -35,6 +32,9 @@ import (
 //			},
 //			HasRawObjectFunc: func(ctx context.Context, containerName string, pool string, rawObject string) (bool, error) {
 //				panic("mock out the HasRawObject method")
+//			},
+//			ListBucketIndexByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error) {
+//				panic("mock out the ListBucketIndexByObject method")
 //			},
 //			ListBucketsFunc: func(ctx context.Context, containerName string) ([]string, error) {
 //				panic("mock out the ListBuckets method")
@@ -51,6 +51,9 @@ import (
 //			RemoveOmapKeyFunc: func(ctx context.Context, containerName string, indexPool string, marker string, shard int, key string) error {
 //				panic("mock out the RemoveOmapKey method")
 //			},
+//			RemoveRawObjectFunc: func(ctx context.Context, containerName string, pool string, rawObject string) error {
+//				panic("mock out the RemoveRawObject method")
+//			},
 //		}
 //
 //		// use mockedClient in code that requires client.Client
@@ -60,9 +63,6 @@ import (
 type ClientMock struct {
 	// BIListByObjectFunc mocks the BIListByObject method.
 	BIListByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error)
-
-	// ListBucketIndexByObjectFunc mocks the ListBucketIndexByObject method.
-	ListBucketIndexByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error)
 
 	// BIListByShardFunc mocks the BIListByShard method.
 	BIListByShardFunc func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error)
@@ -79,6 +79,9 @@ type ClientMock struct {
 	// HasRawObjectFunc mocks the HasRawObject method.
 	HasRawObjectFunc func(ctx context.Context, containerName string, pool string, rawObject string) (bool, error)
 
+	// ListBucketIndexByObjectFunc mocks the ListBucketIndexByObject method.
+	ListBucketIndexByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error)
+
 	// ListBucketsFunc mocks the ListBuckets method.
 	ListBucketsFunc func(ctx context.Context, containerName string) ([]string, error)
 
@@ -94,23 +97,13 @@ type ClientMock struct {
 	// RemoveOmapKeyFunc mocks the RemoveOmapKey method.
 	RemoveOmapKeyFunc func(ctx context.Context, containerName string, indexPool string, marker string, shard int, key string) error
 
+	// RemoveRawObjectFunc mocks the RemoveRawObject method.
+	RemoveRawObjectFunc func(ctx context.Context, containerName string, pool string, rawObject string) error
+
 	// calls tracks calls to the methods.
 	calls struct {
 		// BIListByObject holds details about calls to the BIListByObject method.
 		BIListByObject []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// ContainerName is the containerName argument value.
-			ContainerName string
-			// BucketName is the bucketName argument value.
-			BucketName string
-			// ObjectName is the objectName argument value.
-			ObjectName string
-			// ShardID is the shardID argument value.
-			ShardID int
-		}
-		// ListBucketIndexByObject holds details about calls to the ListBucketIndexByObject method.
-		ListBucketIndexByObject []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ContainerName is the containerName argument value.
@@ -168,6 +161,19 @@ type ClientMock struct {
 			Pool string
 			// RawObject is the rawObject argument value.
 			RawObject string
+		}
+		// ListBucketIndexByObject holds details about calls to the ListBucketIndexByObject method.
+		ListBucketIndexByObject []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// BucketName is the bucketName argument value.
+			BucketName string
+			// ObjectName is the objectName argument value.
+			ObjectName string
+			// ShardID is the shardID argument value.
+			ShardID int
 		}
 		// ListBuckets holds details about calls to the ListBuckets method.
 		ListBuckets []struct {
@@ -228,19 +234,31 @@ type ClientMock struct {
 			// Key is the key argument value.
 			Key string
 		}
+		// RemoveRawObject holds details about calls to the RemoveRawObject method.
+		RemoveRawObject []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// Pool is the pool argument value.
+			Pool string
+			// RawObject is the rawObject argument value.
+			RawObject string
+		}
 	}
-	lockBIListByObject sync.RWMutex
+	lockBIListByObject          sync.RWMutex
+	lockBIListByShard           sync.RWMutex
+	lockBucketLayout            sync.RWMutex
+	lockBucketStats             sync.RWMutex
+	lockGetDefaultZone          sync.RWMutex
+	lockHasRawObject            sync.RWMutex
 	lockListBucketIndexByObject sync.RWMutex
-	lockBIListByShard  sync.RWMutex
-	lockBucketLayout   sync.RWMutex
-	lockBucketStats    sync.RWMutex
-	lockGetDefaultZone sync.RWMutex
-	lockHasRawObject   sync.RWMutex
-	lockListBuckets    sync.RWMutex
-	lockListOmapKeys   sync.RWMutex
-	lockObjectShard    sync.RWMutex
-	lockRemoveObject   sync.RWMutex
-	lockRemoveOmapKey  sync.RWMutex
+	lockListBuckets             sync.RWMutex
+	lockListOmapKeys            sync.RWMutex
+	lockObjectShard             sync.RWMutex
+	lockRemoveObject            sync.RWMutex
+	lockRemoveOmapKey           sync.RWMutex
+	lockRemoveRawObject         sync.RWMutex
 }
 
 // BIListByObject calls BIListByObjectFunc.
@@ -288,54 +306,6 @@ func (mock *ClientMock) BIListByObjectCalls() []struct {
 	mock.lockBIListByObject.RLock()
 	calls = mock.calls.BIListByObject
 	mock.lockBIListByObject.RUnlock()
-	return calls
-}
-
-// ListBucketIndexByObject calls ListBucketIndexByObjectFunc.
-func (mock *ClientMock) ListBucketIndexByObject(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error) {
-	if mock.ListBucketIndexByObjectFunc == nil {
-		panic("ClientMock.ListBucketIndexByObjectFunc: method is nil but Client.ListBucketIndexByObject was just called")
-	}
-	callInfo := struct {
-		Ctx           context.Context
-		ContainerName string
-		BucketName    string
-		ObjectName    string
-		ShardID       int
-	}{
-		Ctx:           ctx,
-		ContainerName: containerName,
-		BucketName:    bucketName,
-		ObjectName:    objectName,
-		ShardID:       shardID,
-	}
-	mock.lockListBucketIndexByObject.Lock()
-	mock.calls.ListBucketIndexByObject = append(mock.calls.ListBucketIndexByObject, callInfo)
-	mock.lockListBucketIndexByObject.Unlock()
-	return mock.ListBucketIndexByObjectFunc(ctx, containerName, bucketName, objectName, shardID)
-}
-
-// ListBucketIndexByObjectCalls gets all the calls that were made to ListBucketIndexByObject.
-// Check the length with:
-//
-//	len(mockedClient.ListBucketIndexByObjectCalls())
-func (mock *ClientMock) ListBucketIndexByObjectCalls() []struct {
-	Ctx           context.Context
-	ContainerName string
-	BucketName    string
-	ObjectName    string
-	ShardID       int
-} {
-	var calls []struct {
-		Ctx           context.Context
-		ContainerName string
-		BucketName    string
-		ObjectName    string
-		ShardID       int
-	}
-	mock.lockListBucketIndexByObject.RLock()
-	calls = mock.calls.ListBucketIndexByObject
-	mock.lockListBucketIndexByObject.RUnlock()
 	return calls
 }
 
@@ -540,6 +510,54 @@ func (mock *ClientMock) HasRawObjectCalls() []struct {
 	mock.lockHasRawObject.RLock()
 	calls = mock.calls.HasRawObject
 	mock.lockHasRawObject.RUnlock()
+	return calls
+}
+
+// ListBucketIndexByObject calls ListBucketIndexByObjectFunc.
+func (mock *ClientMock) ListBucketIndexByObject(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error) {
+	if mock.ListBucketIndexByObjectFunc == nil {
+		panic("ClientMock.ListBucketIndexByObjectFunc: method is nil but Client.ListBucketIndexByObject was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ObjectName    string
+		ShardID       int
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		BucketName:    bucketName,
+		ObjectName:    objectName,
+		ShardID:       shardID,
+	}
+	mock.lockListBucketIndexByObject.Lock()
+	mock.calls.ListBucketIndexByObject = append(mock.calls.ListBucketIndexByObject, callInfo)
+	mock.lockListBucketIndexByObject.Unlock()
+	return mock.ListBucketIndexByObjectFunc(ctx, containerName, bucketName, objectName, shardID)
+}
+
+// ListBucketIndexByObjectCalls gets all the calls that were made to ListBucketIndexByObject.
+// Check the length with:
+//
+//	len(mockedClient.ListBucketIndexByObjectCalls())
+func (mock *ClientMock) ListBucketIndexByObjectCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	BucketName    string
+	ObjectName    string
+	ShardID       int
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ObjectName    string
+		ShardID       int
+	}
+	mock.lockListBucketIndexByObject.RLock()
+	calls = mock.calls.ListBucketIndexByObject
+	mock.lockListBucketIndexByObject.RUnlock()
 	return calls
 }
 
@@ -768,5 +786,49 @@ func (mock *ClientMock) RemoveOmapKeyCalls() []struct {
 	mock.lockRemoveOmapKey.RLock()
 	calls = mock.calls.RemoveOmapKey
 	mock.lockRemoveOmapKey.RUnlock()
+	return calls
+}
+
+// RemoveRawObject calls RemoveRawObjectFunc.
+func (mock *ClientMock) RemoveRawObject(ctx context.Context, containerName string, pool string, rawObject string) error {
+	if mock.RemoveRawObjectFunc == nil {
+		panic("ClientMock.RemoveRawObjectFunc: method is nil but Client.RemoveRawObject was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		Pool          string
+		RawObject     string
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		Pool:          pool,
+		RawObject:     rawObject,
+	}
+	mock.lockRemoveRawObject.Lock()
+	mock.calls.RemoveRawObject = append(mock.calls.RemoveRawObject, callInfo)
+	mock.lockRemoveRawObject.Unlock()
+	return mock.RemoveRawObjectFunc(ctx, containerName, pool, rawObject)
+}
+
+// RemoveRawObjectCalls gets all the calls that were made to RemoveRawObject.
+// Check the length with:
+//
+//	len(mockedClient.RemoveRawObjectCalls())
+func (mock *ClientMock) RemoveRawObjectCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	Pool          string
+	RawObject     string
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		Pool          string
+		RawObject     string
+	}
+	mock.lockRemoveRawObject.RLock()
+	calls = mock.calls.RemoveRawObject
+	mock.lockRemoveRawObject.RUnlock()
 	return calls
 }
