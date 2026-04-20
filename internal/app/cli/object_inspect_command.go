@@ -27,11 +27,15 @@ func (c *objectInspectCommand) Run(ctx context.Context, service *flow.Service, s
 		return fmt.Errorf("inspect object: %w", err)
 	}
 
-	return writeObjectInspect(stdout, c.Object, result)
+	return writeObjectInspect(stdout, c.Container, c.Bucket, c.Object, result)
 }
 
-func writeObjectInspect(stdout io.Writer, objectName string, result *flow.InspectObjectResponse) error {
-	payload, err := newObjectInspectOutput(objectName, result)
+func writeObjectInspect(
+	stdout io.Writer,
+	containerName, bucketName, objectName string,
+	result *flow.InspectObjectResponse,
+) error {
+	payload, err := newObjectInspectOutput(containerName, bucketName, objectName, result)
 	if err != nil {
 		return err
 	}
@@ -48,6 +52,8 @@ func writeObjectInspect(stdout io.Writer, objectName string, result *flow.Inspec
 }
 
 type objectInspectOutput struct {
+	Container   string                 `json:"container"`
+	Bucket      string                 `json:"bucket"`
 	DataPool    string                 `json:"data_pool"`
 	Marker      string                 `json:"marker"`
 	Name        string                 `json:"name"`
@@ -91,7 +97,10 @@ type objectInspectBIEntry struct {
 	Name           string `json:"-"`
 }
 
-func newObjectInspectOutput(objectName string, result *flow.InspectObjectResponse) (*objectInspectOutput, error) {
+func newObjectInspectOutput(
+	containerName, bucketName, objectName string,
+	result *flow.InspectObjectResponse,
+) (*objectInspectOutput, error) {
 	bucketIndex, err := newObjectInspectBIEntries(result.BIList())
 	if err != nil {
 		return nil, err
@@ -103,6 +112,8 @@ func newObjectInspectOutput(objectName string, result *flow.InspectObjectRespons
 	placeholder := hasPlaceholder(bucketIndex)
 
 	return &objectInspectOutput{
+		Container:   containerName,
+		Bucket:      bucketName,
 		DataPool:    result.DataPool(),
 		Marker:      result.Marker(),
 		Name:        objectName,
