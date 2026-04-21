@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/neatflowcv/cephclient/internal/app/flow"
-	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 )
 
 type omapListCommand struct {
@@ -17,17 +16,22 @@ type omapListCommand struct {
 }
 
 func (c *omapListCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	indexes, err := service.ListOmapKeys(ctx, c.Container, c.IndexPool, c.Marker, c.Shard)
+	resp, err := service.ListOmapKeys(ctx, flow.ListOmapKeysRequest{
+		ContainerName: c.Container,
+		IndexPool:     c.IndexPool,
+		Marker:        c.Marker,
+		ShardID:       c.Shard,
+	})
 	if err != nil {
 		return fmt.Errorf("list omap keys: %w", err)
 	}
 
-	return writeOmapKeys(stdout, indexes)
+	return writeOmapKeys(stdout, resp.OmapKeys)
 }
 
-func writeOmapKeys(stdout io.Writer, indexes []*domain.BIIndex) error {
+func writeOmapKeys(stdout io.Writer, indexes []string) error {
 	for _, index := range indexes {
-		_, err := fmt.Fprintf(stdout, "idx=%s\n", quoteField(index.Escaped()))
+		_, err := fmt.Fprintf(stdout, "idx=%s\n", quoteField(index))
 		if err != nil {
 			return fmt.Errorf("write omap keys: %w", err)
 		}

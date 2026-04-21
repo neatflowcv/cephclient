@@ -73,7 +73,7 @@ func writeRMSupportOmapKeys(
 	stdout io.Writer,
 	phase, indexPool, marker string,
 	shardID int,
-	omapKeys []*domain.BIIndex,
+	omapKeys []string,
 ) error {
 	_, err := fmt.Fprintf(
 		stdout,
@@ -88,4 +88,13 @@ func writeRMSupportOmapKeys(
 	}
 
 	return writeOmapKeys(stdout, omapKeys)
+}
+
+func escapedOmapKeys(indexes []*domain.BIIndex) []string {
+	keys := make([]string, len(indexes))
+	for index, omapKey := range indexes {
+		keys[index] = omapKey.Escaped()
+	}
+
+	return keys
 }

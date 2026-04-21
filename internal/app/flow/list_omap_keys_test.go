@@ -37,11 +37,16 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	indexes, err := service.ListOmapKeys(ctx, "rgw", "default.rgw.buckets.index", "bucket-marker", 3)
+	resp, err := service.ListOmapKeys(ctx, flow.ListOmapKeysRequest{
+		ContainerName: "rgw",
+		IndexPool:     "default.rgw.buckets.index",
+		Marker:        "bucket-marker",
+		ShardID:       3,
+	})
 
 	// Assert
 	require.NoError(t, err)
-	require.Equal(t, wantIndexes, indexes)
+	require.Equal(t, []string{"plain", "versioned"}, resp.OmapKeys)
 	require.Len(t, mockClient.ListOmapKeysCalls(), 1)
 }
 
@@ -65,7 +70,12 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.ListOmapKeys(ctx, "rgw", "default.rgw.buckets.index", "bucket-marker", 3)
+	_, err := service.ListOmapKeys(ctx, flow.ListOmapKeysRequest{
+		ContainerName: "rgw",
+		IndexPool:     "default.rgw.buckets.index",
+		Marker:        "bucket-marker",
+		ShardID:       3,
+	})
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)

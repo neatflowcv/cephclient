@@ -100,17 +100,16 @@ func (s *Service) HasRawObject(
 
 func (s *Service) ListOmapKeys(
 	ctx context.Context,
-	containerName, indexPool, marker string,
-	shard int,
-) ([]*domain.BIIndex, error) {
-	indexObject := domain.NewBucketIndexObject(marker, shard)
+	req ListOmapKeysRequest,
+) (*ListOmapKeysResponse, error) {
+	indexObject := domain.NewBucketIndexObject(req.Marker, req.ShardID)
 
-	indexes, err := s.client.ListOmapKeys(ctx, containerName, indexPool, indexObject)
+	indexes, err := s.client.ListOmapKeys(ctx, req.ContainerName, req.IndexPool, indexObject)
 	if err != nil {
 		return nil, fmt.Errorf("get omap keys: %w", err)
 	}
 
-	return indexes, nil
+	return newListOmapKeysResponse(indexes), nil
 }
 
 func (s *Service) ListBuckets(ctx context.Context, containerName string) ([]string, error) {

@@ -135,7 +135,7 @@ func (c *rmSupportCommand) runConfirmedRemoval(
 			plan.IndexPool(),
 			plan.Marker(),
 			plan.ShardID(),
-			plan.OmapKeys(),
+			escapedOmapKeys(plan.OmapKeys()),
 		)
 		if err != nil {
 			return err

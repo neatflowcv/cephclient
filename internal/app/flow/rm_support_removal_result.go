@@ -1,13 +1,11 @@
 package flow
 
-import "github.com/neatflowcv/cephclient/internal/pkg/domain"
-
 type RMSupportRemovalResult struct {
-	omapKeys []*domain.BIIndex
+	omapKeys []string
 }
 
-func NewRMSupportRemovalResult(omapKeys []*domain.BIIndex) *RMSupportRemovalResult {
-	copiedOmapKeys := make([]*domain.BIIndex, len(omapKeys))
+func NewRMSupportRemovalResult(omapKeys []string) *RMSupportRemovalResult {
+	copiedOmapKeys := make([]string, len(omapKeys))
 	copy(copiedOmapKeys, omapKeys)
 
 	return &RMSupportRemovalResult{
@@ -15,8 +13,8 @@ func NewRMSupportRemovalResult(omapKeys []*domain.BIIndex) *RMSupportRemovalResu
 	}
 }
 
-func (r *RMSupportRemovalResult) OmapKeys() []*domain.BIIndex {
-	copied := make([]*domain.BIIndex, len(r.omapKeys))
+func (r *RMSupportRemovalResult) OmapKeys() []string {
+	copied := make([]string, len(r.omapKeys))
 	copy(copied, r.omapKeys)
 
 	return copied
