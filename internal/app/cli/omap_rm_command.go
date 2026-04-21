@@ -10,6 +10,7 @@ import (
 
 type omapRmCommand struct {
 	Container string `arg:"" help:"Container name."     name:"container"`
+	Bucket    string `arg:"" help:"Bucket name."        name:"bucket"`
 	IndexPool string `arg:"" help:"Index pool name."    name:"index-pool"`
 	Marker    string `arg:"" help:"Bucket marker."      name:"marker"`
 	Shard     int    `arg:"" help:"Shard ID."           name:"shard"`
@@ -17,7 +18,7 @@ type omapRmCommand struct {
 }
 
 func (c *omapRmCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	err := service.RemoveOmapKey(ctx, c.Container, c.IndexPool, c.Marker, c.Shard, c.Key)
+	err := service.RemoveOmapKey(ctx, c.Container, c.Bucket, c.IndexPool, c.Marker, c.Shard, c.Key)
 	if err != nil {
 		return fmt.Errorf("remove omap key: %w", err)
 	}

@@ -10,6 +10,7 @@ import (
 
 type omapListCommand struct {
 	Container string `arg:"" help:"Container name."  name:"container"`
+	Bucket    string `arg:"" help:"Bucket name."     name:"bucket"`
 	IndexPool string `arg:"" help:"Index pool name." name:"index-pool"`
 	Marker    string `arg:"" help:"Bucket marker."   name:"marker"`
 	Shard     int    `arg:"" help:"Shard ID."        name:"shard"`
@@ -18,6 +19,7 @@ type omapListCommand struct {
 func (c *omapListCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
 	resp, err := service.ListOmapKeys(ctx, flow.ListOmapKeysRequest{
 		ContainerName: c.Container,
+		BucketName:    c.Bucket,
 		IndexPool:     c.IndexPool,
 		Marker:        c.Marker,
 		ShardID:       c.Shard,

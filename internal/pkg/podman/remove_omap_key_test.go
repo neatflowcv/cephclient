@@ -51,7 +51,7 @@ func TestClientRemoveOmapKeyRunsPodmanCommandsInOrder(t *testing.T) {
 		}
 	}
 	client := podman.NewClientWithRunner(runner)
-	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 0, 7)
 
 	err := client.RemoveOmapKey(
 		t.Context(),
@@ -73,7 +73,7 @@ func TestClientRemoveOmapKeyReturnsMktempErrorWithStderr(t *testing.T) {
 			return nil, errPermissionDenied, errExitStatus125
 		},
 	))
-	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 0, 7)
 
 	err := client.RemoveOmapKey(
 		t.Context(),
@@ -107,7 +107,7 @@ func TestClientRemoveOmapKeyReturnsWriteKeyErrorWithStderr(t *testing.T) {
 		}
 	}
 	client := podman.NewClientWithRunner(runner)
-	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 0, 7)
 
 	err := client.RemoveOmapKey(
 		t.Context(),
@@ -153,7 +153,7 @@ func TestClientRemoveOmapKeyReturnsRemoveErrorWithStderr(t *testing.T) {
 		}
 	}
 	client := podman.NewClientWithRunner(runner)
-	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 0, 7)
 
 	err := client.RemoveOmapKey(
 		t.Context(),

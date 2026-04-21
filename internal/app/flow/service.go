@@ -102,7 +102,16 @@ func (s *Service) ListOmapKeys(
 	ctx context.Context,
 	req ListOmapKeysRequest,
 ) (*ListOmapKeysResponse, error) {
-	indexObject := domain.NewBucketIndexObject(req.Marker, req.ShardID)
+	indexObject, err := s.bucketIndexObject(
+		ctx,
+		req.ContainerName,
+		req.BucketName,
+		req.Marker,
+		req.ShardID,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	indexes, err := s.client.ListOmapKeys(ctx, req.ContainerName, req.IndexPool, indexObject)
 	if err != nil {
@@ -297,6 +306,17 @@ func (s *Service) PurgeObject(
 	rawObjects = remainingEntryGroup.ExtractRawObjectNames(stats.Marker(), req.ObjectName)
 	omapKeys = remainingEntryGroup.ExtractOmapKeys()
 
+	indexObject, err := s.bucketIndexObject(
+		ctx,
+		req.ContainerName,
+		req.BucketName,
+		stats.Marker(),
+		shardID,
+	)
+	if err != nil {
+		return err
+	}
+
 	for _, rawObject := range rawObjects {
 		err = s.client.RemoveRawObject(ctx, req.ContainerName, zone.DataPool(), rawObject)
 		if err != nil {
@@ -325,8 +345,6 @@ func (s *Service) PurgeObject(
 	}
 
 	for _, omapKey := range omapKeys {
-		indexObject := domain.NewBucketIndexObject(stats.Marker(), shardID)
-
 		err = s.client.RemoveOmapKey(
 			ctx,
 			req.ContainerName,
@@ -366,18 +384,34 @@ func (s *Service) PurgeObject(
 
 func (s *Service) RemoveOmapKey(
 	ctx context.Context,
-	containerName, indexPool, marker string,
+	containerName, bucketName, indexPool, marker string,
 	shard int,
 	key string,
 ) error {
-	indexObject := domain.NewBucketIndexObject(marker, shard)
+	indexObject, err := s.bucketIndexObject(ctx, containerName, bucketName, marker, shard)
+	if err != nil {
+		return err
+	}
 
-	err := s.client.RemoveOmapKey(ctx, containerName, indexPool, indexObject, key)
+	err = s.client.RemoveOmapKey(ctx, containerName, indexPool, indexObject, key)
 	if err != nil {
 		return fmt.Errorf("remove omap key: %w", err)
 	}
 
 	return nil
+}
+
+func (s *Service) bucketIndexObject(
+	ctx context.Context,
+	containerName, bucketName, marker string,
+	shard int,
+) (*domain.BucketIndexObject, error) {
+	layout, err := s.client.BucketLayout(ctx, containerName, bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("get bucket layout: %w", err)
+	}
+
+	return domain.NewBucketIndexObject(marker, layout.Generation(), shard), nil
 }
 
 func (s *Service) resolveListBIByObjectShard(

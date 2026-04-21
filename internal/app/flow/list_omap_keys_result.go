@@ -4,6 +4,7 @@ import "github.com/neatflowcv/cephclient/internal/pkg/domain"
 
 type ListOmapKeysRequest struct {
 	ContainerName string
+	BucketName    string
 	IndexPool     string
 	Marker        string
 	ShardID       int

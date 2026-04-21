@@ -21,6 +21,14 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 
 	var mockClient ClientMock
 
+	mockClient.BucketLayoutFunc = func(gotCtx context.Context, containerName, bucketName string) (*domain.Layout, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+
+		return domain.NewLayout(2), nil
+	}
+
 	mockClient.ListOmapKeysFunc = func(
 		gotCtx context.Context,
 		containerName, indexPool string,
@@ -30,6 +38,7 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
 		require.Equal(t, "bucket-marker", indexObject.Marker())
+		require.Equal(t, 2, indexObject.Layout())
 		require.Equal(t, 3, indexObject.Shard())
 
 		return wantIndexes, nil
@@ -39,6 +48,7 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 	// Act
 	resp, err := service.ListOmapKeys(ctx, flow.ListOmapKeysRequest{
 		ContainerName: "rgw",
+		BucketName:    "bucket-a",
 		IndexPool:     "default.rgw.buckets.index",
 		Marker:        "bucket-marker",
 		ShardID:       3,
@@ -47,6 +57,7 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, []string{"plain", "versioned"}, resp.OmapKeys)
+	require.Len(t, mockClient.BucketLayoutCalls(), 1)
 	require.Len(t, mockClient.ListOmapKeysCalls(), 1)
 }
 
@@ -58,6 +69,10 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 	wantErr := errClientFailed
 
 	var mockClient ClientMock
+
+	mockClient.BucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
+		return domain.NewLayout(2), nil
+	}
 
 	mockClient.ListOmapKeysFunc = func(
 		context.Context,
@@ -72,6 +87,7 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 	// Act
 	_, err := service.ListOmapKeys(ctx, flow.ListOmapKeysRequest{
 		ContainerName: "rgw",
+		BucketName:    "bucket-a",
 		IndexPool:     "default.rgw.buckets.index",
 		Marker:        "bucket-marker",
 		ShardID:       3,
@@ -80,5 +96,32 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 	// Assert
 	require.ErrorIs(t, err, wantErr)
 	require.EqualError(t, err, "get omap keys: client failed")
+	require.Len(t, mockClient.BucketLayoutCalls(), 1)
 	require.Len(t, mockClient.ListOmapKeysCalls(), 1)
+}
+
+func TestServiceListOmapKeysReturnsBucketLayoutError(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	var mockClient ClientMock
+
+	mockClient.BucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
+		return nil, errClientFailed
+	}
+	service := flow.NewService(&mockClient)
+
+	_, err := service.ListOmapKeys(ctx, flow.ListOmapKeysRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		IndexPool:     "default.rgw.buckets.index",
+		Marker:        "bucket-marker",
+		ShardID:       3,
+	})
+
+	require.ErrorIs(t, err, errClientFailed)
+	require.EqualError(t, err, "get bucket layout: client failed")
+	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Empty(t, mockClient.ListOmapKeysCalls())
 }

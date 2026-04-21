@@ -470,7 +470,7 @@ func TestServicePurgeObjectRemovesRemainingRawObjectsAndOmapKeysAfterVerificatio
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		[]string{"shard", "list", "remove", "list", "stats", "zone", "raw", "raw", "omap", "omap"},
+		[]string{"shard", "list", "remove", "list", "stats", "zone", "layout", "raw", "raw", "omap", "omap"},
 		fixture.callOrder,
 	)
 	require.Equal(
@@ -485,6 +485,7 @@ func TestServicePurgeObjectRemovesRemainingRawObjectsAndOmapKeysAfterVerificatio
 	)
 	require.Len(t, fixture.mockClient.ListBucketIndexByObjectCalls(), 2)
 	require.Len(t, fixture.mockClient.RemoveRawObjectCalls(), 2)
+	require.Len(t, fixture.mockClient.BucketLayoutCalls(), 1)
 	require.Len(t, fixture.mockClient.RemoveOmapKeyCalls(), 2)
 }
 
@@ -1175,6 +1176,18 @@ func newPurgeObjectFallbackFixture(
 
 		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
 	}
+	fixture.mockClient.BucketLayoutFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.Layout, error) {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+
+		fixture.callOrder = append(fixture.callOrder, "layout")
+
+		return domain.NewLayout(2), nil
+	}
 	fixture.mockClient.RemoveRawObjectFunc = func(
 		gotCtx context.Context,
 		containerName, pool, rawObject string,
@@ -1198,6 +1211,7 @@ func newPurgeObjectFallbackFixture(
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
 		require.Equal(t, "bucket-marker", indexObject.Marker())
+		require.Equal(t, 2, indexObject.Layout())
 		require.Equal(t, 5, indexObject.Shard())
 
 		fixture.callOrder = append(fixture.callOrder, "omap")

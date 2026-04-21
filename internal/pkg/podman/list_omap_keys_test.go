@@ -33,7 +33,7 @@ func TestClientListOmapKeysRunsPodmanCommand(t *testing.T) {
 		},
 	)
 	client := podman.NewClientWithRunner(runner)
-	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 0, 7)
 
 	indexes, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", indexObject)
 
@@ -52,7 +52,7 @@ func TestClientListOmapKeysReturnsEmptySliceForEmptyOutput(t *testing.T) {
 			return nil, "", nil
 		},
 	))
-	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 0, 7)
 
 	indexes, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", indexObject)
 
@@ -68,7 +68,7 @@ func TestClientListOmapKeysReturnsRunnerErrorWithStderr(t *testing.T) {
 			return nil, listOmapKeysErrPermissionDenied, errListOmapKeysExitStatus125
 		},
 	))
-	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 0, 7)
 
 	_, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", indexObject)
 
