@@ -39,8 +39,9 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
+	require.Equal(t, "rgw", stats.ContainerName)
+	require.Equal(t, "test", stats.BucketName)
 	require.Equal(t, "bucket-id", stats.ID)
-	require.Equal(t, "test", stats.Name)
 	require.Equal(t, 11, stats.TotalShards)
 	require.Equal(t, "bucket-marker", stats.Marker)
 	require.EqualValues(t, 5, stats.Size)

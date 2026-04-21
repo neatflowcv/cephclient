@@ -29,8 +29,9 @@ func (c *bucketStatsCommand) Run(ctx context.Context, service *flow.Service, std
 
 func WriteBucketStats(stdout io.Writer, stats *flow.GetBucketStatsResponse) error {
 	payload := bucketStatsOutput{
+		Container:   stats.ContainerName,
+		Bucket:      stats.BucketName,
 		ID:          stats.ID,
-		Name:        stats.Name,
 		Size:        stats.Size,
 		SizeHuman:   formatBucketSize(stats.Size),
 		ObjectCount: stats.ObjectCount,
@@ -53,8 +54,9 @@ func WriteBucketStats(stdout io.Writer, stats *flow.GetBucketStatsResponse) erro
 }
 
 type bucketStatsOutput struct {
+	Container   string `json:"container"`
+	Bucket      string `json:"bucket"`
 	ID          string `json:"id"`
-	Name        string `json:"name"`
 	Size        int64  `json:"size"`
 	SizeHuman   string `json:"size_human"`
 	ObjectCount int    `json:"object_count"`

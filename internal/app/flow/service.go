@@ -65,7 +65,7 @@ func (s *Service) GetBucketStats(
 		return nil, fmt.Errorf("get bucket stats: %w", err)
 	}
 
-	return newGetBucketStatsResponse(stats), nil
+	return newGetBucketStatsResponse(req, stats), nil
 }
 
 func (s *Service) GetBucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error) {
