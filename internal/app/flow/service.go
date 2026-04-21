@@ -380,52 +380,6 @@ func (s *Service) RemoveOmapKey(
 	return nil
 }
 
-func (s *Service) BuildRMSupportPlan(
-	ctx context.Context,
-	containerName, bucketName, objectName string,
-	includeOmap bool,
-) (*RMSupportPlan, error) {
-	stats, err := s.client.BucketStats(ctx, containerName, bucketName)
-	if err != nil {
-		return nil, fmt.Errorf("read bucket stats: %w", err)
-	}
-
-	shard, err := s.client.ObjectShard(ctx, containerName, objectName, stats.TotalShards())
-	if err != nil {
-		return nil, fmt.Errorf("read object shard: %w", err)
-	}
-
-	shardID := shard.Shard()
-
-	biList, err := s.client.BIListByObject(ctx, containerName, bucketName, objectName, shardID)
-	if err != nil {
-		return nil, fmt.Errorf("read bucket index list: %w", err)
-	}
-
-	if !includeOmap {
-		zone, zoneErr := s.client.GetDefaultZone(ctx, containerName)
-		if zoneErr != nil {
-			return nil, fmt.Errorf("read default zone: %w", zoneErr)
-		}
-
-		return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), zone.IndexPool(), nil), nil
-	}
-
-	zone, err := s.client.GetDefaultZone(ctx, containerName)
-	if err != nil {
-		return nil, fmt.Errorf("read default zone: %w", err)
-	}
-
-	indexObject := domain.NewBucketIndexObject(stats.Marker(), shard.Shard())
-
-	omapKeys, err := s.client.ListOmapKeys(ctx, containerName, zone.IndexPool(), indexObject)
-	if err != nil {
-		return nil, fmt.Errorf("list omap keys: %w", err)
-	}
-
-	return NewRMSupportPlan(biList, shard.Shard(), stats.Marker(), zone.IndexPool(), omapKeys), nil
-}
-
 func (s *Service) resolveListBIByObjectShard(
 	ctx context.Context,
 	req ListBIByObjectRequest,
