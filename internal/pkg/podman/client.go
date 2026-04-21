@@ -282,11 +282,9 @@ func (c *Client) HasRawObject(
 
 func (c *Client) ListOmapKeys(
 	ctx context.Context,
-	containerName, indexPool, marker string,
-	shard int,
+	containerName, indexPool string,
+	indexObject *domain.BucketIndexObject,
 ) ([]*domain.BIIndex, error) {
-	indexObject := domain.NewBucketIndexObject(marker, shard)
-
 	commandArgs := []string{
 		"exec",
 		"-i",
@@ -315,12 +313,10 @@ func (c *Client) ListOmapKeys(
 
 func (c *Client) RemoveOmapKey(
 	ctx context.Context,
-	containerName, indexPool, marker string,
-	shard int,
+	containerName, indexPool string,
+	indexObject *domain.BucketIndexObject,
 	key string,
 ) error {
-	indexObject := domain.NewBucketIndexObject(marker, shard)
-
 	stdout, err := c.runPodmanCommand(ctx, []string{
 		"exec",
 		"-i",

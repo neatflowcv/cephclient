@@ -103,7 +103,9 @@ func (s *Service) ListOmapKeys(
 	containerName, indexPool, marker string,
 	shard int,
 ) ([]*domain.BIIndex, error) {
-	indexes, err := s.client.ListOmapKeys(ctx, containerName, indexPool, marker, shard)
+	indexObject := domain.NewBucketIndexObject(marker, shard)
+
+	indexes, err := s.client.ListOmapKeys(ctx, containerName, indexPool, indexObject)
 	if err != nil {
 		return nil, fmt.Errorf("get omap keys: %w", err)
 	}
@@ -324,12 +326,13 @@ func (s *Service) PurgeObject(
 	}
 
 	for _, omapKey := range omapKeys {
+		indexObject := domain.NewBucketIndexObject(stats.Marker(), shardID)
+
 		err = s.client.RemoveOmapKey(
 			ctx,
 			req.ContainerName,
 			zone.IndexPool(),
-			stats.Marker(),
-			shardID,
+			indexObject,
 			omapKey,
 		)
 		if err != nil {
@@ -368,7 +371,9 @@ func (s *Service) RemoveOmapKey(
 	shard int,
 	key string,
 ) error {
-	err := s.client.RemoveOmapKey(ctx, containerName, indexPool, marker, shard, key)
+	indexObject := domain.NewBucketIndexObject(marker, shard)
+
+	err := s.client.RemoveOmapKey(ctx, containerName, indexPool, indexObject, key)
 	if err != nil {
 		return fmt.Errorf("remove omap key: %w", err)
 	}
@@ -412,7 +417,9 @@ func (s *Service) BuildRMSupportPlan(
 		return nil, fmt.Errorf("read default zone: %w", err)
 	}
 
-	omapKeys, err := s.client.ListOmapKeys(ctx, containerName, zone.IndexPool(), stats.Marker(), shard.Shard())
+	indexObject := domain.NewBucketIndexObject(stats.Marker(), shard.Shard())
+
+	omapKeys, err := s.client.ListOmapKeys(ctx, containerName, zone.IndexPool(), indexObject)
 	if err != nil {
 		return nil, fmt.Errorf("list omap keys: %w", err)
 	}

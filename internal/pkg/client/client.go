@@ -19,10 +19,19 @@ type Client interface {
 	BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error)
 	GetDefaultZone(ctx context.Context, containerName string) (*domain.Zone, error)
 	HasRawObject(ctx context.Context, containerName, pool, rawObject string) (bool, error)
-	ListOmapKeys(ctx context.Context, containerName, indexPool, marker string, shard int) ([]*domain.BIIndex, error)
+	ListOmapKeys(
+		ctx context.Context,
+		containerName, indexPool string,
+		indexObject *domain.BucketIndexObject,
+	) ([]*domain.BIIndex, error)
 	ListBuckets(ctx context.Context, containerName string) ([]string, error)
 	ObjectShard(ctx context.Context, containerName, objectName string, totalShards int) (*domain.ObjectShard, error)
 	RemoveObject(ctx context.Context, containerName, bucketName, objectName, version string) error
 	RemoveRawObject(ctx context.Context, containerName, pool, rawObject string) error
-	RemoveOmapKey(ctx context.Context, containerName, indexPool, marker string, shard int, key string) error
+	RemoveOmapKey(
+		ctx context.Context,
+		containerName, indexPool string,
+		indexObject *domain.BucketIndexObject,
+		key string,
+	) error
 }

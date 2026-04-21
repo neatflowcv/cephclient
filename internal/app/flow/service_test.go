@@ -1190,15 +1190,15 @@ func newPurgeObjectFallbackFixture(
 	}
 	fixture.mockClient.RemoveOmapKeyFunc = func(
 		gotCtx context.Context,
-		containerName, indexPool, marker string,
-		shard int,
+		containerName, indexPool string,
+		indexObject *domain.BucketIndexObject,
 		key string,
 	) error {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
-		require.Equal(t, "bucket-marker", marker)
-		require.Equal(t, 5, shard)
+		require.Equal(t, "bucket-marker", indexObject.Marker())
+		require.Equal(t, 5, indexObject.Shard())
 
 		fixture.callOrder = append(fixture.callOrder, "omap")
 		fixture.omapKeys = append(fixture.omapKeys, key)

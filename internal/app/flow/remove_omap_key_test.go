@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/neatflowcv/cephclient/internal/app/flow"
+	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,15 +18,15 @@ func TestServiceRemoveOmapKeyDelegatesToClient(t *testing.T) {
 
 	mockClient.RemoveOmapKeyFunc = func(
 		gotCtx context.Context,
-		containerName, indexPool, marker string,
-		shard int,
+		containerName, indexPool string,
+		indexObject *domain.BucketIndexObject,
 		key string,
 	) error {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
-		require.Equal(t, "bucket-marker", marker)
-		require.Equal(t, 3, shard)
+		require.Equal(t, "bucket-marker", indexObject.Marker())
+		require.Equal(t, 3, indexObject.Shard())
 		require.Equal(t, "plain-key", key)
 
 		return nil
@@ -45,7 +46,7 @@ func TestServiceRemoveOmapKeyReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.RemoveOmapKeyFunc = func(context.Context, string, string, string, int, string) error {
+	mockClient.RemoveOmapKeyFunc = func(context.Context, string, string, *domain.BucketIndexObject, string) error {
 		return errClientFailed
 	}
 	service := flow.NewService(&mockClient)

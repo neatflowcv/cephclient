@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 	"github.com/neatflowcv/cephclient/internal/pkg/podman"
 	"github.com/stretchr/testify/require"
 )
@@ -50,13 +51,13 @@ func TestClientRemoveOmapKeyRunsPodmanCommandsInOrder(t *testing.T) {
 		}
 	}
 	client := podman.NewClientWithRunner(runner)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
 
 	err := client.RemoveOmapKey(
 		t.Context(),
 		"rgw",
 		"default.rgw.buckets.index",
-		"bucket-marker",
-		7,
+		indexObject,
 		"plain-key",
 	)
 
@@ -72,13 +73,13 @@ func TestClientRemoveOmapKeyReturnsMktempErrorWithStderr(t *testing.T) {
 			return nil, errPermissionDenied, errExitStatus125
 		},
 	))
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
 
 	err := client.RemoveOmapKey(
 		t.Context(),
 		"rgw",
 		"default.rgw.buckets.index",
-		"bucket-marker",
-		7,
+		indexObject,
 		"plain-key",
 	)
 
@@ -106,13 +107,13 @@ func TestClientRemoveOmapKeyReturnsWriteKeyErrorWithStderr(t *testing.T) {
 		}
 	}
 	client := podman.NewClientWithRunner(runner)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
 
 	err := client.RemoveOmapKey(
 		t.Context(),
 		"rgw",
 		"default.rgw.buckets.index",
-		"bucket-marker",
-		7,
+		indexObject,
 		"plain-key",
 	)
 
@@ -152,13 +153,13 @@ func TestClientRemoveOmapKeyReturnsRemoveErrorWithStderr(t *testing.T) {
 		}
 	}
 	client := podman.NewClientWithRunner(runner)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
 
 	err := client.RemoveOmapKey(
 		t.Context(),
 		"rgw",
 		"default.rgw.buckets.index",
-		"bucket-marker",
-		7,
+		indexObject,
 		"plain-key",
 	)
 

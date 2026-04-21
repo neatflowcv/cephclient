@@ -39,7 +39,7 @@ import (
 //			ListBucketsFunc: func(ctx context.Context, containerName string) ([]string, error) {
 //				panic("mock out the ListBuckets method")
 //			},
-//			ListOmapKeysFunc: func(ctx context.Context, containerName string, indexPool string, marker string, shard int) ([]*domain.BIIndex, error) {
+//			ListOmapKeysFunc: func(ctx context.Context, containerName string, indexPool string, indexObject *domain.BucketIndexObject) ([]*domain.BIIndex, error) {
 //				panic("mock out the ListOmapKeys method")
 //			},
 //			ObjectShardFunc: func(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error) {
@@ -48,7 +48,7 @@ import (
 //			RemoveObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, version string) error {
 //				panic("mock out the RemoveObject method")
 //			},
-//			RemoveOmapKeyFunc: func(ctx context.Context, containerName string, indexPool string, marker string, shard int, key string) error {
+//			RemoveOmapKeyFunc: func(ctx context.Context, containerName string, indexPool string, indexObject *domain.BucketIndexObject, key string) error {
 //				panic("mock out the RemoveOmapKey method")
 //			},
 //			RemoveRawObjectFunc: func(ctx context.Context, containerName string, pool string, rawObject string) error {
@@ -86,7 +86,7 @@ type ClientMock struct {
 	ListBucketsFunc func(ctx context.Context, containerName string) ([]string, error)
 
 	// ListOmapKeysFunc mocks the ListOmapKeys method.
-	ListOmapKeysFunc func(ctx context.Context, containerName string, indexPool string, marker string, shard int) ([]*domain.BIIndex, error)
+	ListOmapKeysFunc func(ctx context.Context, containerName string, indexPool string, indexObject *domain.BucketIndexObject) ([]*domain.BIIndex, error)
 
 	// ObjectShardFunc mocks the ObjectShard method.
 	ObjectShardFunc func(ctx context.Context, containerName string, objectName string, totalShards int) (*domain.ObjectShard, error)
@@ -95,7 +95,7 @@ type ClientMock struct {
 	RemoveObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, version string) error
 
 	// RemoveOmapKeyFunc mocks the RemoveOmapKey method.
-	RemoveOmapKeyFunc func(ctx context.Context, containerName string, indexPool string, marker string, shard int, key string) error
+	RemoveOmapKeyFunc func(ctx context.Context, containerName string, indexPool string, indexObject *domain.BucketIndexObject, key string) error
 
 	// RemoveRawObjectFunc mocks the RemoveRawObject method.
 	RemoveRawObjectFunc func(ctx context.Context, containerName string, pool string, rawObject string) error
@@ -190,10 +190,8 @@ type ClientMock struct {
 			ContainerName string
 			// IndexPool is the indexPool argument value.
 			IndexPool string
-			// Marker is the marker argument value.
-			Marker string
-			// Shard is the shard argument value.
-			Shard int
+			// IndexObject is the indexObject argument value.
+			IndexObject *domain.BucketIndexObject
 		}
 		// ObjectShard holds details about calls to the ObjectShard method.
 		ObjectShard []struct {
@@ -227,10 +225,8 @@ type ClientMock struct {
 			ContainerName string
 			// IndexPool is the indexPool argument value.
 			IndexPool string
-			// Marker is the marker argument value.
-			Marker string
-			// Shard is the shard argument value.
-			Shard int
+			// IndexObject is the indexObject argument value.
+			IndexObject *domain.BucketIndexObject
 			// Key is the key argument value.
 			Key string
 		}
@@ -598,7 +594,12 @@ func (mock *ClientMock) ListBucketsCalls() []struct {
 }
 
 // ListOmapKeys calls ListOmapKeysFunc.
-func (mock *ClientMock) ListOmapKeys(ctx context.Context, containerName string, indexPool string, marker string, shard int) ([]*domain.BIIndex, error) {
+func (mock *ClientMock) ListOmapKeys(
+	ctx context.Context,
+	containerName string,
+	indexPool string,
+	indexObject *domain.BucketIndexObject,
+) ([]*domain.BIIndex, error) {
 	if mock.ListOmapKeysFunc == nil {
 		panic("ClientMock.ListOmapKeysFunc: method is nil but Client.ListOmapKeys was just called")
 	}
@@ -606,19 +607,17 @@ func (mock *ClientMock) ListOmapKeys(ctx context.Context, containerName string, 
 		Ctx           context.Context
 		ContainerName string
 		IndexPool     string
-		Marker        string
-		Shard         int
+		IndexObject   *domain.BucketIndexObject
 	}{
 		Ctx:           ctx,
 		ContainerName: containerName,
 		IndexPool:     indexPool,
-		Marker:        marker,
-		Shard:         shard,
+		IndexObject:   indexObject,
 	}
 	mock.lockListOmapKeys.Lock()
 	mock.calls.ListOmapKeys = append(mock.calls.ListOmapKeys, callInfo)
 	mock.lockListOmapKeys.Unlock()
-	return mock.ListOmapKeysFunc(ctx, containerName, indexPool, marker, shard)
+	return mock.ListOmapKeysFunc(ctx, containerName, indexPool, indexObject)
 }
 
 // ListOmapKeysCalls gets all the calls that were made to ListOmapKeys.
@@ -629,15 +628,13 @@ func (mock *ClientMock) ListOmapKeysCalls() []struct {
 	Ctx           context.Context
 	ContainerName string
 	IndexPool     string
-	Marker        string
-	Shard         int
+	IndexObject   *domain.BucketIndexObject
 } {
 	var calls []struct {
 		Ctx           context.Context
 		ContainerName string
 		IndexPool     string
-		Marker        string
-		Shard         int
+		IndexObject   *domain.BucketIndexObject
 	}
 	mock.lockListOmapKeys.RLock()
 	calls = mock.calls.ListOmapKeys
@@ -738,7 +735,13 @@ func (mock *ClientMock) RemoveObjectCalls() []struct {
 }
 
 // RemoveOmapKey calls RemoveOmapKeyFunc.
-func (mock *ClientMock) RemoveOmapKey(ctx context.Context, containerName string, indexPool string, marker string, shard int, key string) error {
+func (mock *ClientMock) RemoveOmapKey(
+	ctx context.Context,
+	containerName string,
+	indexPool string,
+	indexObject *domain.BucketIndexObject,
+	key string,
+) error {
 	if mock.RemoveOmapKeyFunc == nil {
 		panic("ClientMock.RemoveOmapKeyFunc: method is nil but Client.RemoveOmapKey was just called")
 	}
@@ -746,21 +749,19 @@ func (mock *ClientMock) RemoveOmapKey(ctx context.Context, containerName string,
 		Ctx           context.Context
 		ContainerName string
 		IndexPool     string
-		Marker        string
-		Shard         int
+		IndexObject   *domain.BucketIndexObject
 		Key           string
 	}{
 		Ctx:           ctx,
 		ContainerName: containerName,
 		IndexPool:     indexPool,
-		Marker:        marker,
-		Shard:         shard,
+		IndexObject:   indexObject,
 		Key:           key,
 	}
 	mock.lockRemoveOmapKey.Lock()
 	mock.calls.RemoveOmapKey = append(mock.calls.RemoveOmapKey, callInfo)
 	mock.lockRemoveOmapKey.Unlock()
-	return mock.RemoveOmapKeyFunc(ctx, containerName, indexPool, marker, shard, key)
+	return mock.RemoveOmapKeyFunc(ctx, containerName, indexPool, indexObject, key)
 }
 
 // RemoveOmapKeyCalls gets all the calls that were made to RemoveOmapKey.
@@ -771,16 +772,14 @@ func (mock *ClientMock) RemoveOmapKeyCalls() []struct {
 	Ctx           context.Context
 	ContainerName string
 	IndexPool     string
-	Marker        string
-	Shard         int
+	IndexObject   *domain.BucketIndexObject
 	Key           string
 } {
 	var calls []struct {
 		Ctx           context.Context
 		ContainerName string
 		IndexPool     string
-		Marker        string
-		Shard         int
+		IndexObject   *domain.BucketIndexObject
 		Key           string
 	}
 	mock.lockRemoveOmapKey.RLock()

@@ -23,14 +23,14 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 
 	mockClient.ListOmapKeysFunc = func(
 		gotCtx context.Context,
-		containerName, indexPool, marker string,
-		shard int,
+		containerName, indexPool string,
+		indexObject *domain.BucketIndexObject,
 	) ([]*domain.BIIndex, error) {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
-		require.Equal(t, "bucket-marker", marker)
-		require.Equal(t, 3, shard)
+		require.Equal(t, "bucket-marker", indexObject.Marker())
+		require.Equal(t, 3, indexObject.Shard())
 
 		return wantIndexes, nil
 	}
@@ -54,7 +54,12 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.ListOmapKeysFunc = func(context.Context, string, string, string, int) ([]*domain.BIIndex, error) {
+	mockClient.ListOmapKeysFunc = func(
+		context.Context,
+		string,
+		string,
+		*domain.BucketIndexObject,
+	) ([]*domain.BIIndex, error) {
 		return nil, wantErr
 	}
 	service := flow.NewService(&mockClient)

@@ -36,10 +36,15 @@ func TestServiceRemoveRMSupportOmapKeysFailsWhenKeyStillExists(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.RemoveOmapKeyFunc = func(context.Context, string, string, string, int, string) error {
+	mockClient.RemoveOmapKeyFunc = func(context.Context, string, string, *domain.BucketIndexObject, string) error {
 		return nil
 	}
-	mockClient.ListOmapKeysFunc = func(context.Context, string, string, string, int) ([]*domain.BIIndex, error) {
+	mockClient.ListOmapKeysFunc = func(
+		context.Context,
+		string,
+		string,
+		*domain.BucketIndexObject,
+	) ([]*domain.BIIndex, error) {
 		return []*domain.BIIndex{domain.NewBIIndex("plain-a")}, nil
 	}
 
@@ -63,10 +68,15 @@ func TestServiceRemoveRMSupportOmapKeysReturnsVerificationListError(t *testing.T
 
 	var mockClient ClientMock
 
-	mockClient.RemoveOmapKeyFunc = func(context.Context, string, string, string, int, string) error {
+	mockClient.RemoveOmapKeyFunc = func(context.Context, string, string, *domain.BucketIndexObject, string) error {
 		return nil
 	}
-	mockClient.ListOmapKeysFunc = func(context.Context, string, string, string, int) ([]*domain.BIIndex, error) {
+	mockClient.ListOmapKeysFunc = func(
+		context.Context,
+		string,
+		string,
+		*domain.BucketIndexObject,
+	) ([]*domain.BIIndex, error) {
 		return nil, errClientFailed
 	}
 
@@ -93,15 +103,15 @@ func newRMSupportRemovalMockClient(t *testing.T, ctx context.Context) *ClientMoc
 
 	mockClient.RemoveOmapKeyFunc = func(
 		gotCtx context.Context,
-		containerName, indexPool, marker string,
-		shard int,
+		containerName, indexPool string,
+		indexObject *domain.BucketIndexObject,
 		key string,
 	) error {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
-		require.Equal(t, "bucket-marker", marker)
-		require.Equal(t, 3, shard)
+		require.Equal(t, "bucket-marker", indexObject.Marker())
+		require.Equal(t, 3, indexObject.Shard())
 		require.Contains(t, []string{"plain-a", "plain-b"}, key)
 
 		return nil
@@ -110,16 +120,16 @@ func newRMSupportRemovalMockClient(t *testing.T, ctx context.Context) *ClientMoc
 	listCallCount := 0
 	mockClient.ListOmapKeysFunc = func(
 		gotCtx context.Context,
-		containerName, indexPool, marker string,
-		shard int,
+		containerName, indexPool string,
+		indexObject *domain.BucketIndexObject,
 	) ([]*domain.BIIndex, error) {
 		listCallCount++
 
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
-		require.Equal(t, "bucket-marker", marker)
-		require.Equal(t, 3, shard)
+		require.Equal(t, "bucket-marker", indexObject.Marker())
+		require.Equal(t, 3, indexObject.Shard())
 
 		switch listCallCount {
 		case 1:

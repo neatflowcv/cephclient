@@ -107,14 +107,14 @@ func TestServiceRMSupportPlanDelegatesWithOmap(t *testing.T) {
 	}
 	mockClient.ListOmapKeysFunc = func(
 		gotCtx context.Context,
-		containerName, indexPool, marker string,
-		shard int,
+		containerName, indexPool string,
+		indexObject *domain.BucketIndexObject,
 	) ([]*domain.BIIndex, error) {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "index-pool", indexPool)
-		require.Equal(t, "bucket-marker", marker)
-		require.Equal(t, 3, shard)
+		require.Equal(t, "bucket-marker", indexObject.Marker())
+		require.Equal(t, 3, indexObject.Shard())
 
 		return wantOmapKeys, nil
 	}

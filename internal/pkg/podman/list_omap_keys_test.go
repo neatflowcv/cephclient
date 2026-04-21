@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 	"github.com/neatflowcv/cephclient/internal/pkg/podman"
 	"github.com/stretchr/testify/require"
 )
@@ -32,8 +33,9 @@ func TestClientListOmapKeysRunsPodmanCommand(t *testing.T) {
 		},
 	)
 	client := podman.NewClientWithRunner(runner)
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
 
-	indexes, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", "bucket-marker", 7)
+	indexes, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", indexObject)
 
 	require.NoError(t, err)
 	require.Len(t, runner.RunCalls(), 1)
@@ -50,8 +52,9 @@ func TestClientListOmapKeysReturnsEmptySliceForEmptyOutput(t *testing.T) {
 			return nil, "", nil
 		},
 	))
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
 
-	indexes, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", "bucket-marker", 7)
+	indexes, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", indexObject)
 
 	require.NoError(t, err)
 	require.Empty(t, indexes)
@@ -65,8 +68,9 @@ func TestClientListOmapKeysReturnsRunnerErrorWithStderr(t *testing.T) {
 			return nil, listOmapKeysErrPermissionDenied, errListOmapKeysExitStatus125
 		},
 	))
+	indexObject := domain.NewBucketIndexObject("bucket-marker", 7)
 
-	_, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", "bucket-marker", 7)
+	_, err := client.ListOmapKeys(t.Context(), "rgw", "default.rgw.buckets.index", indexObject)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), listOmapKeysErrPermissionDenied)
