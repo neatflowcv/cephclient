@@ -32,7 +32,7 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	stats, err := service.BucketStats(ctx, "rgw", "test")
+	stats, err := service.GetBucketStats(ctx, "rgw", "test")
 
 	// Assert
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestServiceBucketLayoutDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	layout, err := service.BucketLayout(ctx, "rgw", "test")
+	layout, err := service.GetBucketLayout(ctx, "rgw", "test")
 
 	// Assert
 	require.NoError(t, err)
@@ -142,7 +142,7 @@ func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	biList, err := service.BIListByShard(ctx, "rgw", "bucket-a", 3)
+	biList, err := service.ListBIByShard(ctx, "rgw", "bucket-a", 3)
 
 	// Assert
 	require.NoError(t, err)
@@ -499,7 +499,7 @@ func TestServiceBIListByShardReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.BIListByShard(ctx, "rgw", "bucket-a", 3)
+	_, err := service.ListBIByShard(ctx, "rgw", "bucket-a", 3)
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
@@ -550,7 +550,7 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.BucketStats(ctx, "rgw", "test")
+	_, err := service.GetBucketStats(ctx, "rgw", "test")
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
@@ -592,7 +592,7 @@ func TestServiceBucketLayoutReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.BucketLayout(ctx, "rgw", "test")
+	_, err := service.GetBucketLayout(ctx, "rgw", "test")
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
@@ -717,7 +717,7 @@ func TestServiceObjectShardDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	shard, err := service.ObjectShard(ctx, "rgw", "test-object", 11)
+	shard, err := service.GetObjectShard(ctx, "rgw", "test-object", 11)
 
 	// Assert
 	require.NoError(t, err)
@@ -740,7 +740,7 @@ func TestServiceObjectShardReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.ObjectShard(ctx, "rgw", "test-object", 11)
+	_, err := service.GetObjectShard(ctx, "rgw", "test-object", 11)
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)

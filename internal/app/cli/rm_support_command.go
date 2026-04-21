@@ -26,7 +26,7 @@ func (c *rmSupportCommand) Run(
 	stdin io.Reader,
 	stdout io.Writer,
 ) error {
-	plan, err := service.RMSupportPlan(ctx, c.Container, c.Bucket, c.Object, c.ShowOmap)
+	plan, err := service.BuildRMSupportPlan(ctx, c.Container, c.Bucket, c.Object, c.ShowOmap)
 	if err != nil {
 		return fmt.Errorf("prepare rm-support flow: %w", err)
 	}

@@ -15,7 +15,7 @@ type bucketLayoutCommand struct {
 }
 
 func (c *bucketLayoutCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	layout, err := service.BucketLayout(ctx, c.Container, c.Bucket)
+	layout, err := service.GetBucketLayout(ctx, c.Container, c.Bucket)
 	if err != nil {
 		return fmt.Errorf("read bucket layout: %w", err)
 	}

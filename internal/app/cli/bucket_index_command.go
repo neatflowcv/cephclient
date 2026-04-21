@@ -15,7 +15,7 @@ type bucketIndexCommand struct {
 }
 
 func (c *bucketIndexCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	biList, err := service.BIListByShard(ctx, c.Container, c.Bucket, c.Shard)
+	biList, err := service.ListBIByShard(ctx, c.Container, c.Bucket, c.Shard)
 	if err != nil {
 		return fmt.Errorf("read bucket index list: %w", err)
 	}

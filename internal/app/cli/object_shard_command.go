@@ -16,7 +16,7 @@ type objectShardCommand struct {
 }
 
 func (c *objectShardCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	shard, err := service.ObjectShard(ctx, c.Container, c.Object, c.TotalShards)
+	shard, err := service.GetObjectShard(ctx, c.Container, c.Object, c.TotalShards)
 	if err != nil {
 		return fmt.Errorf("read object shard: %w", err)
 	}

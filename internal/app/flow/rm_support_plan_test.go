@@ -61,7 +61,7 @@ func TestServiceRMSupportPlanDelegatesWithoutOmap(t *testing.T) { //nolint:funle
 	}
 	service := flow.NewService(&mockClient)
 
-	plan, err := service.RMSupportPlan(ctx, "rgw", "bucket-a", "test.txt", false)
+	plan, err := service.BuildRMSupportPlan(ctx, "rgw", "bucket-a", "test.txt", false)
 
 	require.NoError(t, err)
 	require.Same(t, wantList, plan.BIList())
@@ -120,7 +120,7 @@ func TestServiceRMSupportPlanDelegatesWithOmap(t *testing.T) {
 	}
 	service := flow.NewService(&mockClient)
 
-	plan, err := service.RMSupportPlan(ctx, "rgw", "bucket-a", "test.txt", true)
+	plan, err := service.BuildRMSupportPlan(ctx, "rgw", "bucket-a", "test.txt", true)
 
 	require.NoError(t, err)
 	require.Same(t, wantList, plan.BIList())

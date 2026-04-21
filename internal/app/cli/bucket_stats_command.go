@@ -17,7 +17,7 @@ type bucketStatsCommand struct {
 }
 
 func (c *bucketStatsCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	stats, err := service.BucketStats(ctx, c.Container, c.Bucket)
+	stats, err := service.GetBucketStats(ctx, c.Container, c.Bucket)
 	if err != nil {
 		return fmt.Errorf("read bucket stats: %w", err)
 	}
