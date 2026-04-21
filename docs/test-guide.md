@@ -8,6 +8,7 @@
 
 - 테스트 파일은 대상 패키지 옆에 `*_test.go`로 둡니다.
 - 테스트 패키지명은 반드시 `_test`를 붙입니다.
+- `internal/app/cli` 패키지에는 테스트를 작성하지 않습니다.
 - 가능하면 외부 공개 동작을 기준으로 검증합니다.
 - assertion은 `github.com/stretchr/testify/require`를 사용합니다.
 - 테스트에서 `context.Context`가 필요하면 `context.Background()` 대신 `t.Context()`를 사용합니다.
