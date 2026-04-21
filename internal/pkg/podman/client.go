@@ -285,6 +285,8 @@ func (c *Client) ListOmapKeys(
 	containerName, indexPool, marker string,
 	shard int,
 ) ([]*domain.BIIndex, error) {
+	indexObject := domain.NewBucketIndexObject(marker, shard)
+
 	commandArgs := []string{
 		"exec",
 		"-i",
@@ -293,7 +295,7 @@ func (c *Client) ListOmapKeys(
 		"-p",
 		indexPool,
 		"listomapkeys",
-		fmt.Sprintf(".dir.%s.%d", marker, shard),
+		indexObject.Raw(),
 	}
 
 	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
@@ -317,6 +319,8 @@ func (c *Client) RemoveOmapKey(
 	shard int,
 	key string,
 ) error {
+	indexObject := domain.NewBucketIndexObject(marker, shard)
+
 	stdout, err := c.runPodmanCommand(ctx, []string{
 		"exec",
 		"-i",
@@ -350,7 +354,7 @@ func (c *Client) RemoveOmapKey(
 		"-p",
 		indexPool,
 		"rmomapkey",
-		fmt.Sprintf(".dir.%s.%d", marker, shard),
+		indexObject.Raw(),
 		"--omap-key-file=" + tmpFile,
 	})
 	if err != nil {
