@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -21,26 +22,43 @@ func (c *bucketStatsCommand) Run(ctx context.Context, service *flow.Service, std
 		return fmt.Errorf("read bucket stats: %w", err)
 	}
 
-	return writeBucketStats(stdout, stats)
+	return WriteBucketStats(stdout, stats)
 }
 
-func writeBucketStats(stdout io.Writer, stats *domain.BucketStats) error {
-	_, err := fmt.Fprintf(
-		stdout,
-		"id=%s\nname=%s\nsize=%s\nobject_count=%d\ntotal_shards=%d\nversioning=%s\nmarker=%s\n",
-		stats.ID(),
-		stats.Name(),
-		formatBucketSize(stats.Size()),
-		stats.ObjectCount(),
-		stats.TotalShards(),
-		stats.Versioning(),
-		stats.Marker(),
-	)
+func WriteBucketStats(stdout io.Writer, stats *domain.BucketStats) error {
+	payload := bucketStatsOutput{
+		ID:          stats.ID(),
+		Name:        stats.Name(),
+		Size:        stats.Size(),
+		SizeHuman:   formatBucketSize(stats.Size()),
+		ObjectCount: stats.ObjectCount(),
+		TotalShards: stats.TotalShards(),
+		Versioning:  string(stats.Versioning()),
+		Marker:      stats.Marker(),
+	}
+
+	encoded, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return fmt.Errorf("write bucket stats: %w", err)
+	}
+
+	_, err = fmt.Fprintln(stdout, string(encoded))
 	if err != nil {
 		return fmt.Errorf("write bucket stats: %w", err)
 	}
 
 	return nil
+}
+
+type bucketStatsOutput struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Size        int64  `json:"size"`
+	SizeHuman   string `json:"size_human"`
+	ObjectCount int    `json:"object_count"`
+	TotalShards int    `json:"total_shards"`
+	Versioning  string `json:"versioning"`
+	Marker      string `json:"marker"`
 }
 
 func formatBucketSize(size int64) string {
@@ -57,5 +75,5 @@ func formatBucketSize(size int64) string {
 
 	human := value / math.Pow(unit, float64(exponent))
 
-	return fmt.Sprintf("%d B (%.2f %s)", size, human, units[exponent-1])
+	return fmt.Sprintf("%.2f %s", human, units[exponent-1])
 }
