@@ -32,14 +32,12 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 	mockClient.ListOmapKeysFunc = func(
 		gotCtx context.Context,
 		containerName, indexPool string,
-		indexObject *domain.BucketIndexObject,
+		rawObject string,
 	) ([]*domain.BIIndex, error) {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
-		require.Equal(t, "bucket-marker", indexObject.Marker())
-		require.Equal(t, 2, indexObject.Layout())
-		require.Equal(t, 3, indexObject.Shard())
+		require.Equal(t, ".dir.bucket-marker.2.3", rawObject)
 
 		return wantIndexes, nil
 	}
@@ -78,7 +76,7 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 		context.Context,
 		string,
 		string,
-		*domain.BucketIndexObject,
+		string,
 	) ([]*domain.BIIndex, error) {
 		return nil, wantErr
 	}

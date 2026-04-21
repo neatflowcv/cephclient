@@ -27,15 +27,13 @@ func TestServiceRemoveOmapKeyDelegatesToClient(t *testing.T) {
 	mockClient.RemoveOmapKeyFunc = func(
 		gotCtx context.Context,
 		containerName, indexPool string,
-		indexObject *domain.BucketIndexObject,
+		rawObject string,
 		key string,
 	) error {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "default.rgw.buckets.index", indexPool)
-		require.Equal(t, "bucket-marker", indexObject.Marker())
-		require.Equal(t, 2, indexObject.Layout())
-		require.Equal(t, 3, indexObject.Shard())
+		require.Equal(t, ".dir.bucket-marker.2.3", rawObject)
 		require.Equal(t, "plain-key", key)
 
 		return nil
@@ -67,7 +65,7 @@ func TestServiceRemoveOmapKeyReturnsClientError(t *testing.T) {
 		return domain.NewLayout(2), nil
 	}
 
-	mockClient.RemoveOmapKeyFunc = func(context.Context, string, string, *domain.BucketIndexObject, string) error {
+	mockClient.RemoveOmapKeyFunc = func(context.Context, string, string, string, string) error {
 		return errClientFailed
 	}
 	service := flow.NewService(&mockClient)

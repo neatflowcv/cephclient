@@ -113,7 +113,12 @@ func (s *Service) ListOmapKeys(
 		return nil, err
 	}
 
-	indexes, err := s.client.ListOmapKeys(ctx, req.ContainerName, req.IndexPool, indexObject)
+	indexes, err := s.client.ListOmapKeys(
+		ctx,
+		req.ContainerName,
+		req.IndexPool,
+		indexObject.Raw(),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("get omap keys: %w", err)
 	}
@@ -349,7 +354,7 @@ func (s *Service) PurgeObject(
 			ctx,
 			req.ContainerName,
 			zone.IndexPool(),
-			indexObject,
+			indexObject.Raw(),
 			omapKey,
 		)
 		if err != nil {
@@ -397,7 +402,13 @@ func (s *Service) RemoveOmapKey(
 		return err
 	}
 
-	err = s.client.RemoveOmapKey(ctx, req.ContainerName, req.IndexPool, indexObject, req.Key)
+	err = s.client.RemoveOmapKey(
+		ctx,
+		req.ContainerName,
+		req.IndexPool,
+		indexObject.Raw(),
+		req.Key,
+	)
 	if err != nil {
 		return fmt.Errorf("remove omap key: %w", err)
 	}

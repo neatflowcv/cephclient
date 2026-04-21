@@ -22,7 +22,7 @@ type Client interface {
 	ListOmapKeys(
 		ctx context.Context,
 		containerName, indexPool string,
-		indexObject *domain.BucketIndexObject,
+		rawObject string,
 	) ([]*domain.BIIndex, error)
 	ListBuckets(ctx context.Context, containerName string) ([]string, error)
 	ObjectShard(ctx context.Context, containerName, objectName string, totalShards int) (*domain.ObjectShard, error)
@@ -31,7 +31,7 @@ type Client interface {
 	RemoveOmapKey(
 		ctx context.Context,
 		containerName, indexPool string,
-		indexObject *domain.BucketIndexObject,
+		rawObject string,
 		key string,
 	) error
 }

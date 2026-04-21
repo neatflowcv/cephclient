@@ -283,7 +283,7 @@ func (c *Client) HasRawObject(
 func (c *Client) ListOmapKeys(
 	ctx context.Context,
 	containerName, indexPool string,
-	indexObject *domain.BucketIndexObject,
+	rawObject string,
 ) ([]*domain.BIIndex, error) {
 	commandArgs := []string{
 		"exec",
@@ -293,7 +293,7 @@ func (c *Client) ListOmapKeys(
 		"-p",
 		indexPool,
 		"listomapkeys",
-		indexObject.Raw(),
+		rawObject,
 	}
 
 	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
@@ -314,7 +314,7 @@ func (c *Client) ListOmapKeys(
 func (c *Client) RemoveOmapKey(
 	ctx context.Context,
 	containerName, indexPool string,
-	indexObject *domain.BucketIndexObject,
+	rawObject string,
 	key string,
 ) error {
 	stdout, err := c.runPodmanCommand(ctx, []string{
@@ -350,7 +350,7 @@ func (c *Client) RemoveOmapKey(
 		"-p",
 		indexPool,
 		"rmomapkey",
-		indexObject.Raw(),
+		rawObject,
 		"--omap-key-file=" + tmpFile,
 	})
 	if err != nil {
