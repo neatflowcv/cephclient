@@ -8,7 +8,6 @@ import (
 	"math"
 
 	"github.com/neatflowcv/cephclient/internal/app/flow"
-	"github.com/neatflowcv/cephclient/internal/pkg/domain"
 )
 
 type bucketStatsCommand struct {
@@ -17,7 +16,10 @@ type bucketStatsCommand struct {
 }
 
 func (c *bucketStatsCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	stats, err := service.GetBucketStats(ctx, c.Container, c.Bucket)
+	stats, err := service.GetBucketStats(ctx, flow.GetBucketStatsRequest{
+		ContainerName: c.Container,
+		BucketName:    c.Bucket,
+	})
 	if err != nil {
 		return fmt.Errorf("read bucket stats: %w", err)
 	}
@@ -25,16 +27,16 @@ func (c *bucketStatsCommand) Run(ctx context.Context, service *flow.Service, std
 	return WriteBucketStats(stdout, stats)
 }
 
-func WriteBucketStats(stdout io.Writer, stats *domain.BucketStats) error {
+func WriteBucketStats(stdout io.Writer, stats *flow.GetBucketStatsResponse) error {
 	payload := bucketStatsOutput{
-		ID:          stats.ID(),
-		Name:        stats.Name(),
-		Size:        stats.Size(),
-		SizeHuman:   formatBucketSize(stats.Size()),
-		ObjectCount: stats.ObjectCount(),
-		TotalShards: stats.TotalShards(),
-		Versioning:  string(stats.Versioning()),
-		Marker:      stats.Marker(),
+		ID:          stats.ID,
+		Name:        stats.Name,
+		Size:        stats.Size,
+		SizeHuman:   formatBucketSize(stats.Size),
+		ObjectCount: stats.ObjectCount,
+		TotalShards: stats.TotalShards,
+		Versioning:  string(stats.Versioning),
+		Marker:      stats.Marker,
 	}
 
 	encoded, err := json.MarshalIndent(payload, "", "  ")

@@ -32,17 +32,20 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	stats, err := service.GetBucketStats(ctx, "rgw", "test")
+	stats, err := service.GetBucketStats(ctx, flow.GetBucketStatsRequest{
+		ContainerName: "rgw",
+		BucketName:    "test",
+	})
 
 	// Assert
 	require.NoError(t, err)
-	require.Equal(t, "bucket-id", stats.ID())
-	require.Equal(t, "test", stats.Name())
-	require.Equal(t, 11, stats.TotalShards())
-	require.Equal(t, "bucket-marker", stats.Marker())
-	require.EqualValues(t, 5, stats.Size())
-	require.Equal(t, 1, stats.ObjectCount())
-	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning())
+	require.Equal(t, "bucket-id", stats.ID)
+	require.Equal(t, "test", stats.Name)
+	require.Equal(t, 11, stats.TotalShards)
+	require.Equal(t, "bucket-marker", stats.Marker)
+	require.EqualValues(t, 5, stats.Size)
+	require.Equal(t, 1, stats.ObjectCount)
+	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning)
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 }
 
@@ -550,7 +553,10 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 	service := flow.NewService(&mockClient)
 
 	// Act
-	_, err := service.GetBucketStats(ctx, "rgw", "test")
+	_, err := service.GetBucketStats(ctx, flow.GetBucketStatsRequest{
+		ContainerName: "rgw",
+		BucketName:    "test",
+	})
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)

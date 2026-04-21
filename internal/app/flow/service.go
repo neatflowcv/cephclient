@@ -56,13 +56,16 @@ func (s *Service) ListBIByObject(
 	return NewListBIByObjectResponse(biList), nil
 }
 
-func (s *Service) GetBucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
-	stats, err := s.client.BucketStats(ctx, containerName, bucketName)
+func (s *Service) GetBucketStats(
+	ctx context.Context,
+	req GetBucketStatsRequest,
+) (*GetBucketStatsResponse, error) {
+	stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket stats: %w", err)
 	}
 
-	return stats, nil
+	return newGetBucketStatsResponse(stats), nil
 }
 
 func (s *Service) GetBucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error) {
