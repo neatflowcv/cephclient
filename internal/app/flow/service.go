@@ -384,16 +384,20 @@ func (s *Service) PurgeObject(
 
 func (s *Service) RemoveOmapKey(
 	ctx context.Context,
-	containerName, bucketName, indexPool, marker string,
-	shard int,
-	key string,
+	req RemoveOmapKeyRequest,
 ) error {
-	indexObject, err := s.bucketIndexObject(ctx, containerName, bucketName, marker, shard)
+	indexObject, err := s.bucketIndexObject(
+		ctx,
+		req.ContainerName,
+		req.BucketName,
+		req.Marker,
+		req.ShardID,
+	)
 	if err != nil {
 		return err
 	}
 
-	err = s.client.RemoveOmapKey(ctx, containerName, indexPool, indexObject, key)
+	err = s.client.RemoveOmapKey(ctx, req.ContainerName, req.IndexPool, indexObject, req.Key)
 	if err != nil {
 		return fmt.Errorf("remove omap key: %w", err)
 	}

@@ -18,7 +18,14 @@ type omapRmCommand struct {
 }
 
 func (c *omapRmCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
-	err := service.RemoveOmapKey(ctx, c.Container, c.Bucket, c.IndexPool, c.Marker, c.Shard, c.Key)
+	err := service.RemoveOmapKey(ctx, flow.RemoveOmapKeyRequest{
+		ContainerName: c.Container,
+		BucketName:    c.Bucket,
+		IndexPool:     c.IndexPool,
+		Marker:        c.Marker,
+		ShardID:       c.Shard,
+		Key:           c.Key,
+	})
 	if err != nil {
 		return fmt.Errorf("remove omap key: %w", err)
 	}

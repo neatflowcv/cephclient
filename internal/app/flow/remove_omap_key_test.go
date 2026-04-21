@@ -42,7 +42,14 @@ func TestServiceRemoveOmapKeyDelegatesToClient(t *testing.T) {
 	}
 	service := flow.NewService(&mockClient)
 
-	err := service.RemoveOmapKey(ctx, "rgw", "bucket-a", "default.rgw.buckets.index", "bucket-marker", 3, "plain-key")
+	err := service.RemoveOmapKey(ctx, flow.RemoveOmapKeyRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		IndexPool:     "default.rgw.buckets.index",
+		Marker:        "bucket-marker",
+		ShardID:       3,
+		Key:           "plain-key",
+	})
 
 	require.NoError(t, err)
 	require.Len(t, mockClient.BucketLayoutCalls(), 1)
@@ -65,7 +72,14 @@ func TestServiceRemoveOmapKeyReturnsClientError(t *testing.T) {
 	}
 	service := flow.NewService(&mockClient)
 
-	err := service.RemoveOmapKey(ctx, "rgw", "bucket-a", "default.rgw.buckets.index", "bucket-marker", 3, "plain-key")
+	err := service.RemoveOmapKey(ctx, flow.RemoveOmapKeyRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		IndexPool:     "default.rgw.buckets.index",
+		Marker:        "bucket-marker",
+		ShardID:       3,
+		Key:           "plain-key",
+	})
 
 	require.ErrorIs(t, err, errClientFailed)
 	require.EqualError(t, err, "remove omap key: client failed")
@@ -85,7 +99,14 @@ func TestServiceRemoveOmapKeyReturnsBucketLayoutError(t *testing.T) {
 	}
 	service := flow.NewService(&mockClient)
 
-	err := service.RemoveOmapKey(ctx, "rgw", "bucket-a", "default.rgw.buckets.index", "bucket-marker", 3, "plain-key")
+	err := service.RemoveOmapKey(ctx, flow.RemoveOmapKeyRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		IndexPool:     "default.rgw.buckets.index",
+		Marker:        "bucket-marker",
+		ShardID:       3,
+		Key:           "plain-key",
+	})
 
 	require.ErrorIs(t, err, errClientFailed)
 	require.EqualError(t, err, "get bucket layout: client failed")
