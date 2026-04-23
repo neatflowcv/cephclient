@@ -5,12 +5,17 @@ type PendingLog struct {
 	val []PendingLogItem
 }
 
-func NewPendingLog(key int, val []PendingLogItem) PendingLog {
-	copiedVal := make([]PendingLogItem, len(val))
-	copy(copiedVal, val)
+type PendingLogParams struct {
+	Key int
+	Val []PendingLogItem
+}
+
+func NewPendingLog(p PendingLogParams) PendingLog {
+	copiedVal := make([]PendingLogItem, len(p.Val))
+	copy(copiedVal, p.Val)
 
 	return PendingLog{
-		key: key,
+		key: p.Key,
 		val: copiedVal,
 	}
 }

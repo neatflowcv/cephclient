@@ -809,16 +809,19 @@ func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing
 			"test.txt",
 			"instance-olh",
 			[]domain.PendingLog{
-				domain.NewPendingLog(8, []domain.PendingLogItem{
-					domain.NewPendingLogItem(8, "unlink_olh", "tag-1", "test.txt", "", false),
-					domain.NewPendingLogItem(
-						8,
-						"remove_instance",
-						"tag-1",
-						"test.txt",
-						"instance-pending",
-						false,
-					),
+				domain.NewPendingLog(domain.PendingLogParams{
+					Key: 8,
+					Val: []domain.PendingLogItem{
+						domain.NewPendingLogItem(8, "unlink_olh", "tag-1", "test.txt", "", false),
+						domain.NewPendingLogItem(
+							8,
+							"remove_instance",
+							"tag-1",
+							"test.txt",
+							"instance-pending",
+							false,
+						),
+					},
 				}),
 			},
 		),

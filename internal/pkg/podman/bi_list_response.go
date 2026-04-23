@@ -177,7 +177,10 @@ func (r biPendingLogEntryResponse) toDomain() domain.PendingLog {
 		items = append(items, item.toDomain())
 	}
 
-	return domain.NewPendingLog(r.Key, items)
+	return domain.NewPendingLog(domain.PendingLogParams{
+		Key: r.Key,
+		Val: items,
+	})
 }
 
 type biPendingLogItemResponse struct {
