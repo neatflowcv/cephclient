@@ -63,7 +63,7 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 			return nil, fmt.Errorf("decode olh bi entry: %w", err)
 		}
 
-		var pendingLog []domain.PendingLog
+		var pendingLog []domain.PendingLogParams
 		for _, item := range entry.PendingLog {
 			pendingLog = append(pendingLog, item.toDomain())
 		}
@@ -171,16 +171,16 @@ type biPendingLogEntryResponse struct {
 	Val []biPendingLogItemResponse `json:"val"`
 }
 
-func (r biPendingLogEntryResponse) toDomain() domain.PendingLog {
+func (r biPendingLogEntryResponse) toDomain() domain.PendingLogParams {
 	var items []domain.PendingLogItemParams
 	for _, item := range r.Val {
 		items = append(items, item.toDomain())
 	}
 
-	return domain.NewPendingLog(domain.PendingLogParams{
+	return domain.PendingLogParams{
 		Key: r.Key,
 		Val: items,
-	})
+	}
 }
 
 type biPendingLogItemResponse struct {

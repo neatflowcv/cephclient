@@ -808,8 +808,8 @@ func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing
 		newOLHEntry(
 			"test.txt",
 			"instance-olh",
-			[]domain.PendingLog{
-				domain.NewPendingLog(domain.PendingLogParams{
+			[]domain.PendingLogParams{
+				{
 					Key: 8,
 					Val: []domain.PendingLogItemParams{
 						{
@@ -829,7 +829,7 @@ func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing
 							OpTag:        "tag-1",
 						},
 					},
-				}),
+				},
 			},
 		),
 	})
@@ -1259,7 +1259,7 @@ func newVersionedInstanceEntry() *domain.InstanceBIEntry {
 
 func newOLHEntry(
 	name, instance string,
-	pendingLog []domain.PendingLog,
+	pendingLog []domain.PendingLogParams,
 ) *domain.OLH {
 	return domain.NewOLH(domain.OLHParams{
 		DeleteMarker:   false,

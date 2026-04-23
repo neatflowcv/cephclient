@@ -18,15 +18,17 @@ type OLHParams struct {
 	Exists         bool
 	Instance       string
 	Name           string
-	PendingLog     []PendingLog
+	PendingLog     []PendingLogParams
 	PendingRemoval bool
 	Tag            string
 	IDX            *BIIndex
 }
 
 func NewOLH(p OLHParams) *OLH {
-	copiedPendingLog := make([]PendingLog, len(p.PendingLog))
-	copy(copiedPendingLog, p.PendingLog)
+	var copiedPendingLog []PendingLog
+	for _, pendingLog := range p.PendingLog {
+		copiedPendingLog = append(copiedPendingLog, NewPendingLog(pendingLog))
+	}
 
 	return &OLH{
 		deleteMarker:   p.DeleteMarker,
