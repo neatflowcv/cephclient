@@ -32,7 +32,7 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d mtime=%s",
 			typed.Type(),
-			quoteField(typed.IDX().Escaped()),
+			quoteField(typed.IDX()),
 			quoteField(typed.Entry().Name()),
 			quoteField(typed.Entry().Instance()),
 			typed.Entry().Exists(),
@@ -43,7 +43,7 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d mtime=%s",
 			typed.Type(),
-			quoteField(typed.IDX().Escaped()),
+			quoteField(typed.IDX()),
 			quoteField(typed.Entry().Name()),
 			quoteField(typed.Entry().Instance()),
 			typed.Entry().Exists(),
@@ -54,7 +54,7 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t epoch=%d pending_removal=%t delete_marker=%t",
 			typed.Type(),
-			quoteField(typed.IDX().Escaped()),
+			quoteField(typed.IDX()),
 			quoteField(typed.Name()),
 			quoteField(typed.Instance()),
 			typed.Exists(),

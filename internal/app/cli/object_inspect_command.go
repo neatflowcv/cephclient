@@ -133,7 +133,7 @@ func newObjectInspectOLH(biList *domain.BIList) *objectInspectOLH {
 		}
 
 		return &objectInspectOLH{
-			IDX:            typed.IDX().Escaped(),
+			IDX:            typed.IDX(),
 			Instance:       typed.Instance(),
 			Exists:         typed.Exists(),
 			Epoch:          typed.Epoch(),
@@ -154,7 +154,7 @@ func newObjectInspectVersions(objectName string, result *flow.InspectObjectRespo
 		switch typed := entry.(type) {
 		case *domain.PlainBIEntry:
 			if isPlaceholderPlainEntry(
-				typed.IDX().Escaped(),
+				typed.IDX(),
 				typed.Entry().Name(),
 				formatObjectMTime(typed.Entry()),
 			) {
@@ -207,7 +207,7 @@ func upsertPlainObjectInspectVersion(
 		Exists:         current.Exists || entry.Entry().Exists(),
 		MTime:          firstNonEmpty(current.MTime, formatObjectMTime(entry.Entry())),
 		VersionedEpoch: firstNonZero(current.VersionedEpoch, entry.Entry().VersionedEpoch()),
-		PlainIDX:       firstNonEmpty(current.PlainIDX, entry.IDX().Escaped()),
+		PlainIDX:       firstNonEmpty(current.PlainIDX, entry.IDX()),
 		InstanceIDX:    current.InstanceIDX,
 		RawExists:      false,
 		RawObject:      "",
@@ -234,7 +234,7 @@ func upsertInstanceObjectInspectVersion(
 		MTime:          firstNonEmpty(current.MTime, formatObjectMTime(entry.Entry())),
 		VersionedEpoch: firstNonZero(current.VersionedEpoch, entry.Entry().VersionedEpoch()),
 		PlainIDX:       current.PlainIDX,
-		InstanceIDX:    firstNonEmpty(current.InstanceIDX, entry.IDX().Escaped()),
+		InstanceIDX:    firstNonEmpty(current.InstanceIDX, entry.IDX()),
 		RawExists:      false,
 		RawObject:      "",
 	}
@@ -271,7 +271,7 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 		case *domain.PlainBIEntry:
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
-				IDX:            typed.IDX().Escaped(),
+				IDX:            typed.IDX(),
 				Instance:       typed.Entry().Instance(),
 				Exists:         typed.Entry().Exists(),
 				VersionedEpoch: typed.Entry().VersionedEpoch(),
@@ -284,7 +284,7 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 		case *domain.InstanceBIEntry:
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
-				IDX:            typed.IDX().Escaped(),
+				IDX:            typed.IDX(),
 				Instance:       typed.Entry().Instance(),
 				Exists:         typed.Entry().Exists(),
 				VersionedEpoch: typed.Entry().VersionedEpoch(),
@@ -297,7 +297,7 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 		case *domain.OLH:
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
-				IDX:            typed.IDX().Escaped(),
+				IDX:            typed.IDX(),
 				Instance:       typed.Instance(),
 				Exists:         typed.Exists(),
 				VersionedEpoch: 0,

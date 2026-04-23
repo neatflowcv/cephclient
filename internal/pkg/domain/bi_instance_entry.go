@@ -16,8 +16,8 @@ func (e *InstanceBIEntry) Entry() *BIObjectEntry {
 	return e.entry
 }
 
-func (e *InstanceBIEntry) IDX() *BIIndex {
-	return e.idx
+func (e *InstanceBIEntry) IDX() string {
+	return e.idx.Escaped()
 }
 
 func (e *InstanceBIEntry) Type() string {

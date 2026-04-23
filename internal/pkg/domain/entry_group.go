@@ -79,7 +79,7 @@ func (g *EntryGroup) ExtractOmapKeys() []string {
 	seen := map[string]struct{}{}
 
 	for _, entry := range g.olhs {
-		key := entry.IDX().Escaped()
+		key := entry.IDX()
 		if _, ok := seen[key]; ok {
 			continue
 		}
@@ -89,7 +89,7 @@ func (g *EntryGroup) ExtractOmapKeys() []string {
 	}
 
 	for _, entry := range g.plains {
-		key := entry.IDX().Escaped()
+		key := entry.IDX()
 		if _, ok := seen[key]; ok {
 			continue
 		}
@@ -99,7 +99,7 @@ func (g *EntryGroup) ExtractOmapKeys() []string {
 	}
 
 	for _, entry := range g.instances {
-		key := entry.IDX().Escaped()
+		key := entry.IDX()
 		if _, ok := seen[key]; ok {
 			continue
 		}

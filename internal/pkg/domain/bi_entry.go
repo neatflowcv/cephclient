@@ -1,6 +1,6 @@
 package domain
 
 type BIEntry interface {
-	IDX() *BIIndex
+	IDX() string
 	Type() string
 }

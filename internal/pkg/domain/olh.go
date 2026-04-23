@@ -43,8 +43,8 @@ func NewOLH(p OLHParams) *OLH {
 	}
 }
 
-func (o *OLH) IDX() *BIIndex {
-	return o.idx
+func (o *OLH) IDX() string {
+	return o.idx.Escaped()
 }
 
 func (o *OLH) DeleteMarker() bool {
