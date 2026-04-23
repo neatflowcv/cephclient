@@ -27,7 +27,7 @@ type OLHParams struct {
 func NewOLH(p OLHParams) *OLH {
 	var copiedPendingLog []PendingLog
 	for _, pendingLog := range p.PendingLog {
-		copiedPendingLog = append(copiedPendingLog, NewPendingLog(pendingLog))
+		copiedPendingLog = append(copiedPendingLog, newPendingLog(pendingLog))
 	}
 
 	return &OLH{

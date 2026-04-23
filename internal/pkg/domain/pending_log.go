@@ -10,10 +10,10 @@ type PendingLogParams struct {
 	Val []PendingLogItemParams
 }
 
-func NewPendingLog(p PendingLogParams) PendingLog {
+func newPendingLog(p PendingLogParams) PendingLog {
 	var copiedVal []PendingLogItem
 	for _, item := range p.Val {
-		copiedVal = append(copiedVal, NewPendingLogItem(item))
+		copiedVal = append(copiedVal, newPendingLogItem(item))
 	}
 
 	return PendingLog{
@@ -44,7 +44,7 @@ type PendingLogItemParams struct {
 	OpTag        string
 }
 
-func NewPendingLogItem(p PendingLogItemParams) PendingLogItem {
+func newPendingLogItem(p PendingLogItemParams) PendingLogItem {
 	return PendingLogItem{
 		deleteMarker: p.DeleteMarker,
 		epoch:        p.Epoch,
