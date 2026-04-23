@@ -124,7 +124,8 @@ func (r biObjectEntryResponse) toDirParams(idx *domain.BIIndex) domain.DirParams
 		StorageClass:     r.Meta.StorageClass,
 		Tag:              r.Tag,
 		UserData:         r.Meta.UserData,
-		Ver:              r.Ver.toDomain(),
+		Pool:             r.Ver.Pool,
+		Epoch:            r.Ver.Epoch,
 		VersionedEpoch:   r.VersionedEpoch,
 		IDX:              idx,
 	}
@@ -147,10 +148,6 @@ type biObjectMetaResponse struct {
 type biVersionResponse struct {
 	Epoch int `json:"epoch"`
 	Pool  int `json:"pool"`
-}
-
-func (r biVersionResponse) toDomain() *domain.BIVersion {
-	return domain.NewBIVersion(r.Pool, r.Epoch)
 }
 
 type biOLHEntryResponse struct {

@@ -19,7 +19,8 @@ type dir struct {
 	storageClass     string
 	tag              string
 	userData         string
-	ver              *BIVersion
+	pool             int
+	epoch            int
 	versionedEpoch   int
 	idx              *BIIndex
 }
@@ -43,7 +44,8 @@ type DirParams struct {
 	StorageClass     string
 	Tag              string
 	UserData         string
-	Ver              *BIVersion
+	Pool             int
+	Epoch            int
 	VersionedEpoch   int
 	IDX              *BIIndex
 }
@@ -68,7 +70,8 @@ func newDir(p DirParams) *dir {
 		storageClass:     p.StorageClass,
 		tag:              p.Tag,
 		userData:         p.UserData,
-		ver:              p.Ver,
+		pool:             p.Pool,
+		epoch:            p.Epoch,
 		versionedEpoch:   p.VersionedEpoch,
 		idx:              p.IDX,
 	}
@@ -106,8 +109,12 @@ func (d *dir) Tag() string {
 	return d.tag
 }
 
-func (d *dir) Ver() *BIVersion {
-	return d.ver
+func (d *dir) Pool() int {
+	return d.pool
+}
+
+func (d *dir) Epoch() int {
+	return d.epoch
 }
 
 func (d *dir) VersionedEpoch() int {

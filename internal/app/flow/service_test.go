@@ -115,7 +115,8 @@ func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 		domain.NewPlain(domain.DirParams{
 			Name:             "test.txt",
 			Instance:         "",
-			Ver:              domain.NewBIVersion(-1, 0),
+			Pool:             -1,
+			Epoch:            0,
 			Locator:          "",
 			Exists:           false,
 			Category:         0,
@@ -170,7 +171,8 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 	wantEntry := domain.NewPlain(domain.DirParams{
 		Name:             "test.txt",
 		Instance:         "",
-		Ver:              domain.NewBIVersion(-1, 0),
+		Pool:             -1,
+		Epoch:            0,
 		Locator:          "",
 		Exists:           false,
 		Category:         0,
@@ -990,7 +992,8 @@ func newVersionedPlainEntry(instance string) *domain.Plain {
 	return domain.NewPlain(domain.DirParams{
 		Name:             "test.txt",
 		Instance:         instance,
-		Ver:              domain.NewBIVersion(8, 119),
+		Pool:             8,
+		Epoch:            119,
 		Locator:          "",
 		Exists:           true,
 		Category:         0,
@@ -1267,7 +1270,8 @@ func newVersionedInstanceEntry() *domain.Instance {
 	return domain.NewInstance(domain.DirParams{
 		Name:             name,
 		Instance:         instance,
-		Ver:              domain.NewBIVersion(8, 119),
+		Pool:             8,
+		Epoch:            119,
 		Locator:          "",
 		Exists:           true,
 		Category:         0,

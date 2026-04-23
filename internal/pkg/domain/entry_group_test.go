@@ -95,7 +95,8 @@ func newTestDirParams(instance string, epoch int, idx string) domain.DirParams {
 	return domain.DirParams{
 		Name:             "test.txt",
 		Instance:         instance,
-		Ver:              domain.NewBIVersion(8, epoch),
+		Pool:             8,
+		Epoch:            epoch,
 		Locator:          "",
 		Exists:           true,
 		Category:         0,

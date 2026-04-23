@@ -157,8 +157,8 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	require.True(t, okPlainVersioned)
 	require.Equal(t, "test.txt\\x00v913\\x00iPDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", plainVersioned.IDX())
 	require.Equal(t, "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", plainVersioned.Instance())
-	require.Equal(t, 8, plainVersioned.Ver().Pool())
-	require.Equal(t, 119, plainVersioned.Ver().Epoch())
+	require.Equal(t, 8, plainVersioned.Pool())
+	require.Equal(t, 119, plainVersioned.Epoch())
 	require.False(t, plainVersioned.Pending())
 
 	instance, okInstance := entries[2].(*domain.Instance)
