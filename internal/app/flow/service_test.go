@@ -11,6 +11,46 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func newListBIByObjectWantEntry() *domain.Plain {
+	return domain.NewPlain(domain.DirParams{
+		Name:             "test.txt",
+		Instance:         "",
+		Pool:             -1,
+		Epoch:            0,
+		Locator:          "",
+		Exists:           false,
+		Category:         0,
+		Size:             0,
+		MTime:            "0.000000",
+		ETag:             "",
+		StorageClass:     "",
+		Owner:            "",
+		OwnerDisplayName: "",
+		ContentType:      "",
+		AccountedSize:    0,
+		UserData:         "",
+		Appendable:       false,
+		Tag:              "",
+		Flags:            8,
+		Pending:          false,
+		VersionedEpoch:   0,
+		IDX:              domain.NewBIIndex("test.txt"),
+	})
+}
+
+func requireListBIByObjectResponse(
+	t *testing.T,
+	resp *flow.ListBIByObjectResponse,
+	shardID int,
+) {
+	t.Helper()
+
+	require.Equal(t, "rgw", resp.Container)
+	require.Equal(t, "bucket-a", resp.Bucket)
+	require.Equal(t, "test.txt", resp.Object)
+	require.Equal(t, shardID, resp.ShardID)
+}
+
 func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	t.Parallel()
 
@@ -168,30 +208,7 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 
 	// Arrange
 	ctx := t.Context()
-	wantEntry := domain.NewPlain(domain.DirParams{
-		Name:             "test.txt",
-		Instance:         "",
-		Pool:             -1,
-		Epoch:            0,
-		Locator:          "",
-		Exists:           false,
-		Category:         0,
-		Size:             0,
-		MTime:            "0.000000",
-		ETag:             "",
-		StorageClass:     "",
-		Owner:            "",
-		OwnerDisplayName: "",
-		ContentType:      "",
-		AccountedSize:    0,
-		UserData:         "",
-		Appendable:       false,
-		Tag:              "",
-		Flags:            8,
-		Pending:          false,
-		VersionedEpoch:   0,
-		IDX:              domain.NewBIIndex("test.txt"),
-	})
+	wantEntry := newListBIByObjectWantEntry()
 
 	var mockClient ClientMock
 
@@ -222,7 +239,8 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	require.Equal(t, []domain.BIEntry{wantEntry}, resp.BIList().Entries())
+	requireListBIByObjectResponse(t, resp, 3)
+	require.Equal(t, []domain.BIEntry{wantEntry}, resp.BIList.Entries())
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
 }
 
@@ -282,7 +300,9 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	require.Empty(t, resp.BIList().Entries())
+
+	requireListBIByObjectResponse(t, resp, 7)
+	require.Empty(t, resp.BIList.Entries())
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
@@ -335,7 +355,8 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	require.Empty(t, resp.BIList().Entries())
+	requireListBIByObjectResponse(t, resp, 5)
+	require.Empty(t, resp.BIList.Entries())
 	require.Empty(t, mockClient.BucketStatsCalls())
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)

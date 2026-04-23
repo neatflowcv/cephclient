@@ -30,7 +30,7 @@ func (c *objectIndexCommand) Run(ctx context.Context, service *flow.Service, std
 		return fmt.Errorf("read bucket index list: %w", err)
 	}
 
-	return writeObjectIndexEntriesJSON(stdout, resp.BIList())
+	return writeObjectIndexEntriesJSON(stdout, resp.BIList)
 }
 
 func writeObjectIndexEntriesJSON(stdout io.Writer, biList *domain.BIList) error {

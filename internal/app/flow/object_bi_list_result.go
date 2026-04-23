@@ -11,20 +11,18 @@ type ListBIByObjectRequest struct {
 }
 
 type ListBIByObjectResponse struct {
-	biList *domain.BIList
+	Container string
+	Bucket    string
+	Object    string
+	ShardID   int
+	BIList    *domain.BIList
 }
 
-func NewListBIByObjectResponse(biList *domain.BIList) *ListBIByObjectResponse {
-	return &ListBIByObjectResponse{
-		biList: biList,
-	}
-}
-
-func (r *ListBIByObjectResponse) BIList() *domain.BIList {
-	return r.biList
-}
-
-func newListBIByObjectResponseFromEntryGroup(entryGroup *domain.EntryGroup) *ListBIByObjectResponse {
+func newListBIByObjectResponse(
+	req ListBIByObjectRequest,
+	shardID int,
+	entryGroup *domain.EntryGroup,
+) *ListBIByObjectResponse {
 	var entries []domain.BIEntry
 
 	for _, entry := range entryGroup.OLHs() {
@@ -39,5 +37,11 @@ func newListBIByObjectResponseFromEntryGroup(entryGroup *domain.EntryGroup) *Lis
 		entries = append(entries, entry)
 	}
 
-	return NewListBIByObjectResponse(domain.NewBIList(entries))
+	return &ListBIByObjectResponse{
+		Container: req.ContainerName,
+		Bucket:    req.BucketName,
+		Object:    req.ObjectName,
+		ShardID:   shardID,
+		BIList:    domain.NewBIList(entries),
+	}
 }

@@ -59,7 +59,7 @@ func (s *Service) ListBIByObject(
 		return nil, fmt.Errorf("get bucket index list: %w", err)
 	}
 
-	return newListBIByObjectResponseFromEntryGroup(entryGroup), nil
+	return newListBIByObjectResponse(req, shardID, entryGroup), nil
 }
 
 func (s *Service) GetBucketStats(
