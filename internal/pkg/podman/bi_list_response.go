@@ -192,12 +192,12 @@ type biPendingLogItemResponse struct {
 }
 
 func (r biPendingLogItemResponse) toDomain() domain.PendingLogItem {
-	return domain.NewPendingLogItem(
-		r.Epoch,
-		r.Op,
-		r.OpTag,
-		r.Key.Name,
-		r.Key.Instance,
-		r.DeleteMarker,
-	)
+	return domain.NewPendingLogItem(domain.PendingLogItemParams{
+		DeleteMarker: r.DeleteMarker,
+		Epoch:        r.Epoch,
+		Instance:     r.Key.Instance,
+		Name:         r.Key.Name,
+		Op:           r.Op,
+		OpTag:        r.OpTag,
+	})
 }

@@ -40,18 +40,23 @@ type PendingLogItem struct {
 	opTag        string
 }
 
-func NewPendingLogItem(
-	epoch int,
-	op, opTag, name, instance string,
-	deleteMarker bool,
-) PendingLogItem {
+type PendingLogItemParams struct {
+	DeleteMarker bool
+	Epoch        int
+	Instance     string
+	Name         string
+	Op           string
+	OpTag        string
+}
+
+func NewPendingLogItem(p PendingLogItemParams) PendingLogItem {
 	return PendingLogItem{
-		deleteMarker: deleteMarker,
-		epoch:        epoch,
-		instance:     instance,
-		name:         name,
-		op:           op,
-		opTag:        opTag,
+		deleteMarker: p.DeleteMarker,
+		epoch:        p.Epoch,
+		instance:     p.Instance,
+		name:         p.Name,
+		op:           p.Op,
+		opTag:        p.OpTag,
 	}
 }
 
