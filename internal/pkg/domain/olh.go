@@ -41,41 +41,41 @@ func NewOLH(p OLHParams) *OLH {
 	}
 }
 
-func (e *OLH) IDX() *BIIndex {
-	return e.idx
+func (o *OLH) IDX() *BIIndex {
+	return o.idx
 }
 
-func (e *OLH) DeleteMarker() bool {
-	return e.deleteMarker
+func (o *OLH) DeleteMarker() bool {
+	return o.deleteMarker
 }
 
-func (e *OLH) Epoch() int {
-	return e.epoch
+func (o *OLH) Epoch() int {
+	return o.epoch
 }
 
-func (e *OLH) Exists() bool {
-	return e.exists
+func (o *OLH) Exists() bool {
+	return o.exists
 }
 
-func (e *OLH) Name() string {
-	return e.name
+func (o *OLH) Name() string {
+	return o.name
 }
 
-func (e *OLH) Instance() string {
-	return e.instance
+func (o *OLH) Instance() string {
+	return o.instance
 }
 
-func (e *OLH) PendingLog() []BIPendingLogEntry {
-	copied := make([]BIPendingLogEntry, len(e.pendingLog))
-	copy(copied, e.pendingLog)
+func (o *OLH) PendingLog() []BIPendingLogEntry {
+	copied := make([]BIPendingLogEntry, len(o.pendingLog))
+	copy(copied, o.pendingLog)
 
 	return copied
 }
 
-func (e *OLH) ReferencedVersions() []string {
-	versions := []string{e.Instance()}
+func (o *OLH) ReferencedVersions() []string {
+	versions := []string{o.Instance()}
 
-	for _, pending := range e.PendingLog() {
+	for _, pending := range o.PendingLog() {
 		for _, item := range pending.Val() {
 			versions = append(versions, item.Instance())
 		}
@@ -84,14 +84,14 @@ func (e *OLH) ReferencedVersions() []string {
 	return versions
 }
 
-func (e *OLH) PendingRemoval() bool {
-	return e.pendingRemoval
+func (o *OLH) PendingRemoval() bool {
+	return o.pendingRemoval
 }
 
-func (e *OLH) Tag() string {
-	return e.tag
+func (o *OLH) Tag() string {
+	return o.tag
 }
 
-func (e *OLH) Type() string {
+func (o *OLH) Type() string {
 	return "olh"
 }
