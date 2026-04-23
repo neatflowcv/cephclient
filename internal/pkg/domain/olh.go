@@ -1,31 +1,31 @@
 package domain
 
-type OLHBIEntry struct {
+type OLH struct {
 	entry *BIOLHEntry
 	idx   *BIIndex
 }
 
-type OLHBIEntryParams struct {
+type OLHParams struct {
 	Entry *BIOLHEntry
 	IDX   *BIIndex
 }
 
-func NewOLHBIEntry(p OLHBIEntryParams) *OLHBIEntry {
-	return &OLHBIEntry{
+func NewOLH(p OLHParams) *OLH {
+	return &OLH{
 		entry: p.Entry,
 		idx:   p.IDX,
 	}
 }
 
-func (e *OLHBIEntry) Entry() *BIOLHEntry {
+func (e *OLH) Entry() *BIOLHEntry {
 	return e.entry
 }
 
-func (e *OLHBIEntry) IDX() *BIIndex {
+func (e *OLH) IDX() *BIIndex {
 	return e.idx
 }
 
-func (e *OLHBIEntry) Type() string {
+func (e *OLH) Type() string {
 	return "olh"
 }
 

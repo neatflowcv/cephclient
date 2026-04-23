@@ -1,13 +1,13 @@
 package domain
 
 type EntryGroup struct {
-	olhs      []*OLHBIEntry
+	olhs      []*OLH
 	plains    []*PlainBIEntry
 	instances []*InstanceBIEntry
 }
 
-func NewEntryGroup(olhs []*OLHBIEntry, plains []*PlainBIEntry, instances []*InstanceBIEntry) *EntryGroup {
-	copiedOLHs := make([]*OLHBIEntry, len(olhs))
+func NewEntryGroup(olhs []*OLH, plains []*PlainBIEntry, instances []*InstanceBIEntry) *EntryGroup {
+	copiedOLHs := make([]*OLH, len(olhs))
 	copy(copiedOLHs, olhs)
 
 	copiedPlains := make([]*PlainBIEntry, len(plains))
@@ -23,8 +23,8 @@ func NewEntryGroup(olhs []*OLHBIEntry, plains []*PlainBIEntry, instances []*Inst
 	}
 }
 
-func (g *EntryGroup) OLHs() []*OLHBIEntry {
-	copied := make([]*OLHBIEntry, len(g.olhs))
+func (g *EntryGroup) OLHs() []*OLH {
+	copied := make([]*OLH, len(g.olhs))
 	copy(copied, g.olhs)
 
 	return copied

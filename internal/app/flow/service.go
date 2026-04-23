@@ -533,7 +533,7 @@ func rawObjectVersions(entry domain.BIEntry) []string {
 		return []string{typed.Entry().Instance()}
 	case *domain.InstanceBIEntry:
 		return []string{typed.Entry().Instance()}
-	case *domain.OLHBIEntry:
+	case *domain.OLH:
 		versions := []string{typed.Entry().Key().Instance()}
 
 		for _, pending := range typed.Entry().PendingLog() {

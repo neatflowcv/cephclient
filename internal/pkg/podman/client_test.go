@@ -167,7 +167,7 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	require.Equal(t, "test.txt", instance.Entry().Name())
 	require.Equal(t, "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", instance.Entry().Instance())
 
-	olh, okOLH := entries[3].(*domain.OLHBIEntry)
+	olh, okOLH := entries[3].(*domain.OLH)
 	require.True(t, okOLH)
 	require.Equal(t, "\\x801001_test.txt", olh.IDX().Escaped())
 	require.Equal(t, "test.txt", olh.Entry().Key().Name())

@@ -1122,7 +1122,7 @@ func newPurgeObjectFallbackFixture(
 			), nil
 		case 2:
 			return domain.NewEntryGroup(
-				[]*domain.OLHBIEntry{
+				[]*domain.OLH{
 					newOLHEntry("test.txt", "instance-1", nil),
 				},
 				nil,
@@ -1249,8 +1249,8 @@ func newVersionedInstanceEntry() *domain.InstanceBIEntry {
 func newOLHEntry(
 	name, instance string,
 	pendingLog []domain.BIPendingLogEntry,
-) *domain.OLHBIEntry {
-	return domain.NewOLHBIEntry(domain.OLHBIEntryParams{
+) *domain.OLH {
+	return domain.NewOLH(domain.OLHParams{
 		IDX: domain.NewBIIndex(name),
 		Entry: domain.NewBIOLHEntry(
 			domain.NewBIOLHKey(name, instance),

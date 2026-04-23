@@ -127,7 +127,7 @@ func newObjectInspectOutput(
 
 func newObjectInspectOLH(biList *domain.BIList) *objectInspectOLH {
 	for _, entry := range biList.Entries() {
-		typed, ok := entry.(*domain.OLHBIEntry)
+		typed, ok := entry.(*domain.OLH)
 		if !ok {
 			continue
 		}
@@ -294,7 +294,7 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 				DeleteMarker:   false,
 				Name:           typed.Entry().Name(),
 			})
-		case *domain.OLHBIEntry:
+		case *domain.OLH:
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
 				IDX:            typed.IDX().Escaped(),

@@ -50,7 +50,7 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 			typed.Entry().VersionedEpoch(),
 			quoteField(formatObjectMTime(typed.Entry())),
 		), nil
-	case *domain.OLHBIEntry:
+	case *domain.OLH:
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t epoch=%d pending_removal=%t delete_marker=%t",
 			typed.Type(),

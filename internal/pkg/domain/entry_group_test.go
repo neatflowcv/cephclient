@@ -82,8 +82,8 @@ func TestEntryGroupExtractOmapKeys(t *testing.T) {
 //nolint:funlen // Shared extraction fixture keeps raw and omap expectations aligned.
 func newEntryGroupForExtractionTests() *domain.EntryGroup {
 	return domain.NewEntryGroup(
-		[]*domain.OLHBIEntry{
-			domain.NewOLHBIEntry(domain.OLHBIEntryParams{
+		[]*domain.OLH{
+			domain.NewOLH(domain.OLHParams{
 				IDX: domain.NewBIIndex("test.txt"),
 				Entry: domain.NewBIOLHEntry(
 					domain.NewBIOLHKey("test.txt", "instance-1"),

@@ -63,7 +63,7 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 			return nil, fmt.Errorf("decode olh bi entry: %w", err)
 		}
 
-		return domain.NewOLHBIEntry(domain.OLHBIEntryParams{
+		return domain.NewOLH(domain.OLHParams{
 			IDX:   idx,
 			Entry: entry.toDomain(),
 		}), nil
