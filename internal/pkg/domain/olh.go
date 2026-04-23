@@ -76,7 +76,7 @@ func (o *OLH) ReferencedVersions() []string {
 	versions := []string{o.Instance()}
 
 	for _, pending := range o.PendingLog() {
-		for _, item := range pending.Val() {
+		for _, item := range pending.val {
 			versions = append(versions, item.Instance())
 		}
 	}

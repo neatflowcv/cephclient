@@ -174,7 +174,7 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	require.Equal(t, "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", olh.Instance())
 	require.Equal(t, 2, olh.Epoch())
 	require.Len(t, olh.PendingLog(), 1)
-	require.Len(t, olh.PendingLog()[0].Val(), 2)
+	require.Len(t, olh.ReferencedVersions(), 3)
 }
 
 func TestClientBIListByObjectReturnsRunnerErrorWithStderr(t *testing.T) {

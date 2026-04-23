@@ -7,12 +7,14 @@ type PendingLog struct {
 
 type PendingLogParams struct {
 	Key int
-	Val []PendingLogItem
+	Val []PendingLogItemParams
 }
 
 func NewPendingLog(p PendingLogParams) PendingLog {
-	copiedVal := make([]PendingLogItem, len(p.Val))
-	copy(copiedVal, p.Val)
+	var copiedVal []PendingLogItem
+	for _, item := range p.Val {
+		copiedVal = append(copiedVal, NewPendingLogItem(item))
+	}
 
 	return PendingLog{
 		key: p.Key,
@@ -22,13 +24,6 @@ func NewPendingLog(p PendingLogParams) PendingLog {
 
 func (l PendingLog) Key() int {
 	return l.key
-}
-
-func (l PendingLog) Val() []PendingLogItem {
-	copied := make([]PendingLogItem, len(l.val))
-	copy(copied, l.val)
-
-	return copied
 }
 
 type PendingLogItem struct {

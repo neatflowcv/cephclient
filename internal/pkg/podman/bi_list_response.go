@@ -172,7 +172,7 @@ type biPendingLogEntryResponse struct {
 }
 
 func (r biPendingLogEntryResponse) toDomain() domain.PendingLog {
-	var items []domain.PendingLogItem
+	var items []domain.PendingLogItemParams
 	for _, item := range r.Val {
 		items = append(items, item.toDomain())
 	}
@@ -191,13 +191,13 @@ type biPendingLogItemResponse struct {
 	OpTag        string           `json:"op_tag"`
 }
 
-func (r biPendingLogItemResponse) toDomain() domain.PendingLogItem {
-	return domain.NewPendingLogItem(domain.PendingLogItemParams{
+func (r biPendingLogItemResponse) toDomain() domain.PendingLogItemParams {
+	return domain.PendingLogItemParams{
 		DeleteMarker: r.DeleteMarker,
 		Epoch:        r.Epoch,
 		Instance:     r.Key.Instance,
 		Name:         r.Key.Name,
 		Op:           r.Op,
 		OpTag:        r.OpTag,
-	})
+	}
 }
