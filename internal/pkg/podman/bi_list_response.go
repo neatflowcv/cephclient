@@ -45,7 +45,10 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 			return nil, fmt.Errorf("decode plain bi entry: %w", err)
 		}
 
-		return domain.NewPlainBIEntry(idx, entry.toDomain()), nil
+		return domain.NewPlainBIEntry(domain.DirParams{
+			Entry: entry.toDomain(),
+			IDX:   idx,
+		}), nil
 	case "instance":
 		var entry biObjectEntryResponse
 
@@ -54,7 +57,10 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 			return nil, fmt.Errorf("decode instance bi entry: %w", err)
 		}
 
-		return domain.NewInstanceBIEntry(idx, entry.toDomain()), nil
+		return domain.NewInstanceBIEntry(domain.DirParams{
+			Entry: entry.toDomain(),
+			IDX:   idx,
+		}), nil
 	case "olh":
 		var entry biOLHEntryResponse
 

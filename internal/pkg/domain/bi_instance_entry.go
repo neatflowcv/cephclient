@@ -1,23 +1,13 @@
 package domain
 
 type InstanceBIEntry struct {
-	entry *BIObjectEntry
-	idx   *BIIndex
+	*dir
 }
 
-func NewInstanceBIEntry(idx *BIIndex, entry *BIObjectEntry) *InstanceBIEntry {
+func NewInstanceBIEntry(p DirParams) *InstanceBIEntry {
 	return &InstanceBIEntry{
-		entry: entry,
-		idx:   idx,
+		dir: newDir(p),
 	}
-}
-
-func (e *InstanceBIEntry) Entry() *BIObjectEntry {
-	return e.entry
-}
-
-func (e *InstanceBIEntry) IDX() string {
-	return e.idx.Escaped()
 }
 
 func (e *InstanceBIEntry) Type() string {

@@ -112,9 +112,9 @@ func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 	// Arrange
 	ctx := t.Context()
 	wantList := domain.NewBIList([]domain.BIEntry{
-		domain.NewPlainBIEntry(
-			domain.NewBIIndex("test.txt"),
-			domain.NewBIObjectEntry(
+		domain.NewPlainBIEntry(domain.DirParams{
+			IDX: domain.NewBIIndex("test.txt"),
+			Entry: domain.NewBIObjectEntry(
 				"test.txt",
 				"",
 				domain.NewBIVersion(-1, 0),
@@ -126,7 +126,7 @@ func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 				false,
 				0,
 			),
-		),
+		}),
 	})
 
 	var mockClient ClientMock
@@ -159,9 +159,9 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 
 	// Arrange
 	ctx := t.Context()
-	wantEntry := domain.NewPlainBIEntry(
-		domain.NewBIIndex("test.txt"),
-		domain.NewBIObjectEntry(
+	wantEntry := domain.NewPlainBIEntry(domain.DirParams{
+		IDX: domain.NewBIIndex("test.txt"),
+		Entry: domain.NewBIObjectEntry(
 			"test.txt",
 			"",
 			domain.NewBIVersion(-1, 0),
@@ -173,7 +173,7 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 			false,
 			0,
 		),
-	)
+	})
 
 	var mockClient ClientMock
 
@@ -971,9 +971,9 @@ func newObjectInspectClientMock(
 }
 
 func newVersionedPlainEntry(instance string) *domain.PlainBIEntry {
-	return domain.NewPlainBIEntry(
-		domain.NewBIIndex(fmt.Sprintf("%s:%s", "test.txt", instance)),
-		domain.NewBIObjectEntry(
+	return domain.NewPlainBIEntry(domain.DirParams{
+		IDX: domain.NewBIIndex(fmt.Sprintf("%s:%s", "test.txt", instance)),
+		Entry: domain.NewBIObjectEntry(
 			"test.txt",
 			instance,
 			domain.NewBIVersion(8, 119),
@@ -985,7 +985,7 @@ func newVersionedPlainEntry(instance string) *domain.PlainBIEntry {
 			false,
 			2,
 		),
-	)
+	})
 }
 
 func configurePurgeObjectBucketStatsMock(
@@ -1240,9 +1240,9 @@ func newVersionedInstanceEntry() *domain.InstanceBIEntry {
 		instance = "instance-1"
 	)
 
-	return domain.NewInstanceBIEntry(
-		domain.NewBIIndex(fmt.Sprintf("%s-instance:%s", name, instance)),
-		domain.NewBIObjectEntry(
+	return domain.NewInstanceBIEntry(domain.DirParams{
+		IDX: domain.NewBIIndex(fmt.Sprintf("%s-instance:%s", name, instance)),
+		Entry: domain.NewBIObjectEntry(
 			name,
 			instance,
 			domain.NewBIVersion(8, 119),
@@ -1254,7 +1254,7 @@ func newVersionedInstanceEntry() *domain.InstanceBIEntry {
 			false,
 			2,
 		),
-	)
+	})
 }
 
 func newOLHEntry(

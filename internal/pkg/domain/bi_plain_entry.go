@@ -1,23 +1,13 @@
 package domain
 
 type PlainBIEntry struct {
-	entry *BIObjectEntry
-	idx   *BIIndex
+	*dir
 }
 
-func NewPlainBIEntry(idx *BIIndex, entry *BIObjectEntry) *PlainBIEntry {
+func NewPlainBIEntry(p DirParams) *PlainBIEntry {
 	return &PlainBIEntry{
-		entry: entry,
-		idx:   idx,
+		dir: newDir(p),
 	}
-}
-
-func (e *PlainBIEntry) Entry() *BIObjectEntry {
-	return e.entry
-}
-
-func (e *PlainBIEntry) IDX() string {
-	return e.idx.Escaped()
 }
 
 func (e *PlainBIEntry) Type() string {

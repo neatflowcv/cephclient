@@ -25,9 +25,9 @@ func TestEntryGroupIsEmpty(t *testing.T) {
 			nil,
 			nil,
 			[]*domain.InstanceBIEntry{
-				domain.NewInstanceBIEntry(
-					domain.NewBIIndex("test.txt-instance:instance-1"),
-					domain.NewBIObjectEntry(
+				domain.NewInstanceBIEntry(domain.DirParams{
+					IDX: domain.NewBIIndex("test.txt-instance:instance-1"),
+					Entry: domain.NewBIObjectEntry(
 						"test.txt",
 						"instance-1",
 						domain.NewBIVersion(8, 119),
@@ -39,7 +39,7 @@ func TestEntryGroupIsEmpty(t *testing.T) {
 						false,
 						2,
 					),
-				),
+				}),
 			},
 		)
 
@@ -96,9 +96,9 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 			}),
 		},
 		[]*domain.PlainBIEntry{
-			domain.NewPlainBIEntry(
-				domain.NewBIIndex("test.txt:instance-2"),
-				domain.NewBIObjectEntry(
+			domain.NewPlainBIEntry(domain.DirParams{
+				IDX: domain.NewBIIndex("test.txt:instance-2"),
+				Entry: domain.NewBIObjectEntry(
 					"test.txt",
 					"instance-2",
 					domain.NewBIVersion(8, 120),
@@ -110,10 +110,10 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 					false,
 					2,
 				),
-			),
-			domain.NewPlainBIEntry(
-				domain.NewBIIndex("test.txt:instance-1"),
-				domain.NewBIObjectEntry(
+			}),
+			domain.NewPlainBIEntry(domain.DirParams{
+				IDX: domain.NewBIIndex("test.txt:instance-1"),
+				Entry: domain.NewBIObjectEntry(
 					"test.txt",
 					"instance-1",
 					domain.NewBIVersion(8, 119),
@@ -125,12 +125,12 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 					false,
 					2,
 				),
-			),
+			}),
 		},
 		[]*domain.InstanceBIEntry{
-			domain.NewInstanceBIEntry(
-				domain.NewBIIndex("test.txt-instance:instance-1"),
-				domain.NewBIObjectEntry(
+			domain.NewInstanceBIEntry(domain.DirParams{
+				IDX: domain.NewBIIndex("test.txt-instance:instance-1"),
+				Entry: domain.NewBIObjectEntry(
 					"test.txt",
 					"instance-1",
 					domain.NewBIVersion(8, 119),
@@ -142,10 +142,10 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 					false,
 					2,
 				),
-			),
-			domain.NewInstanceBIEntry(
-				domain.NewBIIndex("test.txt-instance:instance-1"),
-				domain.NewBIObjectEntry(
+			}),
+			domain.NewInstanceBIEntry(domain.DirParams{
+				IDX: domain.NewBIIndex("test.txt-instance:instance-1"),
+				Entry: domain.NewBIObjectEntry(
 					"test.txt",
 					"instance-1",
 					domain.NewBIVersion(8, 119),
@@ -157,7 +157,7 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 					false,
 					2,
 				),
-			),
+			}),
 		},
 	)
 }
