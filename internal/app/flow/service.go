@@ -19,6 +19,7 @@ type PurgeObjectRequest struct {
 	ContainerName string
 	BucketName    string
 	ObjectName    string
+	Layout        *int
 	TotalShards   *int
 }
 
@@ -114,6 +115,7 @@ func (s *Service) ListOmapKeys(
 		req.BucketName,
 		req.Marker,
 		req.ShardID,
+		nil,
 	)
 	if err != nil {
 		return nil, err
@@ -323,6 +325,7 @@ func (s *Service) PurgeObject(
 		req.BucketName,
 		stats.Marker(),
 		shardID,
+		req.Layout,
 	)
 	if err != nil {
 		return err
@@ -403,6 +406,7 @@ func (s *Service) RemoveOmapKey(
 		req.BucketName,
 		req.Marker,
 		req.ShardID,
+		nil,
 	)
 	if err != nil {
 		return err
@@ -426,7 +430,12 @@ func (s *Service) bucketIndexObject(
 	ctx context.Context,
 	containerName, bucketName, marker string,
 	shard int,
+	layoutGeneration *int,
 ) (*domain.BucketIndexObject, error) {
+	if layoutGeneration != nil {
+		return domain.NewBucketIndexObject(marker, *layoutGeneration, shard), nil
+	}
+
 	layout, err := s.client.BucketLayout(ctx, containerName, bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket layout: %w", err)

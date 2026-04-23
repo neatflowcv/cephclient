@@ -379,6 +379,7 @@ func TestServicePurgeObjectResolvesShardWhenRequestTotalShardsIsNil(t *testing.T
 		ContainerName: "rgw",
 		BucketName:    "bucket-a",
 		ObjectName:    "test.txt",
+		Layout:        nil,
 		TotalShards:   nil,
 	})
 
@@ -470,6 +471,7 @@ func TestServicePurgeObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 		ContainerName: "rgw",
 		BucketName:    "bucket-a",
 		ObjectName:    "test.txt",
+		Layout:        nil,
 		TotalShards:   &totalShards,
 	})
 
@@ -498,6 +500,7 @@ func TestServicePurgeObjectRemovesRemainingRawObjectsAndOmapKeysAfterVerificatio
 		ContainerName: "rgw",
 		BucketName:    "bucket-a",
 		ObjectName:    "test.txt",
+		Layout:        nil,
 		TotalShards:   &totalShards,
 	})
 
@@ -522,6 +525,56 @@ func TestServicePurgeObjectRemovesRemainingRawObjectsAndOmapKeysAfterVerificatio
 	require.Len(t, fixture.mockClient.RemoveRawObjectCalls(), 2)
 	require.Len(t, fixture.mockClient.BucketLayoutCalls(), 1)
 	require.Len(t, fixture.mockClient.RemoveOmapKeyCalls(), 2)
+}
+
+func TestServicePurgeObjectUsesRequestLayoutWhenProvided(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+	totalShards := 13
+	layout := 4
+	fixture := newPurgeObjectFallbackFixture(t, ctx)
+	fixture.mockClient.RemoveOmapKeyFunc = func(
+		gotCtx context.Context,
+		containerName, indexPool string,
+		rawObject string,
+		key string,
+	) error {
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "default.rgw.buckets.index", indexPool)
+		require.Equal(t, ".dir.bucket-marker.4.5", rawObject)
+
+		fixture.callOrder = append(fixture.callOrder, "omap")
+		fixture.omapKeys = append(fixture.omapKeys, key)
+
+		return nil
+	}
+	service := flow.NewService(&fixture.mockClient)
+
+	// Act
+	err := service.PurgeObject(ctx, flow.PurgeObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		Layout:        &layout,
+		TotalShards:   &totalShards,
+	})
+
+	// Assert
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		[]string{"shard", "list", "remove", "list", "stats", "zone", "raw", "raw", "omap", "omap"},
+		fixture.callOrder,
+	)
+	require.Empty(t, fixture.mockClient.BucketLayoutCalls())
+
+	removeOmapCalls := fixture.mockClient.RemoveOmapKeyCalls()
+	require.Len(t, removeOmapCalls, 2)
+	require.Equal(t, ".dir.bucket-marker.4.5", removeOmapCalls[0].RawObject)
+	require.Equal(t, ".dir.bucket-marker.4.5", removeOmapCalls[1].RawObject)
 }
 
 func TestServiceBIListByShardReturnsClientError(t *testing.T) {

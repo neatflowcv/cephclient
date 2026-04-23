@@ -9,10 +9,11 @@ import (
 )
 
 type objectPurgeCommand struct {
-	Container   string `arg:""                    help:"Container name." name:"container"`
-	Bucket      string `arg:""                    help:"Bucket name."    name:"bucket"`
-	Object      string `arg:""                    help:"Object name."    name:"object"`
-	TotalShards *int   `help:"Total shard count." name:"total-shards"`
+	Container   string `arg:""                           help:"Container name." name:"container"`
+	Bucket      string `arg:""                           help:"Bucket name."    name:"bucket"`
+	Object      string `arg:""                           help:"Object name."    name:"object"`
+	Layout      *int   `help:"Bucket layout generation." name:"layout"`
+	TotalShards *int   `help:"Total shard count."        name:"total-shards"`
 }
 
 func (c *objectPurgeCommand) Run(ctx context.Context, service *flow.Service, stdout io.Writer) error {
@@ -20,6 +21,7 @@ func (c *objectPurgeCommand) Run(ctx context.Context, service *flow.Service, std
 		ContainerName: c.Container,
 		BucketName:    c.Bucket,
 		ObjectName:    c.Object,
+		Layout:        c.Layout,
 		TotalShards:   c.TotalShards,
 	})
 	if err != nil {
