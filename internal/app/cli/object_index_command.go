@@ -30,11 +30,11 @@ func (c *objectIndexCommand) Run(ctx context.Context, service *flow.Service, std
 		return fmt.Errorf("read bucket index list: %w", err)
 	}
 
-	return writeObjectIndexEntriesJSON(stdout, resp.BIList)
+	return writeObjectIndexEntriesJSON(stdout, resp)
 }
 
-func writeObjectIndexEntriesJSON(stdout io.Writer, biList *domain.BIList) error {
-	payload, err := newObjectIndexEntriesResponse(biList)
+func writeObjectIndexEntriesJSON(stdout io.Writer, resp *flow.ListBIByObjectResponse) error {
+	payload, err := newObjectIndexEntriesResponse(resp)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,11 @@ func writeObjectIndexEntriesJSON(stdout io.Writer, biList *domain.BIList) error 
 }
 
 type objectIndexEntriesResponse struct {
-	Entries []objectIndexEntryResponse `json:"entries"`
+	Container string                     `json:"container"`
+	Bucket    string                     `json:"bucket"`
+	Object    string                     `json:"object"`
+	ShardID   int                        `json:"shard_id"`
+	Entries   []objectIndexEntryResponse `json:"entries"`
 }
 
 type objectIndexEntryResponse interface {
@@ -95,10 +99,10 @@ func (instanceObjectIndexEntryResponse) isObjectIndexEntryResponse() {}
 
 func (olhObjectIndexEntryResponse) isObjectIndexEntryResponse() {}
 
-func newObjectIndexEntriesResponse(biList *domain.BIList) (*objectIndexEntriesResponse, error) {
+func newObjectIndexEntriesResponse(resp *flow.ListBIByObjectResponse) (*objectIndexEntriesResponse, error) {
 	var entries []objectIndexEntryResponse
 
-	for _, entry := range biList.Entries() {
+	for _, entry := range resp.BIList.Entries() {
 		item, err := newObjectIndexEntryResponse(entry)
 		if err != nil {
 			return nil, err
@@ -108,7 +112,11 @@ func newObjectIndexEntriesResponse(biList *domain.BIList) (*objectIndexEntriesRe
 	}
 
 	return &objectIndexEntriesResponse{
-		Entries: entries,
+		Container: resp.Container,
+		Bucket:    resp.Bucket,
+		Object:    resp.Object,
+		ShardID:   resp.ShardID,
+		Entries:   entries,
 	}, nil
 }
 
