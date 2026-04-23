@@ -179,7 +179,7 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BIListByObjectFunc = func(
+	mockClient.ListBIByObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName string,
 		shardID int,
@@ -207,7 +207,7 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	require.Same(t, wantList, resp.BIList())
-	require.Len(t, mockClient.BIListByObjectCalls(), 1)
+	require.Len(t, mockClient.ListBIByObjectCalls(), 1)
 }
 
 func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
@@ -241,7 +241,7 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 
 		return domain.NewObjectShard(7), nil
 	}
-	mockClient.BIListByObjectFunc = func(
+	mockClient.ListBIByObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName string,
 		shardID int,
@@ -270,7 +270,7 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 	require.Same(t, wantList, resp.BIList())
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
-	require.Len(t, mockClient.BIListByObjectCalls(), 1)
+	require.Len(t, mockClient.ListBIByObjectCalls(), 1)
 }
 
 func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
@@ -295,7 +295,7 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 
 		return domain.NewObjectShard(5), nil
 	}
-	mockClient.BIListByObjectFunc = func(
+	mockClient.ListBIByObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName string,
 		shardID int,
@@ -324,7 +324,7 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 	require.Same(t, wantList, resp.BIList())
 	require.Empty(t, mockClient.BucketStatsCalls())
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
-	require.Len(t, mockClient.BIListByObjectCalls(), 1)
+	require.Len(t, mockClient.ListBIByObjectCalls(), 1)
 }
 
 func TestServicePurgeObjectResolvesShardWhenRequestTotalShardsIsNil(t *testing.T) {
@@ -520,7 +520,7 @@ func TestServiceListBIByObjectReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BIListByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
+	mockClient.ListBIByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
 		return nil, wantErr
 	}
 	service := flow.NewService(&mockClient)
@@ -537,7 +537,7 @@ func TestServiceListBIByObjectReturnsClientError(t *testing.T) {
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
-	require.Len(t, mockClient.BIListByObjectCalls(), 1)
+	require.Len(t, mockClient.ListBIByObjectCalls(), 1)
 }
 
 func TestServiceBucketStatsReturnsClientError(t *testing.T) {
@@ -889,7 +889,7 @@ func TestServiceObjectInspectReturnsStepContextForRawExists(t *testing.T) {
 	mockClient.ObjectShardFunc = func(context.Context, string, string, int) (*domain.ObjectShard, error) {
 		return domain.NewObjectShard(3), nil
 	}
-	mockClient.BIListByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
+	mockClient.ListBIByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
 		return domain.NewBIList([]domain.BIEntry{newVersionedPlainEntry("instance-1")}), nil
 	}
 	mockClient.HasRawObjectFunc = func(context.Context, string, string, string) (bool, error) {
@@ -935,7 +935,7 @@ func newObjectInspectClientMock(
 
 		return domain.NewObjectShard(3), nil
 	}
-	mockClient.BIListByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
+	mockClient.ListBIByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
 		*callOrder = append(*callOrder, "bilist")
 
 		return biList, nil

@@ -119,7 +119,7 @@ func TestClientBIListByObjectRunsPodmanCommand(t *testing.T) {
 	)
 	client := podman.NewClientWithRunner(runner)
 
-	biList, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
+	biList, err := client.ListBIByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
 	require.NoError(t, err)
 	require.Len(t, runner.RunCalls(), 1)
@@ -138,7 +138,7 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 		},
 	))
 
-	biList, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test.txt", 3)
+	biList, err := client.ListBIByObject(t.Context(), "rgw", "test-bucket", "test.txt", 3)
 
 	require.NoError(t, err)
 
@@ -186,7 +186,7 @@ func TestClientBIListByObjectReturnsRunnerErrorWithStderr(t *testing.T) {
 		},
 	))
 
-	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
+	_, err := client.ListBIByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
@@ -201,7 +201,7 @@ func TestClientBIListByObjectReturnsJSONError(t *testing.T) {
 		},
 	))
 
-	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
+	_, err := client.ListBIByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
 	require.Error(t, err)
 }
@@ -215,7 +215,7 @@ func TestClientBIListByObjectRejectsUnknownType(t *testing.T) {
 		},
 	))
 
-	_, err := client.BIListByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
+	_, err := client.ListBIByObject(t.Context(), "rgw", "test-bucket", "test-object", 7)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported bi entry type")

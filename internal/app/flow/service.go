@@ -48,7 +48,7 @@ func (s *Service) ListBIByObject(
 		return nil, err
 	}
 
-	biList, err := s.client.BIListByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shardID)
+	biList, err := s.client.ListBIByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shardID)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket index list: %w", err)
 	}
@@ -169,7 +169,7 @@ func (s *Service) InspectObject(
 
 	shardID := shard.Shard()
 
-	biList, err := s.client.BIListByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shardID)
+	biList, err := s.client.ListBIByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shardID)
 	if err != nil {
 		return nil, fmt.Errorf("read bucket index list: %w", err)
 	}

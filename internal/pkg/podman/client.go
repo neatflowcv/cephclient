@@ -67,7 +67,7 @@ func (c *Client) BIListByShard(
 	return biList, nil
 }
 
-func (c *Client) BIListByObject(
+func (c *Client) ListBIByObject(
 	ctx context.Context,
 	containerName, bucketName, objectName string,
 	shardID int,

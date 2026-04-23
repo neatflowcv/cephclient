@@ -9,7 +9,7 @@ import (
 //nolint:interfacebloat // Application services depend on one aggregated Ceph client interface by design.
 type Client interface {
 	BIListByShard(ctx context.Context, containerName, bucketName string, shardID int) (*domain.BIList, error)
-	BIListByObject(ctx context.Context, containerName, bucketName, objectName string, shardID int) (*domain.BIList, error)
+	ListBIByObject(ctx context.Context, containerName, bucketName, objectName string, shardID int) (*domain.BIList, error)
 	ListBucketIndexByObject(
 		ctx context.Context,
 		containerName, bucketName, objectName string,

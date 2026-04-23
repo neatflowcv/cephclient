@@ -15,9 +15,6 @@ import (
 //
 //		// make and configure a mocked client.Client
 //		mockedClient := &ClientMock{
-//			BIListByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
-//				panic("mock out the BIListByObject method")
-//			},
 //			BIListByShardFunc: func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error) {
 //				panic("mock out the BIListByShard method")
 //			},
@@ -32,6 +29,9 @@ import (
 //			},
 //			HasRawObjectFunc: func(ctx context.Context, containerName string, pool string, rawObject string) (bool, error) {
 //				panic("mock out the HasRawObject method")
+//			},
+//			ListBIByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
+//				panic("mock out the ListBIByObject method")
 //			},
 //			ListBucketIndexByObjectFunc: func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error) {
 //				panic("mock out the ListBucketIndexByObject method")
@@ -61,9 +61,6 @@ import (
 //
 //	}
 type ClientMock struct {
-	// BIListByObjectFunc mocks the BIListByObject method.
-	BIListByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error)
-
 	// BIListByShardFunc mocks the BIListByShard method.
 	BIListByShardFunc func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error)
 
@@ -78,6 +75,9 @@ type ClientMock struct {
 
 	// HasRawObjectFunc mocks the HasRawObject method.
 	HasRawObjectFunc func(ctx context.Context, containerName string, pool string, rawObject string) (bool, error)
+
+	// ListBIByObjectFunc mocks the ListBIByObject method.
+	ListBIByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error)
 
 	// ListBucketIndexByObjectFunc mocks the ListBucketIndexByObject method.
 	ListBucketIndexByObjectFunc func(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error)
@@ -102,19 +102,6 @@ type ClientMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// BIListByObject holds details about calls to the BIListByObject method.
-		BIListByObject []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// ContainerName is the containerName argument value.
-			ContainerName string
-			// BucketName is the bucketName argument value.
-			BucketName string
-			// ObjectName is the objectName argument value.
-			ObjectName string
-			// ShardID is the shardID argument value.
-			ShardID int
-		}
 		// BIListByShard holds details about calls to the BIListByShard method.
 		BIListByShard []struct {
 			// Ctx is the ctx argument value.
@@ -161,6 +148,19 @@ type ClientMock struct {
 			Pool string
 			// RawObject is the rawObject argument value.
 			RawObject string
+		}
+		// ListBIByObject holds details about calls to the ListBIByObject method.
+		ListBIByObject []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContainerName is the containerName argument value.
+			ContainerName string
+			// BucketName is the bucketName argument value.
+			BucketName string
+			// ObjectName is the objectName argument value.
+			ObjectName string
+			// ShardID is the shardID argument value.
+			ShardID int
 		}
 		// ListBucketIndexByObject holds details about calls to the ListBucketIndexByObject method.
 		ListBucketIndexByObject []struct {
@@ -242,12 +242,12 @@ type ClientMock struct {
 			RawObject string
 		}
 	}
-	lockBIListByObject          sync.RWMutex
 	lockBIListByShard           sync.RWMutex
 	lockBucketLayout            sync.RWMutex
 	lockBucketStats             sync.RWMutex
 	lockGetDefaultZone          sync.RWMutex
 	lockHasRawObject            sync.RWMutex
+	lockListBIByObject          sync.RWMutex
 	lockListBucketIndexByObject sync.RWMutex
 	lockListBuckets             sync.RWMutex
 	lockListOmapKeys            sync.RWMutex
@@ -255,54 +255,6 @@ type ClientMock struct {
 	lockRemoveObject            sync.RWMutex
 	lockRemoveOmapKey           sync.RWMutex
 	lockRemoveRawObject         sync.RWMutex
-}
-
-// BIListByObject calls BIListByObjectFunc.
-func (mock *ClientMock) BIListByObject(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
-	if mock.BIListByObjectFunc == nil {
-		panic("ClientMock.BIListByObjectFunc: method is nil but Client.BIListByObject was just called")
-	}
-	callInfo := struct {
-		Ctx           context.Context
-		ContainerName string
-		BucketName    string
-		ObjectName    string
-		ShardID       int
-	}{
-		Ctx:           ctx,
-		ContainerName: containerName,
-		BucketName:    bucketName,
-		ObjectName:    objectName,
-		ShardID:       shardID,
-	}
-	mock.lockBIListByObject.Lock()
-	mock.calls.BIListByObject = append(mock.calls.BIListByObject, callInfo)
-	mock.lockBIListByObject.Unlock()
-	return mock.BIListByObjectFunc(ctx, containerName, bucketName, objectName, shardID)
-}
-
-// BIListByObjectCalls gets all the calls that were made to BIListByObject.
-// Check the length with:
-//
-//	len(mockedClient.BIListByObjectCalls())
-func (mock *ClientMock) BIListByObjectCalls() []struct {
-	Ctx           context.Context
-	ContainerName string
-	BucketName    string
-	ObjectName    string
-	ShardID       int
-} {
-	var calls []struct {
-		Ctx           context.Context
-		ContainerName string
-		BucketName    string
-		ObjectName    string
-		ShardID       int
-	}
-	mock.lockBIListByObject.RLock()
-	calls = mock.calls.BIListByObject
-	mock.lockBIListByObject.RUnlock()
-	return calls
 }
 
 // BIListByShard calls BIListByShardFunc.
@@ -509,6 +461,54 @@ func (mock *ClientMock) HasRawObjectCalls() []struct {
 	return calls
 }
 
+// ListBIByObject calls ListBIByObjectFunc.
+func (mock *ClientMock) ListBIByObject(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.BIList, error) {
+	if mock.ListBIByObjectFunc == nil {
+		panic("ClientMock.ListBIByObjectFunc: method is nil but Client.ListBIByObject was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ObjectName    string
+		ShardID       int
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		BucketName:    bucketName,
+		ObjectName:    objectName,
+		ShardID:       shardID,
+	}
+	mock.lockListBIByObject.Lock()
+	mock.calls.ListBIByObject = append(mock.calls.ListBIByObject, callInfo)
+	mock.lockListBIByObject.Unlock()
+	return mock.ListBIByObjectFunc(ctx, containerName, bucketName, objectName, shardID)
+}
+
+// ListBIByObjectCalls gets all the calls that were made to ListBIByObject.
+// Check the length with:
+//
+//	len(mockedClient.ListBIByObjectCalls())
+func (mock *ClientMock) ListBIByObjectCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	BucketName    string
+	ObjectName    string
+	ShardID       int
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+		ObjectName    string
+		ShardID       int
+	}
+	mock.lockListBIByObject.RLock()
+	calls = mock.calls.ListBIByObject
+	mock.lockListBIByObject.RUnlock()
+	return calls
+}
+
 // ListBucketIndexByObject calls ListBucketIndexByObjectFunc.
 func (mock *ClientMock) ListBucketIndexByObject(ctx context.Context, containerName string, bucketName string, objectName string, shardID int) (*domain.EntryGroup, error) {
 	if mock.ListBucketIndexByObjectFunc == nil {
@@ -594,12 +594,7 @@ func (mock *ClientMock) ListBucketsCalls() []struct {
 }
 
 // ListOmapKeys calls ListOmapKeysFunc.
-func (mock *ClientMock) ListOmapKeys(
-	ctx context.Context,
-	containerName string,
-	indexPool string,
-	rawObject string,
-) ([]*domain.BIIndex, error) {
+func (mock *ClientMock) ListOmapKeys(ctx context.Context, containerName string, indexPool string, rawObject string) ([]*domain.BIIndex, error) {
 	if mock.ListOmapKeysFunc == nil {
 		panic("ClientMock.ListOmapKeysFunc: method is nil but Client.ListOmapKeys was just called")
 	}
@@ -735,13 +730,7 @@ func (mock *ClientMock) RemoveObjectCalls() []struct {
 }
 
 // RemoveOmapKey calls RemoveOmapKeyFunc.
-func (mock *ClientMock) RemoveOmapKey(
-	ctx context.Context,
-	containerName string,
-	indexPool string,
-	rawObject string,
-	key string,
-) error {
+func (mock *ClientMock) RemoveOmapKey(ctx context.Context, containerName string, indexPool string, rawObject string, key string) error {
 	if mock.RemoveOmapKeyFunc == nil {
 		panic("ClientMock.RemoveOmapKeyFunc: method is nil but Client.RemoveOmapKey was just called")
 	}
