@@ -1,95 +1,98 @@
 package domain
 
 type OLH struct {
-	entry *BIOLHEntry
-	idx   *BIIndex
+	deleteMarker   bool
+	epoch          int
+	exists         bool
+	instance       string
+	name           string
+	pendingLog     []BIPendingLogEntry
+	pendingRemoval bool
+	tag            string
+	idx            *BIIndex
 }
 
 type OLHParams struct {
-	Entry *BIOLHEntry
-	IDX   *BIIndex
+	DeleteMarker   bool
+	Epoch          int
+	Exists         bool
+	Key            *BIOLHKey
+	PendingLog     []BIPendingLogEntry
+	PendingRemoval bool
+	Tag            string
+	IDX            *BIIndex
 }
 
 func NewOLH(p OLHParams) *OLH {
-	return &OLH{
-		entry: p.Entry,
-		idx:   p.IDX,
-	}
-}
+	copiedPendingLog := make([]BIPendingLogEntry, len(p.PendingLog))
+	copy(copiedPendingLog, p.PendingLog)
 
-func (e *OLH) Entry() *BIOLHEntry {
-	return e.entry
+	return &OLH{
+		deleteMarker:   p.DeleteMarker,
+		epoch:          p.Epoch,
+		exists:         p.Exists,
+		instance:       p.Key.instance,
+		name:           p.Key.name,
+		pendingLog:     copiedPendingLog,
+		pendingRemoval: p.PendingRemoval,
+		tag:            p.Tag,
+		idx:            p.IDX,
+	}
 }
 
 func (e *OLH) IDX() *BIIndex {
 	return e.idx
 }
 
-func (e *OLH) Type() string {
-	return "olh"
-}
-
-type BIOLHEntry struct {
-	deleteMarker   bool
-	epoch          int
-	exists         bool
-	key            *BIOLHKey
-	pendingLog     []BIPendingLogEntry
-	pendingRemoval bool
-	tag            string
-}
-
-func NewBIOLHEntry(
-	key *BIOLHKey,
-	deleteMarker bool,
-	epoch int,
-	pendingLog []BIPendingLogEntry,
-	tag string,
-	exists, pendingRemoval bool,
-) *BIOLHEntry {
-	copiedPendingLog := make([]BIPendingLogEntry, len(pendingLog))
-	copy(copiedPendingLog, pendingLog)
-
-	return &BIOLHEntry{
-		deleteMarker:   deleteMarker,
-		epoch:          epoch,
-		exists:         exists,
-		key:            key,
-		pendingLog:     copiedPendingLog,
-		pendingRemoval: pendingRemoval,
-		tag:            tag,
-	}
-}
-
-func (e *BIOLHEntry) DeleteMarker() bool {
+func (e *OLH) DeleteMarker() bool {
 	return e.deleteMarker
 }
 
-func (e *BIOLHEntry) Epoch() int {
+func (e *OLH) Epoch() int {
 	return e.epoch
 }
 
-func (e *BIOLHEntry) Exists() bool {
+func (e *OLH) Exists() bool {
 	return e.exists
 }
 
-func (e *BIOLHEntry) Key() *BIOLHKey {
-	return e.key
+func (e *OLH) Name() string {
+	return e.name
 }
 
-func (e *BIOLHEntry) PendingLog() []BIPendingLogEntry {
+func (e *OLH) Instance() string {
+	return e.instance
+}
+
+func (e *OLH) PendingLog() []BIPendingLogEntry {
 	copied := make([]BIPendingLogEntry, len(e.pendingLog))
 	copy(copied, e.pendingLog)
 
 	return copied
 }
 
-func (e *BIOLHEntry) PendingRemoval() bool {
+func (e *OLH) ReferencedVersions() []string {
+	versions := []string{e.Instance()}
+
+	for _, pending := range e.PendingLog() {
+		for _, item := range pending.Val() {
+			versions = append(versions, item.Instance())
+		}
+	}
+
+	return versions
+}
+
+func (e *OLH) PendingRemoval() bool {
 	return e.pendingRemoval
 }
 
-func (e *BIOLHEntry) Tag() string {
+func (e *OLH) Tag() string {
 	return e.tag
+}
+
+func (e *OLH) Type() string {
+	return "olh"
 }
 
 type BIOLHKey struct {

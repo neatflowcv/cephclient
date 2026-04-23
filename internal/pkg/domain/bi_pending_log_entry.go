@@ -56,6 +56,10 @@ func (i BIPendingLogItem) Key() *BIOLHKey {
 	return i.key
 }
 
+func (i BIPendingLogItem) Instance() string {
+	return i.key.instance
+}
+
 func (i BIPendingLogItem) Op() string {
 	return i.op
 }

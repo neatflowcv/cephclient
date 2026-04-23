@@ -170,11 +170,11 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	olh, okOLH := entries[3].(*domain.OLH)
 	require.True(t, okOLH)
 	require.Equal(t, "\\x801001_test.txt", olh.IDX().Escaped())
-	require.Equal(t, "test.txt", olh.Entry().Key().Name())
-	require.Equal(t, "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", olh.Entry().Key().Instance())
-	require.Equal(t, 2, olh.Entry().Epoch())
-	require.Len(t, olh.Entry().PendingLog(), 1)
-	require.Len(t, olh.Entry().PendingLog()[0].Val(), 2)
+	require.Equal(t, "test.txt", olh.Name())
+	require.Equal(t, "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", olh.Instance())
+	require.Equal(t, 2, olh.Epoch())
+	require.Len(t, olh.PendingLog(), 1)
+	require.Len(t, olh.PendingLog()[0].Val(), 2)
 }
 
 func TestClientBIListByObjectReturnsRunnerErrorWithStderr(t *testing.T) {

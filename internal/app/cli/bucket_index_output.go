@@ -55,12 +55,12 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 			"type=%s idx=%s name=%s instance=%s exists=%t epoch=%d pending_removal=%t delete_marker=%t",
 			typed.Type(),
 			quoteField(typed.IDX().Escaped()),
-			quoteField(typed.Entry().Key().Name()),
-			quoteField(typed.Entry().Key().Instance()),
-			typed.Entry().Exists(),
-			typed.Entry().Epoch(),
-			typed.Entry().PendingRemoval(),
-			typed.Entry().DeleteMarker(),
+			quoteField(typed.Name()),
+			quoteField(typed.Instance()),
+			typed.Exists(),
+			typed.Epoch(),
+			typed.PendingRemoval(),
+			typed.DeleteMarker(),
 		), nil
 	default:
 		return "", fmt.Errorf("%w: %T", errUnsupportedBIEntryFormat, entry)

@@ -134,11 +134,11 @@ func newObjectInspectOLH(biList *domain.BIList) *objectInspectOLH {
 
 		return &objectInspectOLH{
 			IDX:            typed.IDX().Escaped(),
-			Instance:       typed.Entry().Key().Instance(),
-			Exists:         typed.Entry().Exists(),
-			Epoch:          typed.Entry().Epoch(),
-			PendingRemoval: typed.Entry().PendingRemoval(),
-			DeleteMarker:   typed.Entry().DeleteMarker(),
+			Instance:       typed.Instance(),
+			Exists:         typed.Exists(),
+			Epoch:          typed.Epoch(),
+			PendingRemoval: typed.PendingRemoval(),
+			DeleteMarker:   typed.DeleteMarker(),
 		}
 	}
 
@@ -298,14 +298,14 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
 				IDX:            typed.IDX().Escaped(),
-				Instance:       typed.Entry().Key().Instance(),
-				Exists:         typed.Entry().Exists(),
+				Instance:       typed.Instance(),
+				Exists:         typed.Exists(),
 				VersionedEpoch: 0,
 				MTime:          "",
-				Epoch:          typed.Entry().Epoch(),
-				PendingRemoval: typed.Entry().PendingRemoval(),
-				DeleteMarker:   typed.Entry().DeleteMarker(),
-				Name:           typed.Entry().Key().Name(),
+				Epoch:          typed.Epoch(),
+				PendingRemoval: typed.PendingRemoval(),
+				DeleteMarker:   typed.DeleteMarker(),
+				Name:           typed.Name(),
 			})
 		default:
 			return nil, fmt.Errorf("%w: %T", errUnsupportedBIEntryFormat, entry)

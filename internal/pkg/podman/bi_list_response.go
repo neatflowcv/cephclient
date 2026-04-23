@@ -63,9 +63,20 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 			return nil, fmt.Errorf("decode olh bi entry: %w", err)
 		}
 
+		pendingLog := make([]domain.BIPendingLogEntry, 0, len(entry.PendingLog))
+		for _, item := range entry.PendingLog {
+			pendingLog = append(pendingLog, item.toDomain())
+		}
+
 		return domain.NewOLH(domain.OLHParams{
-			IDX:   idx,
-			Entry: entry.toDomain(),
+			DeleteMarker:   entry.DeleteMarker,
+			Epoch:          entry.Epoch,
+			Exists:         entry.Exists,
+			Key:            entry.Key.toDomain(),
+			PendingLog:     pendingLog,
+			PendingRemoval: entry.PendingRemoval,
+			Tag:            entry.Tag,
+			IDX:            idx,
 		}), nil
 	default:
 		return nil, fmt.Errorf("%w: %s", errUnsupportedBIEntryType, r.Type)
@@ -147,23 +158,6 @@ type biOLHEntryResponse struct {
 	PendingLog     []biPendingLogEntryResponse `json:"pending_log"`
 	PendingRemoval bool                        `json:"pending_removal"`
 	Tag            string                      `json:"tag"`
-}
-
-func (r biOLHEntryResponse) toDomain() *domain.BIOLHEntry {
-	pendingLog := make([]domain.BIPendingLogEntry, 0, len(r.PendingLog))
-	for _, item := range r.PendingLog {
-		pendingLog = append(pendingLog, item.toDomain())
-	}
-
-	return domain.NewBIOLHEntry(
-		r.Key.toDomain(),
-		r.DeleteMarker,
-		r.Epoch,
-		pendingLog,
-		r.Tag,
-		r.Exists,
-		r.PendingRemoval,
-	)
 }
 
 type biOLHKeyResponse struct {

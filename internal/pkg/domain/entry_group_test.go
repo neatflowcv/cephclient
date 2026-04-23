@@ -84,16 +84,14 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 	return domain.NewEntryGroup(
 		[]*domain.OLH{
 			domain.NewOLH(domain.OLHParams{
-				IDX: domain.NewBIIndex("test.txt"),
-				Entry: domain.NewBIOLHEntry(
-					domain.NewBIOLHKey("test.txt", "instance-1"),
-					false,
-					2,
-					nil,
-					"",
-					true,
-					false,
-				),
+				DeleteMarker:   false,
+				Epoch:          2,
+				Exists:         true,
+				Key:            domain.NewBIOLHKey("test.txt", "instance-1"),
+				PendingLog:     nil,
+				PendingRemoval: false,
+				Tag:            "",
+				IDX:            domain.NewBIIndex("test.txt"),
 			}),
 		},
 		[]*domain.PlainBIEntry{

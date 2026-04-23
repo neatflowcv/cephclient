@@ -1251,15 +1251,13 @@ func newOLHEntry(
 	pendingLog []domain.BIPendingLogEntry,
 ) *domain.OLH {
 	return domain.NewOLH(domain.OLHParams{
-		IDX: domain.NewBIIndex(name),
-		Entry: domain.NewBIOLHEntry(
-			domain.NewBIOLHKey(name, instance),
-			false,
-			2,
-			pendingLog,
-			"",
-			true,
-			false,
-		),
+		DeleteMarker:   false,
+		Epoch:          2,
+		Exists:         true,
+		Key:            domain.NewBIOLHKey(name, instance),
+		PendingLog:     pendingLog,
+		PendingRemoval: false,
+		Tag:            "",
+		IDX:            domain.NewBIIndex(name),
 	})
 }

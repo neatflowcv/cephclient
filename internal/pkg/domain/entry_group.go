@@ -117,7 +117,7 @@ func (g *EntryGroup) versions() []string {
 	seen := NewSeen()
 
 	for _, olh := range g.olhs {
-		version := olh.entry.key.instance
+		version := olh.Instance()
 		if seen.Check(version) {
 			continue
 		}
@@ -125,9 +125,9 @@ func (g *EntryGroup) versions() []string {
 		seen.Set(version)
 		versions = append(versions, version)
 
-		for _, log := range olh.entry.PendingLog() {
-			for _, val := range log.val {
-				valVersion := val.key.instance
+		for _, log := range olh.PendingLog() {
+			for _, val := range log.Val() {
+				valVersion := val.Instance()
 				if seen.Check(valVersion) {
 					continue
 				}
