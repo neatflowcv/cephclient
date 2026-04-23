@@ -273,7 +273,16 @@ func (s *Service) PurgeObject(
 			instance.Instance(),
 		)
 		if err != nil {
-			return fmt.Errorf("remove object: %w", err)
+			slog.Warn(
+				"failed to remove object",
+				"container", req.ContainerName,
+				"bucket", req.BucketName,
+				"object", req.ObjectName,
+				"version", instance.Instance(),
+				"error", err,
+			)
+
+			continue
 		}
 
 		slog.Info(
@@ -334,7 +343,7 @@ func (s *Service) PurgeObject(
 	for _, rawObject := range rawObjects {
 		err = s.client.RemoveRawObject(ctx, req.ContainerName, zone.DataPool(), rawObject)
 		if err != nil {
-			slog.Info(
+			slog.Warn(
 				"failed to remove raw object",
 				"container", req.ContainerName,
 				"bucket", req.BucketName,
@@ -367,7 +376,7 @@ func (s *Service) PurgeObject(
 			omapKey,
 		)
 		if err != nil {
-			slog.Info(
+			slog.Warn(
 				"failed to remove omap key",
 				"container", req.ContainerName,
 				"bucket", req.BucketName,
