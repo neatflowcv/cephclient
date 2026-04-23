@@ -60,7 +60,7 @@ func TestClientBucketLayoutRunsPodmanCommand(t *testing.T) {
 	)
 	client := podman.NewClientWithRunner(runner)
 
-	layout, err := client.BucketLayout(t.Context(), "rgw", "test")
+	layout, err := client.GetBucketLayout(t.Context(), "rgw", "test")
 
 	require.NoError(t, err)
 	require.Len(t, runner.RunCalls(), 1)
@@ -308,7 +308,7 @@ func TestClientBucketLayoutParsesFixture(t *testing.T) {
 		},
 	))
 
-	layout, err := client.BucketLayout(t.Context(), "rgw", "test")
+	layout, err := client.GetBucketLayout(t.Context(), "rgw", "test")
 
 	require.NoError(t, err)
 	require.Equal(t, 1, layout.Generation())
@@ -323,7 +323,7 @@ func TestClientBucketLayoutReturnsRunnerErrorWithStderr(t *testing.T) {
 		},
 	))
 
-	_, err := client.BucketLayout(t.Context(), "rgw", "test")
+	_, err := client.GetBucketLayout(t.Context(), "rgw", "test")
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
@@ -338,7 +338,7 @@ func TestClientBucketLayoutReturnsJSONError(t *testing.T) {
 		},
 	))
 
-	_, err := client.BucketLayout(t.Context(), "rgw", "test")
+	_, err := client.GetBucketLayout(t.Context(), "rgw", "test")
 
 	require.Error(t, err)
 }

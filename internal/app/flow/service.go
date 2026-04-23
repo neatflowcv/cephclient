@@ -76,7 +76,7 @@ func (s *Service) GetBucketStats(
 }
 
 func (s *Service) GetBucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error) {
-	layout, err := s.client.BucketLayout(ctx, containerName, bucketName)
+	layout, err := s.client.GetBucketLayout(ctx, containerName, bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket layout: %w", err)
 	}
@@ -436,7 +436,7 @@ func (s *Service) bucketIndexObject(
 		return domain.NewBucketIndexObject(marker, *layoutGeneration, shard), nil
 	}
 
-	layout, err := s.client.BucketLayout(ctx, containerName, bucketName)
+	layout, err := s.client.GetBucketLayout(ctx, containerName, bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket layout: %w", err)
 	}

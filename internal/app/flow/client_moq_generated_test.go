@@ -18,11 +18,11 @@ import (
 //			BIListByShardFunc: func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error) {
 //				panic("mock out the BIListByShard method")
 //			},
-//			BucketLayoutFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error) {
-//				panic("mock out the BucketLayout method")
-//			},
 //			BucketStatsFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
 //				panic("mock out the BucketStats method")
+//			},
+//			GetBucketLayoutFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error) {
+//				panic("mock out the GetBucketLayout method")
 //			},
 //			GetDefaultZoneFunc: func(ctx context.Context, containerName string) (*domain.Zone, error) {
 //				panic("mock out the GetDefaultZone method")
@@ -64,11 +64,11 @@ type ClientMock struct {
 	// BIListByShardFunc mocks the BIListByShard method.
 	BIListByShardFunc func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error)
 
-	// BucketLayoutFunc mocks the BucketLayout method.
-	BucketLayoutFunc func(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error)
-
 	// BucketStatsFunc mocks the BucketStats method.
 	BucketStatsFunc func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error)
+
+	// GetBucketLayoutFunc mocks the GetBucketLayout method.
+	GetBucketLayoutFunc func(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error)
 
 	// GetDefaultZoneFunc mocks the GetDefaultZone method.
 	GetDefaultZoneFunc func(ctx context.Context, containerName string) (*domain.Zone, error)
@@ -113,8 +113,8 @@ type ClientMock struct {
 			// ShardID is the shardID argument value.
 			ShardID int
 		}
-		// BucketLayout holds details about calls to the BucketLayout method.
-		BucketLayout []struct {
+		// BucketStats holds details about calls to the BucketStats method.
+		BucketStats []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ContainerName is the containerName argument value.
@@ -122,8 +122,8 @@ type ClientMock struct {
 			// BucketName is the bucketName argument value.
 			BucketName string
 		}
-		// BucketStats holds details about calls to the BucketStats method.
-		BucketStats []struct {
+		// GetBucketLayout holds details about calls to the GetBucketLayout method.
+		GetBucketLayout []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ContainerName is the containerName argument value.
@@ -243,8 +243,8 @@ type ClientMock struct {
 		}
 	}
 	lockBIListByShard           sync.RWMutex
-	lockBucketLayout            sync.RWMutex
 	lockBucketStats             sync.RWMutex
+	lockGetBucketLayout         sync.RWMutex
 	lockGetDefaultZone          sync.RWMutex
 	lockHasRawObject            sync.RWMutex
 	lockListBIByObject          sync.RWMutex
@@ -301,46 +301,6 @@ func (mock *ClientMock) BIListByShardCalls() []struct {
 	return calls
 }
 
-// BucketLayout calls BucketLayoutFunc.
-func (mock *ClientMock) BucketLayout(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error) {
-	if mock.BucketLayoutFunc == nil {
-		panic("ClientMock.BucketLayoutFunc: method is nil but Client.BucketLayout was just called")
-	}
-	callInfo := struct {
-		Ctx           context.Context
-		ContainerName string
-		BucketName    string
-	}{
-		Ctx:           ctx,
-		ContainerName: containerName,
-		BucketName:    bucketName,
-	}
-	mock.lockBucketLayout.Lock()
-	mock.calls.BucketLayout = append(mock.calls.BucketLayout, callInfo)
-	mock.lockBucketLayout.Unlock()
-	return mock.BucketLayoutFunc(ctx, containerName, bucketName)
-}
-
-// BucketLayoutCalls gets all the calls that were made to BucketLayout.
-// Check the length with:
-//
-//	len(mockedClient.BucketLayoutCalls())
-func (mock *ClientMock) BucketLayoutCalls() []struct {
-	Ctx           context.Context
-	ContainerName string
-	BucketName    string
-} {
-	var calls []struct {
-		Ctx           context.Context
-		ContainerName string
-		BucketName    string
-	}
-	mock.lockBucketLayout.RLock()
-	calls = mock.calls.BucketLayout
-	mock.lockBucketLayout.RUnlock()
-	return calls
-}
-
 // BucketStats calls BucketStatsFunc.
 func (mock *ClientMock) BucketStats(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
 	if mock.BucketStatsFunc == nil {
@@ -378,6 +338,46 @@ func (mock *ClientMock) BucketStatsCalls() []struct {
 	mock.lockBucketStats.RLock()
 	calls = mock.calls.BucketStats
 	mock.lockBucketStats.RUnlock()
+	return calls
+}
+
+// GetBucketLayout calls GetBucketLayoutFunc.
+func (mock *ClientMock) GetBucketLayout(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error) {
+	if mock.GetBucketLayoutFunc == nil {
+		panic("ClientMock.GetBucketLayoutFunc: method is nil but Client.GetBucketLayout was just called")
+	}
+	callInfo := struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+	}{
+		Ctx:           ctx,
+		ContainerName: containerName,
+		BucketName:    bucketName,
+	}
+	mock.lockGetBucketLayout.Lock()
+	mock.calls.GetBucketLayout = append(mock.calls.GetBucketLayout, callInfo)
+	mock.lockGetBucketLayout.Unlock()
+	return mock.GetBucketLayoutFunc(ctx, containerName, bucketName)
+}
+
+// GetBucketLayoutCalls gets all the calls that were made to GetBucketLayout.
+// Check the length with:
+//
+//	len(mockedClient.GetBucketLayoutCalls())
+func (mock *ClientMock) GetBucketLayoutCalls() []struct {
+	Ctx           context.Context
+	ContainerName string
+	BucketName    string
+} {
+	var calls []struct {
+		Ctx           context.Context
+		ContainerName string
+		BucketName    string
+	}
+	mock.lockGetBucketLayout.RLock()
+	calls = mock.calls.GetBucketLayout
+	mock.lockGetBucketLayout.RUnlock()
 	return calls
 }
 

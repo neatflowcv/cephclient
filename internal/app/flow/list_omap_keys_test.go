@@ -21,7 +21,10 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketLayoutFunc = func(gotCtx context.Context, containerName, bucketName string) (*domain.Layout, error) {
+	mockClient.GetBucketLayoutFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.Layout, error) {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "bucket-a", bucketName)
@@ -55,7 +58,7 @@ func TestServiceListOmapKeysDelegatesToClient(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, []string{"plain", "versioned"}, resp.OmapKeys)
-	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, mockClient.GetBucketLayoutCalls(), 1)
 	require.Len(t, mockClient.ListOmapKeysCalls(), 1)
 }
 
@@ -68,7 +71,7 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
+	mockClient.GetBucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
 		return domain.NewLayout(2), nil
 	}
 
@@ -94,7 +97,7 @@ func TestServiceListOmapKeysReturnsClientError(t *testing.T) {
 	// Assert
 	require.ErrorIs(t, err, wantErr)
 	require.EqualError(t, err, "get omap keys: client failed")
-	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, mockClient.GetBucketLayoutCalls(), 1)
 	require.Len(t, mockClient.ListOmapKeysCalls(), 1)
 }
 
@@ -105,7 +108,7 @@ func TestServiceListOmapKeysReturnsBucketLayoutError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
+	mockClient.GetBucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
 		return nil, errClientFailed
 	}
 	service := flow.NewService(&mockClient)
@@ -120,6 +123,6 @@ func TestServiceListOmapKeysReturnsBucketLayoutError(t *testing.T) {
 
 	require.ErrorIs(t, err, errClientFailed)
 	require.EqualError(t, err, "get bucket layout: client failed")
-	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, mockClient.GetBucketLayoutCalls(), 1)
 	require.Empty(t, mockClient.ListOmapKeysCalls())
 }

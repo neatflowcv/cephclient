@@ -191,7 +191,7 @@ func (c *Client) BucketStats(ctx context.Context, containerName, bucketName stri
 	return stats, nil
 }
 
-func (c *Client) BucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error) {
+func (c *Client) GetBucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error) {
 	commandArgs := []string{
 		"exec",
 		"-i",

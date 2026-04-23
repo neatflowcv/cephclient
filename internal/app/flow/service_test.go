@@ -98,7 +98,7 @@ func TestServiceBucketLayoutDelegatesToClient(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketLayoutFunc = func(
+	mockClient.GetBucketLayoutFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName string,
 	) (*domain.Layout, error) {
@@ -116,7 +116,7 @@ func TestServiceBucketLayoutDelegatesToClient(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	require.Equal(t, 1, layout.Generation())
-	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, mockClient.GetBucketLayoutCalls(), 1)
 }
 
 func TestServiceHasRawObjectDelegatesToClient(t *testing.T) {
@@ -523,7 +523,7 @@ func TestServicePurgeObjectRemovesRemainingRawObjectsAndOmapKeysAfterVerificatio
 	)
 	require.Len(t, fixture.mockClient.ListBucketIndexByObjectCalls(), 2)
 	require.Len(t, fixture.mockClient.RemoveRawObjectCalls(), 2)
-	require.Len(t, fixture.mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, fixture.mockClient.GetBucketLayoutCalls(), 1)
 	require.Len(t, fixture.mockClient.RemoveOmapKeyCalls(), 2)
 }
 
@@ -569,7 +569,7 @@ func TestServicePurgeObjectUsesRequestLayoutWhenProvided(t *testing.T) {
 		[]string{"shard", "list", "remove", "list", "stats", "zone", "raw", "raw", "omap", "omap"},
 		fixture.callOrder,
 	)
-	require.Empty(t, fixture.mockClient.BucketLayoutCalls())
+	require.Empty(t, fixture.mockClient.GetBucketLayoutCalls())
 
 	removeOmapCalls := fixture.mockClient.RemoveOmapKeyCalls()
 	require.Len(t, removeOmapCalls, 2)
@@ -688,7 +688,7 @@ func TestServiceBucketLayoutReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
+	mockClient.GetBucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
 		return nil, wantErr
 	}
 	service := flow.NewService(&mockClient)
@@ -698,7 +698,7 @@ func TestServiceBucketLayoutReturnsClientError(t *testing.T) {
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
-	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, mockClient.GetBucketLayoutCalls(), 1)
 }
 
 func TestServiceGetDefaultZoneDelegatesToClient(t *testing.T) {
@@ -1290,7 +1290,7 @@ func newPurgeObjectFallbackFixture(
 
 		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
 	}
-	fixture.mockClient.BucketLayoutFunc = func(
+	fixture.mockClient.GetBucketLayoutFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName string,
 	) (*domain.Layout, error) {

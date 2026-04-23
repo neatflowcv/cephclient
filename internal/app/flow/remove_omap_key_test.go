@@ -16,7 +16,10 @@ func TestServiceRemoveOmapKeyDelegatesToClient(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketLayoutFunc = func(gotCtx context.Context, containerName, bucketName string) (*domain.Layout, error) {
+	mockClient.GetBucketLayoutFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName string,
+	) (*domain.Layout, error) {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "bucket-a", bucketName)
@@ -50,7 +53,7 @@ func TestServiceRemoveOmapKeyDelegatesToClient(t *testing.T) {
 	})
 
 	require.NoError(t, err)
-	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, mockClient.GetBucketLayoutCalls(), 1)
 	require.Len(t, mockClient.RemoveOmapKeyCalls(), 1)
 }
 
@@ -61,7 +64,7 @@ func TestServiceRemoveOmapKeyReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
+	mockClient.GetBucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
 		return domain.NewLayout(2), nil
 	}
 
@@ -81,7 +84,7 @@ func TestServiceRemoveOmapKeyReturnsClientError(t *testing.T) {
 
 	require.ErrorIs(t, err, errClientFailed)
 	require.EqualError(t, err, "remove omap key: client failed")
-	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, mockClient.GetBucketLayoutCalls(), 1)
 	require.Len(t, mockClient.RemoveOmapKeyCalls(), 1)
 }
 
@@ -92,7 +95,7 @@ func TestServiceRemoveOmapKeyReturnsBucketLayoutError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
+	mockClient.GetBucketLayoutFunc = func(context.Context, string, string) (*domain.Layout, error) {
 		return nil, errClientFailed
 	}
 	service := flow.NewService(&mockClient)
@@ -108,6 +111,6 @@ func TestServiceRemoveOmapKeyReturnsBucketLayoutError(t *testing.T) {
 
 	require.ErrorIs(t, err, errClientFailed)
 	require.EqualError(t, err, "get bucket layout: client failed")
-	require.Len(t, mockClient.BucketLayoutCalls(), 1)
+	require.Len(t, mockClient.GetBucketLayoutCalls(), 1)
 	require.Empty(t, mockClient.RemoveOmapKeyCalls())
 }
