@@ -25,19 +25,7 @@ func TestEntryGroupIsEmpty(t *testing.T) {
 			nil,
 			nil,
 			[]*domain.Instance{
-				domain.NewInstance(domain.DirParams{
-					Name:           "test.txt",
-					Instance:       "instance-1",
-					Ver:            domain.NewBIVersion(8, 119),
-					Locator:        "",
-					Exists:         true,
-					Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-					Tag:            "",
-					Flags:          0,
-					Pending:        false,
-					VersionedEpoch: 2,
-					IDX:            domain.NewBIIndex("test.txt-instance:instance-1"),
-				}),
+				domain.NewInstance(newTestDirParams("instance-1", 119, "test.txt-instance:instance-1")),
 			},
 		)
 
@@ -77,7 +65,6 @@ func TestEntryGroupExtractOmapKeys(t *testing.T) {
 	)
 }
 
-//nolint:funlen // Shared extraction fixture keeps raw and omap expectations aligned.
 func newEntryGroupForExtractionTests() *domain.EntryGroup {
 	return domain.NewEntryGroup(
 		[]*domain.OLH{
@@ -94,60 +81,38 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 			}),
 		},
 		[]*domain.Plain{
-			domain.NewPlain(domain.DirParams{
-				Name:           "test.txt",
-				Instance:       "instance-2",
-				Ver:            domain.NewBIVersion(8, 120),
-				Locator:        "",
-				Exists:         true,
-				Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-				Tag:            "",
-				Flags:          0,
-				Pending:        false,
-				VersionedEpoch: 2,
-				IDX:            domain.NewBIIndex("test.txt:instance-2"),
-			}),
-			domain.NewPlain(domain.DirParams{
-				Name:           "test.txt",
-				Instance:       "instance-1",
-				Ver:            domain.NewBIVersion(8, 119),
-				Locator:        "",
-				Exists:         true,
-				Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-				Tag:            "",
-				Flags:          0,
-				Pending:        false,
-				VersionedEpoch: 2,
-				IDX:            domain.NewBIIndex("test.txt:instance-1"),
-			}),
+			domain.NewPlain(newTestDirParams("instance-2", 120, "test.txt:instance-2")),
+			domain.NewPlain(newTestDirParams("instance-1", 119, "test.txt:instance-1")),
 		},
 		[]*domain.Instance{
-			domain.NewInstance(domain.DirParams{
-				Name:           "test.txt",
-				Instance:       "instance-1",
-				Ver:            domain.NewBIVersion(8, 119),
-				Locator:        "",
-				Exists:         true,
-				Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-				Tag:            "",
-				Flags:          0,
-				Pending:        false,
-				VersionedEpoch: 2,
-				IDX:            domain.NewBIIndex("test.txt-instance:instance-1"),
-			}),
-			domain.NewInstance(domain.DirParams{
-				Name:           "test.txt",
-				Instance:       "instance-1",
-				Ver:            domain.NewBIVersion(8, 119),
-				Locator:        "",
-				Exists:         true,
-				Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-				Tag:            "",
-				Flags:          0,
-				Pending:        false,
-				VersionedEpoch: 2,
-				IDX:            domain.NewBIIndex("test.txt-instance:instance-1"),
-			}),
+			domain.NewInstance(newTestDirParams("instance-1", 119, "test.txt-instance:instance-1")),
+			domain.NewInstance(newTestDirParams("instance-1", 119, "test.txt-instance:instance-1")),
 		},
 	)
+}
+
+func newTestDirParams(instance string, epoch int, idx string) domain.DirParams {
+	return domain.DirParams{
+		Name:             "test.txt",
+		Instance:         instance,
+		Ver:              domain.NewBIVersion(8, epoch),
+		Locator:          "",
+		Exists:           true,
+		Category:         0,
+		Size:             0,
+		MTime:            "0.000000",
+		ETag:             "",
+		StorageClass:     "",
+		Owner:            "",
+		OwnerDisplayName: "",
+		ContentType:      "",
+		AccountedSize:    0,
+		UserData:         "",
+		Appendable:       false,
+		Tag:              "",
+		Flags:            0,
+		Pending:          false,
+		VersionedEpoch:   2,
+		IDX:              domain.NewBIIndex(idx),
+	}
 }

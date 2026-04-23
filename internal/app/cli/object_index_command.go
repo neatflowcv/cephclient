@@ -122,7 +122,7 @@ func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse
 			Instance:       typed.Instance(),
 			Exists:         typed.Exists(),
 			VersionedEpoch: typed.VersionedEpoch(),
-			MTime:          formatObjectMTime(typed),
+			MTime:          typed.MTime(),
 		}, nil
 	case *domain.Instance:
 		return instanceObjectIndexEntryResponse{
@@ -132,7 +132,7 @@ func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse
 			Instance:       typed.Instance(),
 			Exists:         typed.Exists(),
 			VersionedEpoch: typed.VersionedEpoch(),
-			MTime:          formatObjectMTime(typed),
+			MTime:          typed.MTime(),
 		}, nil
 	case *domain.OLH:
 		return olhObjectIndexEntryResponse{

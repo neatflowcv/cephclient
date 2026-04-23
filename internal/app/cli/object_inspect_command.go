@@ -156,7 +156,7 @@ func newObjectInspectVersions(objectName string, result *flow.InspectObjectRespo
 			if isPlaceholderPlainEntry(
 				typed.IDX(),
 				typed.Name(),
-				formatObjectMTime(typed),
+				typed.MTime(),
 			) {
 				continue
 			}
@@ -205,7 +205,7 @@ func upsertPlainObjectInspectVersion(
 	grouped[version] = objectInspectVersion{
 		Version:        version,
 		Exists:         current.Exists || entry.Exists(),
-		MTime:          firstNonEmpty(current.MTime, formatObjectMTime(entry)),
+		MTime:          firstNonEmpty(current.MTime, entry.MTime()),
 		VersionedEpoch: firstNonZero(current.VersionedEpoch, entry.VersionedEpoch()),
 		PlainIDX:       firstNonEmpty(current.PlainIDX, entry.IDX()),
 		InstanceIDX:    current.InstanceIDX,
@@ -231,7 +231,7 @@ func upsertInstanceObjectInspectVersion(
 	grouped[version] = objectInspectVersion{
 		Version:        version,
 		Exists:         current.Exists || entry.Exists(),
-		MTime:          firstNonEmpty(current.MTime, formatObjectMTime(entry)),
+		MTime:          firstNonEmpty(current.MTime, entry.MTime()),
 		VersionedEpoch: firstNonZero(current.VersionedEpoch, entry.VersionedEpoch()),
 		PlainIDX:       current.PlainIDX,
 		InstanceIDX:    firstNonEmpty(current.InstanceIDX, entry.IDX()),
@@ -275,7 +275,7 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 				Instance:       typed.Instance(),
 				Exists:         typed.Exists(),
 				VersionedEpoch: typed.VersionedEpoch(),
-				MTime:          formatObjectMTime(typed),
+				MTime:          typed.MTime(),
 				Epoch:          0,
 				PendingRemoval: false,
 				DeleteMarker:   false,
@@ -288,7 +288,7 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 				Instance:       typed.Instance(),
 				Exists:         typed.Exists(),
 				VersionedEpoch: typed.VersionedEpoch(),
-				MTime:          formatObjectMTime(typed),
+				MTime:          typed.MTime(),
 				Epoch:          0,
 				PendingRemoval: false,
 				DeleteMarker:   false,

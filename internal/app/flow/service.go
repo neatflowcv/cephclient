@@ -249,8 +249,8 @@ func (s *Service) PurgeObject(
 
 	instances := entryGroup.Instances()
 	slices.SortFunc(instances, func(a, b *domain.Instance) int {
-		aTime, _ := time.Parse(time.RFC3339Nano, a.Meta().MTime())
-		bTime, _ := time.Parse(time.RFC3339Nano, b.Meta().MTime())
+		aTime, _ := time.Parse(time.RFC3339Nano, a.MTime())
+		bTime, _ := time.Parse(time.RFC3339Nano, b.MTime())
 
 		switch {
 		case aTime.Before(bTime):

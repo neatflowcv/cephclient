@@ -37,7 +37,7 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 			quoteField(typed.Instance()),
 			typed.Exists(),
 			typed.VersionedEpoch(),
-			quoteField(formatObjectMTime(typed)),
+			quoteField(typed.MTime()),
 		), nil
 	case *domain.Instance:
 		return fmt.Sprintf(
@@ -48,7 +48,7 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 			quoteField(typed.Instance()),
 			typed.Exists(),
 			typed.VersionedEpoch(),
-			quoteField(formatObjectMTime(typed)),
+			quoteField(typed.MTime()),
 		), nil
 	case *domain.OLH:
 		return fmt.Sprintf(
@@ -65,16 +65,4 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 	default:
 		return "", fmt.Errorf("%w: %T", errUnsupportedBIEntryFormat, entry)
 	}
-}
-
-type objectMetaProvider interface {
-	Meta() *domain.BIObjectMeta
-}
-
-func formatObjectMTime(entry objectMetaProvider) string {
-	if entry.Meta() == nil {
-		return ""
-	}
-
-	return entry.Meta().MTime()
 }

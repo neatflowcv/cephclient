@@ -106,17 +106,27 @@ type biObjectEntryResponse struct {
 
 func (r biObjectEntryResponse) toDirParams(idx *domain.BIIndex) domain.DirParams {
 	return domain.DirParams{
-		Exists:         r.Exists,
-		Flags:          r.Flags,
-		Instance:       r.Instance,
-		Locator:        r.Locator,
-		Meta:           r.Meta.toDomain(),
-		Name:           r.Name,
-		Pending:        len(r.PendingMap) > 0,
-		Tag:            r.Tag,
-		Ver:            r.Ver.toDomain(),
-		VersionedEpoch: r.VersionedEpoch,
-		IDX:            idx,
+		AccountedSize:    r.Meta.AccountedSize,
+		Appendable:       r.Meta.Appendable,
+		Category:         r.Meta.Category,
+		ContentType:      r.Meta.ContentType,
+		ETag:             r.Meta.ETag,
+		Exists:           r.Exists,
+		Flags:            r.Flags,
+		Instance:         r.Instance,
+		Locator:          r.Locator,
+		MTime:            r.Meta.MTime,
+		Name:             r.Name,
+		Owner:            r.Meta.Owner,
+		OwnerDisplayName: r.Meta.OwnerDisplayName,
+		Pending:          len(r.PendingMap) > 0,
+		Size:             r.Meta.Size,
+		StorageClass:     r.Meta.StorageClass,
+		Tag:              r.Tag,
+		UserData:         r.Meta.UserData,
+		Ver:              r.Ver.toDomain(),
+		VersionedEpoch:   r.VersionedEpoch,
+		IDX:              idx,
 	}
 }
 
@@ -132,22 +142,6 @@ type biObjectMetaResponse struct {
 	Size             int    `json:"size"`
 	StorageClass     string `json:"storage_class"`
 	UserData         string `json:"user_data"`
-}
-
-func (r biObjectMetaResponse) toDomain() *domain.BIObjectMeta {
-	return domain.NewBIObjectMeta(
-		r.Category,
-		r.Size,
-		r.MTime,
-		r.ETag,
-		r.StorageClass,
-		r.Owner,
-		r.OwnerDisplayName,
-		r.ContentType,
-		r.AccountedSize,
-		r.UserData,
-		r.Appendable,
-	)
 }
 
 type biVersionResponse struct {
