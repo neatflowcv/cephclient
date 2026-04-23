@@ -48,12 +48,18 @@ func (s *Service) ListBIByObject(
 		return nil, err
 	}
 
-	biList, err := s.client.ListBIByObject(ctx, req.ContainerName, req.BucketName, req.ObjectName, shardID)
+	entryGroup, err := s.client.ListBucketIndexByObject(
+		ctx,
+		req.ContainerName,
+		req.BucketName,
+		req.ObjectName,
+		shardID,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket index list: %w", err)
 	}
 
-	return NewListBIByObjectResponse(biList), nil
+	return newListBIByObjectResponseFromEntryGroup(entryGroup), nil
 }
 
 func (s *Service) GetBucketStats(

@@ -159,38 +159,36 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 
 	// Arrange
 	ctx := t.Context()
-	wantList := domain.NewBIList([]domain.BIEntry{
-		domain.NewPlainBIEntry(
-			domain.NewBIIndex("test.txt"),
-			domain.NewBIObjectEntry(
-				"test.txt",
-				"",
-				domain.NewBIVersion(-1, 0),
-				"",
-				false,
-				domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-				"",
-				8,
-				false,
-				0,
-			),
+	wantEntry := domain.NewPlainBIEntry(
+		domain.NewBIIndex("test.txt"),
+		domain.NewBIObjectEntry(
+			"test.txt",
+			"",
+			domain.NewBIVersion(-1, 0),
+			"",
+			false,
+			domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+			"",
+			8,
+			false,
+			0,
 		),
-	})
+	)
 
 	var mockClient ClientMock
 
-	mockClient.ListBIByObjectFunc = func(
+	mockClient.ListBucketIndexByObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName string,
 		shardID int,
-	) (*domain.BIList, error) {
+	) (*domain.EntryGroup, error) {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "bucket-a", bucketName)
 		require.Equal(t, "test.txt", objectName)
 		require.Equal(t, 3, shardID)
 
-		return wantList, nil
+		return domain.NewEntryGroup(nil, []*domain.PlainBIEntry{wantEntry}, nil), nil
 	}
 	service := flow.NewService(&mockClient)
 
@@ -206,8 +204,8 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	require.Same(t, wantList, resp.BIList())
-	require.Len(t, mockClient.ListBIByObjectCalls(), 1)
+	require.Equal(t, []domain.BIEntry{wantEntry}, resp.BIList().Entries())
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
 }
 
 func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
@@ -215,7 +213,6 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 
 	// Arrange
 	ctx := t.Context()
-	wantList := domain.NewBIList([]domain.BIEntry{})
 
 	var mockClient ClientMock
 
@@ -241,18 +238,18 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 
 		return domain.NewObjectShard(7), nil
 	}
-	mockClient.ListBIByObjectFunc = func(
+	mockClient.ListBucketIndexByObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName string,
 		shardID int,
-	) (*domain.BIList, error) {
+	) (*domain.EntryGroup, error) {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "bucket-a", bucketName)
 		require.Equal(t, "test.txt", objectName)
 		require.Equal(t, 7, shardID)
 
-		return wantList, nil
+		return domain.NewEntryGroup(nil, nil, nil), nil
 	}
 	service := flow.NewService(&mockClient)
 
@@ -267,10 +264,10 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	require.Same(t, wantList, resp.BIList())
+	require.Empty(t, resp.BIList().Entries())
 	require.Len(t, mockClient.BucketStatsCalls(), 1)
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
-	require.Len(t, mockClient.ListBIByObjectCalls(), 1)
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
 }
 
 func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
@@ -278,7 +275,6 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 
 	// Arrange
 	ctx := t.Context()
-	wantList := domain.NewBIList([]domain.BIEntry{})
 	totalShards := 13
 
 	var mockClient ClientMock
@@ -295,18 +291,18 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 
 		return domain.NewObjectShard(5), nil
 	}
-	mockClient.ListBIByObjectFunc = func(
+	mockClient.ListBucketIndexByObjectFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName, objectName string,
 		shardID int,
-	) (*domain.BIList, error) {
+	) (*domain.EntryGroup, error) {
 		require.Equal(t, ctx, gotCtx)
 		require.Equal(t, "rgw", containerName)
 		require.Equal(t, "bucket-a", bucketName)
 		require.Equal(t, "test.txt", objectName)
 		require.Equal(t, 5, shardID)
 
-		return wantList, nil
+		return domain.NewEntryGroup(nil, nil, nil), nil
 	}
 	service := flow.NewService(&mockClient)
 
@@ -321,10 +317,10 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	require.Same(t, wantList, resp.BIList())
+	require.Empty(t, resp.BIList().Entries())
 	require.Empty(t, mockClient.BucketStatsCalls())
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
-	require.Len(t, mockClient.ListBIByObjectCalls(), 1)
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
 }
 
 func TestServicePurgeObjectResolvesShardWhenRequestTotalShardsIsNil(t *testing.T) {
@@ -520,7 +516,13 @@ func TestServiceListBIByObjectReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.ListBIByObjectFunc = func(context.Context, string, string, string, int) (*domain.BIList, error) {
+	mockClient.ListBucketIndexByObjectFunc = func(
+		context.Context,
+		string,
+		string,
+		string,
+		int,
+	) (*domain.EntryGroup, error) {
 		return nil, wantErr
 	}
 	service := flow.NewService(&mockClient)
@@ -537,7 +539,7 @@ func TestServiceListBIByObjectReturnsClientError(t *testing.T) {
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
-	require.Len(t, mockClient.ListBIByObjectCalls(), 1)
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
 }
 
 func TestServiceBucketStatsReturnsClientError(t *testing.T) {
