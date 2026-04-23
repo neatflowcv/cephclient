@@ -29,16 +29,22 @@ func (e BIPendingLogEntry) Val() []BIPendingLogItem {
 type BIPendingLogItem struct {
 	deleteMarker bool
 	epoch        int
-	key          *BIOLHKey
+	instance     string
+	name         string
 	op           string
 	opTag        string
 }
 
-func NewBIPendingLogItem(epoch int, op, opTag string, key *BIOLHKey, deleteMarker bool) BIPendingLogItem {
+func NewBIPendingLogItem(
+	epoch int,
+	op, opTag, name, instance string,
+	deleteMarker bool,
+) BIPendingLogItem {
 	return BIPendingLogItem{
 		deleteMarker: deleteMarker,
 		epoch:        epoch,
-		key:          key,
+		instance:     instance,
+		name:         name,
 		op:           op,
 		opTag:        opTag,
 	}
@@ -52,12 +58,12 @@ func (i BIPendingLogItem) Epoch() int {
 	return i.epoch
 }
 
-func (i BIPendingLogItem) Key() *BIOLHKey {
-	return i.key
+func (i BIPendingLogItem) Instance() string {
+	return i.instance
 }
 
-func (i BIPendingLogItem) Instance() string {
-	return i.key.instance
+func (i BIPendingLogItem) Name() string {
+	return i.name
 }
 
 func (i BIPendingLogItem) Op() string {

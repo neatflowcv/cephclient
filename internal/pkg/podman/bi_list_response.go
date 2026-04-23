@@ -72,7 +72,8 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 			DeleteMarker:   entry.DeleteMarker,
 			Epoch:          entry.Epoch,
 			Exists:         entry.Exists,
-			Key:            entry.Key.toDomain(),
+			Instance:       entry.Key.Instance,
+			Name:           entry.Key.Name,
 			PendingLog:     pendingLog,
 			PendingRemoval: entry.PendingRemoval,
 			Tag:            entry.Tag,
@@ -165,10 +166,6 @@ type biOLHKeyResponse struct {
 	Name     string `json:"name"`
 }
 
-func (r biOLHKeyResponse) toDomain() *domain.BIOLHKey {
-	return domain.NewBIOLHKey(r.Name, r.Instance)
-}
-
 type biPendingLogEntryResponse struct {
 	Key int                        `json:"key"`
 	Val []biPendingLogItemResponse `json:"val"`
@@ -192,5 +189,12 @@ type biPendingLogItemResponse struct {
 }
 
 func (r biPendingLogItemResponse) toDomain() domain.BIPendingLogItem {
-	return domain.NewBIPendingLogItem(r.Epoch, r.Op, r.OpTag, r.Key.toDomain(), r.DeleteMarker)
+	return domain.NewBIPendingLogItem(
+		r.Epoch,
+		r.Op,
+		r.OpTag,
+		r.Key.Name,
+		r.Key.Instance,
+		r.DeleteMarker,
+	)
 }

@@ -16,7 +16,8 @@ type OLHParams struct {
 	DeleteMarker   bool
 	Epoch          int
 	Exists         bool
-	Key            *BIOLHKey
+	Instance       string
+	Name           string
 	PendingLog     []BIPendingLogEntry
 	PendingRemoval bool
 	Tag            string
@@ -31,8 +32,8 @@ func NewOLH(p OLHParams) *OLH {
 		deleteMarker:   p.DeleteMarker,
 		epoch:          p.Epoch,
 		exists:         p.Exists,
-		instance:       p.Key.instance,
-		name:           p.Key.name,
+		instance:       p.Instance,
+		name:           p.Name,
 		pendingLog:     copiedPendingLog,
 		pendingRemoval: p.PendingRemoval,
 		tag:            p.Tag,
@@ -93,24 +94,4 @@ func (e *OLH) Tag() string {
 
 func (e *OLH) Type() string {
 	return "olh"
-}
-
-type BIOLHKey struct {
-	instance string
-	name     string
-}
-
-func NewBIOLHKey(name, instance string) *BIOLHKey {
-	return &BIOLHKey{
-		instance: instance,
-		name:     name,
-	}
-}
-
-func (k *BIOLHKey) Instance() string {
-	return k.instance
-}
-
-func (k *BIOLHKey) Name() string {
-	return k.name
 }
