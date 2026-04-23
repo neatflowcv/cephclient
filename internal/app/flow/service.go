@@ -67,7 +67,7 @@ func (s *Service) GetBucketStats(
 	ctx context.Context,
 	req GetBucketStatsRequest,
 ) (*GetBucketStatsResponse, error) {
-	stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
+	stats, err := s.client.GetBucketStats(ctx, req.ContainerName, req.BucketName)
 	if err != nil {
 		return nil, fmt.Errorf("get bucket stats: %w", err)
 	}
@@ -165,7 +165,7 @@ func (s *Service) InspectObject(
 		return nil, fmt.Errorf("read default zone: %w", err)
 	}
 
-	stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
+	stats, err := s.client.GetBucketStats(ctx, req.ContainerName, req.BucketName)
 	if err != nil {
 		return nil, fmt.Errorf("read bucket stats: %w", err)
 	}
@@ -310,7 +310,7 @@ func (s *Service) PurgeObject(
 		return nil
 	}
 
-	stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
+	stats, err := s.client.GetBucketStats(ctx, req.ContainerName, req.BucketName)
 	if err != nil {
 		return fmt.Errorf("read bucket stats: %w", err)
 	}
@@ -463,7 +463,7 @@ func (s *Service) resolveListBIByObjectShard(
 
 	totalShards := req.TotalShards
 	if totalShards == nil {
-		stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
+		stats, err := s.client.GetBucketStats(ctx, req.ContainerName, req.BucketName)
 		if err != nil {
 			return 0, fmt.Errorf("read bucket stats: %w", err)
 		}
@@ -486,7 +486,7 @@ func (s *Service) resolvePurgeObjectShard(
 ) (int, error) {
 	totalShards := req.TotalShards
 	if totalShards == nil {
-		stats, err := s.client.BucketStats(ctx, req.ContainerName, req.BucketName)
+		stats, err := s.client.GetBucketStats(ctx, req.ContainerName, req.BucketName)
 		if err != nil {
 			return 0, fmt.Errorf("read bucket stats: %w", err)
 		}

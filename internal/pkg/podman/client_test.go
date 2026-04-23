@@ -14,7 +14,7 @@ import (
 
 const errPermissionDenied = "permission denied"
 
-func TestClientBucketStatsMapsBucketAndUsageFieldsFromJSON(t *testing.T) {
+func TestClientGetBucketStatsMapsBucketAndUsageFieldsFromJSON(t *testing.T) {
 	t.Parallel()
 
 	runner := newRunnerMock(
@@ -34,7 +34,7 @@ func TestClientBucketStatsMapsBucketAndUsageFieldsFromJSON(t *testing.T) {
 	)
 	client := podman.NewClientWithRunner(runner)
 
-	stats, err := client.BucketStats(t.Context(), "rgw", "test")
+	stats, err := client.GetBucketStats(t.Context(), "rgw", "test")
 
 	require.NoError(t, err)
 	require.Len(t, runner.RunCalls(), 1)
@@ -221,7 +221,7 @@ func TestClientBIListByObjectRejectsUnknownType(t *testing.T) {
 	require.Contains(t, err.Error(), "unsupported bi entry type")
 }
 
-func TestClientBucketStatsParsesFixtureBucketAndUsagePaths(t *testing.T) {
+func TestClientGetBucketStatsParsesFixtureBucketAndUsagePaths(t *testing.T) {
 	t.Parallel()
 
 	fixture, err := os.ReadFile(filepath.Join("testdata", "test.stats.json"))
@@ -233,7 +233,7 @@ func TestClientBucketStatsParsesFixtureBucketAndUsagePaths(t *testing.T) {
 		},
 	))
 
-	stats, err := client.BucketStats(t.Context(), "rgw", "test")
+	stats, err := client.GetBucketStats(t.Context(), "rgw", "test")
 
 	require.NoError(t, err)
 	require.Equal(t, "test", stats.Name())   // json: bucket
@@ -245,7 +245,7 @@ func TestClientBucketStatsParsesFixtureBucketAndUsagePaths(t *testing.T) {
 	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning())
 }
 
-func TestClientBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {
+func TestClientGetBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {
 	t.Parallel()
 
 	client := podman.NewClientWithRunner(newRunnerMock(
@@ -254,13 +254,13 @@ func TestClientBucketStatsReturnsRunnerErrorWithStderr(t *testing.T) {
 		},
 	))
 
-	_, err := client.BucketStats(t.Context(), "rgw", "test")
+	_, err := client.GetBucketStats(t.Context(), "rgw", "test")
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), errPermissionDenied)
 }
 
-func TestClientBucketStatsReturnsJSONError(t *testing.T) {
+func TestClientGetBucketStatsReturnsJSONError(t *testing.T) {
 	t.Parallel()
 
 	client := podman.NewClientWithRunner(newRunnerMock(
@@ -269,12 +269,12 @@ func TestClientBucketStatsReturnsJSONError(t *testing.T) {
 		},
 	))
 
-	_, err := client.BucketStats(t.Context(), "rgw", "test")
+	_, err := client.GetBucketStats(t.Context(), "rgw", "test")
 
 	require.Error(t, err)
 }
 
-func TestClientBucketStatsReturnsInvalidVersioningError(t *testing.T) {
+func TestClientGetBucketStatsReturnsInvalidVersioningError(t *testing.T) {
 	t.Parallel()
 
 	client := podman.NewClientWithRunner(newRunnerMock(
@@ -290,7 +290,7 @@ func TestClientBucketStatsReturnsInvalidVersioningError(t *testing.T) {
 		},
 	))
 
-	_, err := client.BucketStats(t.Context(), "rgw", "test")
+	_, err := client.GetBucketStats(t.Context(), "rgw", "test")
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid versioning")

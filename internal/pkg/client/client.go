@@ -16,7 +16,7 @@ type Client interface {
 		shardID int,
 	) (*domain.EntryGroup, error)
 	GetBucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error)
-	BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error)
+	GetBucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error)
 	GetDefaultZone(ctx context.Context, containerName string) (*domain.Zone, error)
 	HasRawObject(ctx context.Context, containerName, pool, rawObject string) (bool, error)
 	ListOmapKeys(

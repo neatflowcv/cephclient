@@ -59,7 +59,7 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketStatsFunc = func(
+	mockClient.GetBucketStatsFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName string,
 	) (*domain.BucketStats, error) {
@@ -87,7 +87,7 @@ func TestServiceBucketStatsDelegatesToClient(t *testing.T) {
 	require.EqualValues(t, 5, stats.Size)
 	require.Equal(t, 1, stats.ObjectCount)
 	require.Equal(t, domain.VersioningStatusEnabled, stats.Versioning)
-	require.Len(t, mockClient.BucketStatsCalls(), 1)
+	require.Len(t, mockClient.GetBucketStatsCalls(), 1)
 }
 
 func TestServiceBucketLayoutDelegatesToClient(t *testing.T) {
@@ -252,7 +252,7 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketStatsFunc = func(
+	mockClient.GetBucketStatsFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName string,
 	) (*domain.BucketStats, error) {
@@ -303,7 +303,7 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 
 	requireListBIByObjectResponse(t, resp, 7)
 	require.Empty(t, resp.BIList.Entries())
-	require.Len(t, mockClient.BucketStatsCalls(), 1)
+	require.Len(t, mockClient.GetBucketStatsCalls(), 1)
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
 }
@@ -357,7 +357,7 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 	require.NoError(t, err)
 	requireListBIByObjectResponse(t, resp, 5)
 	require.Empty(t, resp.BIList.Entries())
-	require.Empty(t, mockClient.BucketStatsCalls())
+	require.Empty(t, mockClient.GetBucketStatsCalls())
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
 }
@@ -385,7 +385,7 @@ func TestServicePurgeObjectResolvesShardWhenRequestTotalShardsIsNil(t *testing.T
 
 	require.NoError(t, err)
 	require.Equal(t, []string{"stats", "shard", "list", "list"}, callOrder)
-	require.Len(t, mockClient.BucketStatsCalls(), 1)
+	require.Len(t, mockClient.GetBucketStatsCalls(), 1)
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 2)
 	require.Empty(t, mockClient.RemoveObjectCalls())
@@ -440,7 +440,7 @@ func TestServicePurgeObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 			return domain.NewEntryGroup(nil, nil, nil), errClientFailed
 		}
 	}
-	mockClient.BucketStatsFunc = func(
+	mockClient.GetBucketStatsFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName string,
 	) (*domain.BucketStats, error) {
@@ -477,7 +477,7 @@ func TestServicePurgeObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 
 	// Assert
 	require.NoError(t, err)
-	require.Empty(t, mockClient.BucketStatsCalls())
+	require.Empty(t, mockClient.GetBucketStatsCalls())
 	require.Empty(t, mockClient.GetDefaultZoneCalls())
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 2)
@@ -643,7 +643,7 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 
 	var mockClient ClientMock
 
-	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
+	mockClient.GetBucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
 		return nil, wantErr
 	}
 	service := flow.NewService(&mockClient)
@@ -656,7 +656,7 @@ func TestServiceBucketStatsReturnsClientError(t *testing.T) {
 
 	// Assert
 	require.ErrorIs(t, err, wantErr)
-	require.Len(t, mockClient.BucketStatsCalls(), 1)
+	require.Len(t, mockClient.GetBucketStatsCalls(), 1)
 }
 
 func TestServiceHasRawObjectReturnsClientError(t *testing.T) {
@@ -961,7 +961,7 @@ func TestServiceObjectInspectReturnsStepContextForBucketStats(t *testing.T) {
 	mockClient.GetDefaultZoneFunc = func(context.Context, string) (*domain.Zone, error) {
 		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
 	}
-	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
+	mockClient.GetBucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
 		return nil, wantErr
 	}
 
@@ -988,7 +988,7 @@ func TestServiceObjectInspectReturnsStepContextForRawExists(t *testing.T) {
 	mockClient.GetDefaultZoneFunc = func(context.Context, string) (*domain.Zone, error) {
 		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
 	}
-	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
+	mockClient.GetBucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
 		return domain.NewBucketStats("bucket-id", "test", 11, "bucket-marker", 5, 1, domain.VersioningStatusEnabled)
 	}
 	mockClient.ObjectShardFunc = func(context.Context, string, string, int) (*domain.ObjectShard, error) {
@@ -1030,7 +1030,7 @@ func newObjectInspectClientMock(
 
 		return domain.NewZone("default.rgw.buckets.data", "default.rgw.buckets.index"), nil
 	}
-	mockClient.BucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
+	mockClient.GetBucketStatsFunc = func(context.Context, string, string) (*domain.BucketStats, error) {
 		*callOrder = append(*callOrder, "stats")
 
 		return domain.NewBucketStats("bucket-id", "test", 11, "bucket-marker", 5, 1, domain.VersioningStatusEnabled)
@@ -1098,7 +1098,7 @@ func configurePurgeObjectBucketStatsMock(
 ) {
 	t.Helper()
 
-	mockClient.BucketStatsFunc = func(
+	mockClient.GetBucketStatsFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName string,
 	) (*domain.BucketStats, error) {
@@ -1262,7 +1262,7 @@ func newPurgeObjectFallbackFixture(
 
 		return nil
 	}
-	fixture.mockClient.BucketStatsFunc = func(
+	fixture.mockClient.GetBucketStatsFunc = func(
 		gotCtx context.Context,
 		containerName, bucketName string,
 	) (*domain.BucketStats, error) {

@@ -18,8 +18,8 @@ import (
 //			BIListByShardFunc: func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error) {
 //				panic("mock out the BIListByShard method")
 //			},
-//			BucketStatsFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
-//				panic("mock out the BucketStats method")
+//			GetBucketStatsFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
+//				panic("mock out the GetBucketStats method")
 //			},
 //			GetBucketLayoutFunc: func(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error) {
 //				panic("mock out the GetBucketLayout method")
@@ -64,8 +64,8 @@ type ClientMock struct {
 	// BIListByShardFunc mocks the BIListByShard method.
 	BIListByShardFunc func(ctx context.Context, containerName string, bucketName string, shardID int) (*domain.BIList, error)
 
-	// BucketStatsFunc mocks the BucketStats method.
-	BucketStatsFunc func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error)
+	// GetBucketStatsFunc mocks the GetBucketStats method.
+	GetBucketStatsFunc func(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error)
 
 	// GetBucketLayoutFunc mocks the GetBucketLayout method.
 	GetBucketLayoutFunc func(ctx context.Context, containerName string, bucketName string) (*domain.Layout, error)
@@ -113,8 +113,8 @@ type ClientMock struct {
 			// ShardID is the shardID argument value.
 			ShardID int
 		}
-		// BucketStats holds details about calls to the BucketStats method.
-		BucketStats []struct {
+		// GetBucketStats holds details about calls to the GetBucketStats method.
+		GetBucketStats []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ContainerName is the containerName argument value.
@@ -243,7 +243,7 @@ type ClientMock struct {
 		}
 	}
 	lockBIListByShard           sync.RWMutex
-	lockBucketStats             sync.RWMutex
+	lockGetBucketStats          sync.RWMutex
 	lockGetBucketLayout         sync.RWMutex
 	lockGetDefaultZone          sync.RWMutex
 	lockHasRawObject            sync.RWMutex
@@ -301,10 +301,10 @@ func (mock *ClientMock) BIListByShardCalls() []struct {
 	return calls
 }
 
-// BucketStats calls BucketStatsFunc.
-func (mock *ClientMock) BucketStats(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
-	if mock.BucketStatsFunc == nil {
-		panic("ClientMock.BucketStatsFunc: method is nil but Client.BucketStats was just called")
+// GetBucketStats calls GetBucketStatsFunc.
+func (mock *ClientMock) GetBucketStats(ctx context.Context, containerName string, bucketName string) (*domain.BucketStats, error) {
+	if mock.GetBucketStatsFunc == nil {
+		panic("ClientMock.GetBucketStatsFunc: method is nil but Client.GetBucketStats was just called")
 	}
 	callInfo := struct {
 		Ctx           context.Context
@@ -315,17 +315,17 @@ func (mock *ClientMock) BucketStats(ctx context.Context, containerName string, b
 		ContainerName: containerName,
 		BucketName:    bucketName,
 	}
-	mock.lockBucketStats.Lock()
-	mock.calls.BucketStats = append(mock.calls.BucketStats, callInfo)
-	mock.lockBucketStats.Unlock()
-	return mock.BucketStatsFunc(ctx, containerName, bucketName)
+	mock.lockGetBucketStats.Lock()
+	mock.calls.GetBucketStats = append(mock.calls.GetBucketStats, callInfo)
+	mock.lockGetBucketStats.Unlock()
+	return mock.GetBucketStatsFunc(ctx, containerName, bucketName)
 }
 
-// BucketStatsCalls gets all the calls that were made to BucketStats.
+// GetBucketStatsCalls gets all the calls that were made to GetBucketStats.
 // Check the length with:
 //
-//	len(mockedClient.BucketStatsCalls())
-func (mock *ClientMock) BucketStatsCalls() []struct {
+//	len(mockedClient.GetBucketStatsCalls())
+func (mock *ClientMock) GetBucketStatsCalls() []struct {
 	Ctx           context.Context
 	ContainerName string
 	BucketName    string
@@ -335,9 +335,9 @@ func (mock *ClientMock) BucketStatsCalls() []struct {
 		ContainerName string
 		BucketName    string
 	}
-	mock.lockBucketStats.RLock()
-	calls = mock.calls.BucketStats
-	mock.lockBucketStats.RUnlock()
+	mock.lockGetBucketStats.RLock()
+	calls = mock.calls.GetBucketStats
+	mock.lockGetBucketStats.RUnlock()
 	return calls
 }
 

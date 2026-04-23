@@ -162,7 +162,7 @@ func toEntryGroup(biList *domain.BIList) *domain.EntryGroup {
 	return domain.NewEntryGroup(olhs, plains, instances)
 }
 
-func (c *Client) BucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
+func (c *Client) GetBucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
 	commandArgs := []string{
 		"exec",
 		"-i",
