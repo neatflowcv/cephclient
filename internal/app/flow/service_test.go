@@ -113,19 +113,17 @@ func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 	ctx := t.Context()
 	wantList := domain.NewBIList([]domain.BIEntry{
 		domain.NewPlain(domain.DirParams{
-			IDX: domain.NewBIIndex("test.txt"),
-			Entry: domain.NewBIObjectEntry(
-				"test.txt",
-				"",
-				domain.NewBIVersion(-1, 0),
-				"",
-				false,
-				domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-				"",
-				8,
-				false,
-				0,
-			),
+			Name:           "test.txt",
+			Instance:       "",
+			Ver:            domain.NewBIVersion(-1, 0),
+			Locator:        "",
+			Exists:         false,
+			Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+			Tag:            "",
+			Flags:          8,
+			Pending:        false,
+			VersionedEpoch: 0,
+			IDX:            domain.NewBIIndex("test.txt"),
 		}),
 	})
 
@@ -160,19 +158,17 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 	// Arrange
 	ctx := t.Context()
 	wantEntry := domain.NewPlain(domain.DirParams{
-		IDX: domain.NewBIIndex("test.txt"),
-		Entry: domain.NewBIObjectEntry(
-			"test.txt",
-			"",
-			domain.NewBIVersion(-1, 0),
-			"",
-			false,
-			domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-			"",
-			8,
-			false,
-			0,
-		),
+		Name:           "test.txt",
+		Instance:       "",
+		Ver:            domain.NewBIVersion(-1, 0),
+		Locator:        "",
+		Exists:         false,
+		Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+		Tag:            "",
+		Flags:          8,
+		Pending:        false,
+		VersionedEpoch: 0,
+		IDX:            domain.NewBIIndex("test.txt"),
 	})
 
 	var mockClient ClientMock
@@ -972,19 +968,17 @@ func newObjectInspectClientMock(
 
 func newVersionedPlainEntry(instance string) *domain.Plain {
 	return domain.NewPlain(domain.DirParams{
-		IDX: domain.NewBIIndex(fmt.Sprintf("%s:%s", "test.txt", instance)),
-		Entry: domain.NewBIObjectEntry(
-			"test.txt",
-			instance,
-			domain.NewBIVersion(8, 119),
-			"",
-			true,
-			domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-			"",
-			0,
-			false,
-			2,
-		),
+		Name:           "test.txt",
+		Instance:       instance,
+		Ver:            domain.NewBIVersion(8, 119),
+		Locator:        "",
+		Exists:         true,
+		Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+		Tag:            "",
+		Flags:          0,
+		Pending:        false,
+		VersionedEpoch: 2,
+		IDX:            domain.NewBIIndex(fmt.Sprintf("%s:%s", "test.txt", instance)),
 	})
 }
 
@@ -1241,19 +1235,17 @@ func newVersionedInstanceEntry() *domain.Instance {
 	)
 
 	return domain.NewInstance(domain.DirParams{
-		IDX: domain.NewBIIndex(fmt.Sprintf("%s-instance:%s", name, instance)),
-		Entry: domain.NewBIObjectEntry(
-			name,
-			instance,
-			domain.NewBIVersion(8, 119),
-			"",
-			true,
-			domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
-			"",
-			0,
-			false,
-			2,
-		),
+		Name:           name,
+		Instance:       instance,
+		Ver:            domain.NewBIVersion(8, 119),
+		Locator:        "",
+		Exists:         true,
+		Meta:           domain.NewBIObjectMeta(0, 0, "0.000000", "", "", "", "", "", 0, "", false),
+		Tag:            "",
+		Flags:          0,
+		Pending:        false,
+		VersionedEpoch: 2,
+		IDX:            domain.NewBIIndex(fmt.Sprintf("%s-instance:%s", name, instance)),
 	})
 }
 

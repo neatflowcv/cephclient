@@ -38,29 +38,19 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 
 	switch r.Type {
 	case "plain":
-		var entry biObjectEntryResponse
-
-		err := json.Unmarshal(r.Entry, &entry)
+		entry, err := r.decodeObjectEntry()
 		if err != nil {
 			return nil, fmt.Errorf("decode plain bi entry: %w", err)
 		}
 
-		return domain.NewPlain(domain.DirParams{
-			Entry: entry.toDomain(),
-			IDX:   idx,
-		}), nil
+		return domain.NewPlain(entry.toDirParams(idx)), nil
 	case "instance":
-		var entry biObjectEntryResponse
-
-		err := json.Unmarshal(r.Entry, &entry)
+		entry, err := r.decodeObjectEntry()
 		if err != nil {
 			return nil, fmt.Errorf("decode instance bi entry: %w", err)
 		}
 
-		return domain.NewInstance(domain.DirParams{
-			Entry: entry.toDomain(),
-			IDX:   idx,
-		}), nil
+		return domain.NewInstance(entry.toDirParams(idx)), nil
 	case "olh":
 		var entry biOLHEntryResponse
 
@@ -90,6 +80,17 @@ func (r biListEntryResponse) toDomain() (domain.BIEntry, error) {
 	}
 }
 
+func (r biListEntryResponse) decodeObjectEntry() (biObjectEntryResponse, error) {
+	var entry biObjectEntryResponse
+
+	err := json.Unmarshal(r.Entry, &entry)
+	if err != nil {
+		return biObjectEntryResponse{}, fmt.Errorf("unmarshal object entry: %w", err)
+	}
+
+	return entry, nil
+}
+
 type biObjectEntryResponse struct {
 	Exists         bool                 `json:"exists"`
 	Flags          int                  `json:"flags"`
@@ -103,19 +104,20 @@ type biObjectEntryResponse struct {
 	VersionedEpoch int                  `json:"versioned_epoch"`
 }
 
-func (r biObjectEntryResponse) toDomain() *domain.BIObjectEntry {
-	return domain.NewBIObjectEntry(
-		r.Name,
-		r.Instance,
-		r.Ver.toDomain(),
-		r.Locator,
-		r.Exists,
-		r.Meta.toDomain(),
-		r.Tag,
-		r.Flags,
-		len(r.PendingMap) > 0,
-		r.VersionedEpoch,
-	)
+func (r biObjectEntryResponse) toDirParams(idx *domain.BIIndex) domain.DirParams {
+	return domain.DirParams{
+		Exists:         r.Exists,
+		Flags:          r.Flags,
+		Instance:       r.Instance,
+		Locator:        r.Locator,
+		Meta:           r.Meta.toDomain(),
+		Name:           r.Name,
+		Pending:        len(r.PendingMap) > 0,
+		Tag:            r.Tag,
+		Ver:            r.Ver.toDomain(),
+		VersionedEpoch: r.VersionedEpoch,
+		IDX:            idx,
+	}
 }
 
 type biObjectMetaResponse struct {

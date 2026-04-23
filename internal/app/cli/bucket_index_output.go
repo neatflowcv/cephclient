@@ -33,22 +33,22 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d mtime=%s",
 			typed.Type(),
 			quoteField(typed.IDX()),
-			quoteField(typed.Entry().Name()),
-			quoteField(typed.Entry().Instance()),
-			typed.Entry().Exists(),
-			typed.Entry().VersionedEpoch(),
-			quoteField(formatObjectMTime(typed.Entry())),
+			quoteField(typed.Name()),
+			quoteField(typed.Instance()),
+			typed.Exists(),
+			typed.VersionedEpoch(),
+			quoteField(formatObjectMTime(typed)),
 		), nil
 	case *domain.Instance:
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d mtime=%s",
 			typed.Type(),
 			quoteField(typed.IDX()),
-			quoteField(typed.Entry().Name()),
-			quoteField(typed.Entry().Instance()),
-			typed.Entry().Exists(),
-			typed.Entry().VersionedEpoch(),
-			quoteField(formatObjectMTime(typed.Entry())),
+			quoteField(typed.Name()),
+			quoteField(typed.Instance()),
+			typed.Exists(),
+			typed.VersionedEpoch(),
+			quoteField(formatObjectMTime(typed)),
 		), nil
 	case *domain.OLH:
 		return fmt.Sprintf(
@@ -67,7 +67,11 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 	}
 }
 
-func formatObjectMTime(entry *domain.BIObjectEntry) string {
+type objectMetaProvider interface {
+	Meta() *domain.BIObjectMeta
+}
+
+func formatObjectMTime(entry objectMetaProvider) string {
 	if entry.Meta() == nil {
 		return ""
 	}

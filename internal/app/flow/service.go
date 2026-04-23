@@ -249,8 +249,8 @@ func (s *Service) PurgeObject(
 
 	instances := entryGroup.Instances()
 	slices.SortFunc(instances, func(a, b *domain.Instance) int {
-		aTime, _ := time.Parse(time.RFC3339Nano, a.Entry().Meta().MTime())
-		bTime, _ := time.Parse(time.RFC3339Nano, b.Entry().Meta().MTime())
+		aTime, _ := time.Parse(time.RFC3339Nano, a.Meta().MTime())
+		bTime, _ := time.Parse(time.RFC3339Nano, b.Meta().MTime())
 
 		switch {
 		case aTime.Before(bTime):
@@ -268,7 +268,7 @@ func (s *Service) PurgeObject(
 			req.ContainerName,
 			req.BucketName,
 			req.ObjectName,
-			instance.Entry().Instance(),
+			instance.Instance(),
 		)
 		if err != nil {
 			return fmt.Errorf("remove object: %w", err)
@@ -279,7 +279,7 @@ func (s *Service) PurgeObject(
 			"container", req.ContainerName,
 			"bucket", req.BucketName,
 			"object", req.ObjectName,
-			"version", instance.Entry().Instance(),
+			"version", instance.Instance(),
 		)
 	}
 
@@ -530,9 +530,9 @@ func rawObjectNames(marker, objectName string, biList *domain.BIList) []*domain.
 func rawObjectVersions(entry domain.BIEntry) []string {
 	switch typed := entry.(type) {
 	case *domain.Plain:
-		return []string{typed.Entry().Instance()}
+		return []string{typed.Instance()}
 	case *domain.Instance:
-		return []string{typed.Entry().Instance()}
+		return []string{typed.Instance()}
 	case *domain.OLH:
 		return typed.ReferencedVersions()
 	default:

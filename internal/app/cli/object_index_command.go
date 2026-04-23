@@ -118,21 +118,21 @@ func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse
 		return plainObjectIndexEntryResponse{
 			Type:           typed.Type(),
 			IDX:            typed.IDX(),
-			Name:           typed.Entry().Name(),
-			Instance:       typed.Entry().Instance(),
-			Exists:         typed.Entry().Exists(),
-			VersionedEpoch: typed.Entry().VersionedEpoch(),
-			MTime:          formatObjectMTime(typed.Entry()),
+			Name:           typed.Name(),
+			Instance:       typed.Instance(),
+			Exists:         typed.Exists(),
+			VersionedEpoch: typed.VersionedEpoch(),
+			MTime:          formatObjectMTime(typed),
 		}, nil
 	case *domain.Instance:
 		return instanceObjectIndexEntryResponse{
 			Type:           typed.Type(),
 			IDX:            typed.IDX(),
-			Name:           typed.Entry().Name(),
-			Instance:       typed.Entry().Instance(),
-			Exists:         typed.Entry().Exists(),
-			VersionedEpoch: typed.Entry().VersionedEpoch(),
-			MTime:          formatObjectMTime(typed.Entry()),
+			Name:           typed.Name(),
+			Instance:       typed.Instance(),
+			Exists:         typed.Exists(),
+			VersionedEpoch: typed.VersionedEpoch(),
+			MTime:          formatObjectMTime(typed),
 		}, nil
 	case *domain.OLH:
 		return olhObjectIndexEntryResponse{

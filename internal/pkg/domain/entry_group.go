@@ -139,7 +139,7 @@ func (g *EntryGroup) versions() []string {
 	}
 
 	for _, entry := range g.instances {
-		version := entry.Entry().Instance()
+		version := entry.Instance()
 		if seen.Check(version) {
 			continue
 		}
@@ -149,7 +149,7 @@ func (g *EntryGroup) versions() []string {
 	}
 
 	for _, entry := range g.plains {
-		version := entry.Entry().Instance()
+		version := entry.Instance()
 		if seen.Check(version) {
 			continue
 		}

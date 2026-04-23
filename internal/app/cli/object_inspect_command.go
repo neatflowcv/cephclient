@@ -155,8 +155,8 @@ func newObjectInspectVersions(objectName string, result *flow.InspectObjectRespo
 		case *domain.Plain:
 			if isPlaceholderPlainEntry(
 				typed.IDX(),
-				typed.Entry().Name(),
-				formatObjectMTime(typed.Entry()),
+				typed.Name(),
+				formatObjectMTime(typed),
 			) {
 				continue
 			}
@@ -195,7 +195,7 @@ func upsertPlainObjectInspectVersion(
 	orderedKeys []string,
 	entry *domain.Plain,
 ) []string {
-	version := entry.Entry().Instance()
+	version := entry.Instance()
 
 	current, exists := grouped[version]
 	if !exists {
@@ -204,9 +204,9 @@ func upsertPlainObjectInspectVersion(
 
 	grouped[version] = objectInspectVersion{
 		Version:        version,
-		Exists:         current.Exists || entry.Entry().Exists(),
-		MTime:          firstNonEmpty(current.MTime, formatObjectMTime(entry.Entry())),
-		VersionedEpoch: firstNonZero(current.VersionedEpoch, entry.Entry().VersionedEpoch()),
+		Exists:         current.Exists || entry.Exists(),
+		MTime:          firstNonEmpty(current.MTime, formatObjectMTime(entry)),
+		VersionedEpoch: firstNonZero(current.VersionedEpoch, entry.VersionedEpoch()),
 		PlainIDX:       firstNonEmpty(current.PlainIDX, entry.IDX()),
 		InstanceIDX:    current.InstanceIDX,
 		RawExists:      false,
@@ -221,7 +221,7 @@ func upsertInstanceObjectInspectVersion(
 	orderedKeys []string,
 	entry *domain.Instance,
 ) []string {
-	version := entry.Entry().Instance()
+	version := entry.Instance()
 
 	current, exists := grouped[version]
 	if !exists {
@@ -230,9 +230,9 @@ func upsertInstanceObjectInspectVersion(
 
 	grouped[version] = objectInspectVersion{
 		Version:        version,
-		Exists:         current.Exists || entry.Entry().Exists(),
-		MTime:          firstNonEmpty(current.MTime, formatObjectMTime(entry.Entry())),
-		VersionedEpoch: firstNonZero(current.VersionedEpoch, entry.Entry().VersionedEpoch()),
+		Exists:         current.Exists || entry.Exists(),
+		MTime:          firstNonEmpty(current.MTime, formatObjectMTime(entry)),
+		VersionedEpoch: firstNonZero(current.VersionedEpoch, entry.VersionedEpoch()),
 		PlainIDX:       current.PlainIDX,
 		InstanceIDX:    firstNonEmpty(current.InstanceIDX, entry.IDX()),
 		RawExists:      false,
@@ -272,27 +272,27 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
 				IDX:            typed.IDX(),
-				Instance:       typed.Entry().Instance(),
-				Exists:         typed.Entry().Exists(),
-				VersionedEpoch: typed.Entry().VersionedEpoch(),
-				MTime:          formatObjectMTime(typed.Entry()),
+				Instance:       typed.Instance(),
+				Exists:         typed.Exists(),
+				VersionedEpoch: typed.VersionedEpoch(),
+				MTime:          formatObjectMTime(typed),
 				Epoch:          0,
 				PendingRemoval: false,
 				DeleteMarker:   false,
-				Name:           typed.Entry().Name(),
+				Name:           typed.Name(),
 			})
 		case *domain.Instance:
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
 				IDX:            typed.IDX(),
-				Instance:       typed.Entry().Instance(),
-				Exists:         typed.Entry().Exists(),
-				VersionedEpoch: typed.Entry().VersionedEpoch(),
-				MTime:          formatObjectMTime(typed.Entry()),
+				Instance:       typed.Instance(),
+				Exists:         typed.Exists(),
+				VersionedEpoch: typed.VersionedEpoch(),
+				MTime:          formatObjectMTime(typed),
 				Epoch:          0,
 				PendingRemoval: false,
 				DeleteMarker:   false,
-				Name:           typed.Entry().Name(),
+				Name:           typed.Name(),
 			})
 		case *domain.OLH:
 			entries = append(entries, objectInspectBIEntry{
