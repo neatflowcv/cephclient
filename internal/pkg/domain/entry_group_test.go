@@ -24,8 +24,8 @@ func TestEntryGroupIsEmpty(t *testing.T) {
 		group := domain.NewEntryGroup(
 			nil,
 			nil,
-			[]*domain.InstanceBIEntry{
-				domain.NewInstanceBIEntry(domain.DirParams{
+			[]*domain.Instance{
+				domain.NewInstance(domain.DirParams{
 					IDX: domain.NewBIIndex("test.txt-instance:instance-1"),
 					Entry: domain.NewBIObjectEntry(
 						"test.txt",
@@ -95,8 +95,8 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 				IDX:            domain.NewBIIndex("test.txt"),
 			}),
 		},
-		[]*domain.PlainBIEntry{
-			domain.NewPlainBIEntry(domain.DirParams{
+		[]*domain.Plain{
+			domain.NewPlain(domain.DirParams{
 				IDX: domain.NewBIIndex("test.txt:instance-2"),
 				Entry: domain.NewBIObjectEntry(
 					"test.txt",
@@ -111,7 +111,7 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 					2,
 				),
 			}),
-			domain.NewPlainBIEntry(domain.DirParams{
+			domain.NewPlain(domain.DirParams{
 				IDX: domain.NewBIIndex("test.txt:instance-1"),
 				Entry: domain.NewBIObjectEntry(
 					"test.txt",
@@ -127,8 +127,8 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 				),
 			}),
 		},
-		[]*domain.InstanceBIEntry{
-			domain.NewInstanceBIEntry(domain.DirParams{
+		[]*domain.Instance{
+			domain.NewInstance(domain.DirParams{
 				IDX: domain.NewBIIndex("test.txt-instance:instance-1"),
 				Entry: domain.NewBIObjectEntry(
 					"test.txt",
@@ -143,7 +143,7 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 					2,
 				),
 			}),
-			domain.NewInstanceBIEntry(domain.DirParams{
+			domain.NewInstance(domain.DirParams{
 				IDX: domain.NewBIIndex("test.txt-instance:instance-1"),
 				Entry: domain.NewBIObjectEntry(
 					"test.txt",

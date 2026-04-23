@@ -152,7 +152,7 @@ func newObjectInspectVersions(objectName string, result *flow.InspectObjectRespo
 
 	for _, entry := range result.BIList().Entries() {
 		switch typed := entry.(type) {
-		case *domain.PlainBIEntry:
+		case *domain.Plain:
 			if isPlaceholderPlainEntry(
 				typed.IDX(),
 				typed.Entry().Name(),
@@ -162,7 +162,7 @@ func newObjectInspectVersions(objectName string, result *flow.InspectObjectRespo
 			}
 
 			orderedKeys = upsertPlainObjectInspectVersion(grouped, orderedKeys, typed)
-		case *domain.InstanceBIEntry:
+		case *domain.Instance:
 			orderedKeys = upsertInstanceObjectInspectVersion(grouped, orderedKeys, typed)
 		}
 	}
@@ -193,7 +193,7 @@ func newObjectInspectVersions(objectName string, result *flow.InspectObjectRespo
 func upsertPlainObjectInspectVersion(
 	grouped map[string]objectInspectVersion,
 	orderedKeys []string,
-	entry *domain.PlainBIEntry,
+	entry *domain.Plain,
 ) []string {
 	version := entry.Entry().Instance()
 
@@ -219,7 +219,7 @@ func upsertPlainObjectInspectVersion(
 func upsertInstanceObjectInspectVersion(
 	grouped map[string]objectInspectVersion,
 	orderedKeys []string,
-	entry *domain.InstanceBIEntry,
+	entry *domain.Instance,
 ) []string {
 	version := entry.Entry().Instance()
 
@@ -268,7 +268,7 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 
 	for _, entry := range biList.Entries() {
 		switch typed := entry.(type) {
-		case *domain.PlainBIEntry:
+		case *domain.Plain:
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
 				IDX:            typed.IDX(),
@@ -281,7 +281,7 @@ func newObjectInspectBIEntries(biList *domain.BIList) ([]objectInspectBIEntry, e
 				DeleteMarker:   false,
 				Name:           typed.Entry().Name(),
 			})
-		case *domain.InstanceBIEntry:
+		case *domain.Instance:
 			entries = append(entries, objectInspectBIEntry{
 				Type:           typed.Type(),
 				IDX:            typed.IDX(),

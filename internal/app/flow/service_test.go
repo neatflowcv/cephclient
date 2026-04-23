@@ -112,7 +112,7 @@ func TestServiceBIListByShardDelegatesToClient(t *testing.T) {
 	// Arrange
 	ctx := t.Context()
 	wantList := domain.NewBIList([]domain.BIEntry{
-		domain.NewPlainBIEntry(domain.DirParams{
+		domain.NewPlain(domain.DirParams{
 			IDX: domain.NewBIIndex("test.txt"),
 			Entry: domain.NewBIObjectEntry(
 				"test.txt",
@@ -159,7 +159,7 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 
 	// Arrange
 	ctx := t.Context()
-	wantEntry := domain.NewPlainBIEntry(domain.DirParams{
+	wantEntry := domain.NewPlain(domain.DirParams{
 		IDX: domain.NewBIIndex("test.txt"),
 		Entry: domain.NewBIObjectEntry(
 			"test.txt",
@@ -188,7 +188,7 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 		require.Equal(t, "test.txt", objectName)
 		require.Equal(t, 3, shardID)
 
-		return domain.NewEntryGroup(nil, []*domain.PlainBIEntry{wantEntry}, nil), nil
+		return domain.NewEntryGroup(nil, []*domain.Plain{wantEntry}, nil), nil
 	}
 	service := flow.NewService(&mockClient)
 
@@ -970,8 +970,8 @@ func newObjectInspectClientMock(
 	return &mockClient
 }
 
-func newVersionedPlainEntry(instance string) *domain.PlainBIEntry {
-	return domain.NewPlainBIEntry(domain.DirParams{
+func newVersionedPlainEntry(instance string) *domain.Plain {
+	return domain.NewPlain(domain.DirParams{
 		IDX: domain.NewBIIndex(fmt.Sprintf("%s:%s", "test.txt", instance)),
 		Entry: domain.NewBIObjectEntry(
 			"test.txt",
@@ -1127,7 +1127,7 @@ func newPurgeObjectFallbackFixture(
 			return domain.NewEntryGroup(
 				nil,
 				nil,
-				[]*domain.InstanceBIEntry{
+				[]*domain.Instance{
 					newVersionedInstanceEntry(),
 				},
 			), nil
@@ -1137,7 +1137,7 @@ func newPurgeObjectFallbackFixture(
 					newOLHEntry("test.txt", "instance-1", nil),
 				},
 				nil,
-				[]*domain.InstanceBIEntry{
+				[]*domain.Instance{
 					newVersionedInstanceEntry(),
 				},
 			), nil
@@ -1234,13 +1234,13 @@ func newPurgeObjectFallbackFixture(
 	return fixture
 }
 
-func newVersionedInstanceEntry() *domain.InstanceBIEntry {
+func newVersionedInstanceEntry() *domain.Instance {
 	const (
 		name     = "test.txt"
 		instance = "instance-1"
 	)
 
-	return domain.NewInstanceBIEntry(domain.DirParams{
+	return domain.NewInstance(domain.DirParams{
 		IDX: domain.NewBIIndex(fmt.Sprintf("%s-instance:%s", name, instance)),
 		Entry: domain.NewBIObjectEntry(
 			name,

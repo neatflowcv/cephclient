@@ -144,17 +144,17 @@ func toEntryGroup(biList *domain.BIList) *domain.EntryGroup {
 
 	var (
 		olhs      []*domain.OLH
-		plains    []*domain.PlainBIEntry
-		instances []*domain.InstanceBIEntry
+		plains    []*domain.Plain
+		instances []*domain.Instance
 	)
 
 	for _, entry := range biList.Entries() {
 		switch typed := entry.(type) {
 		case *domain.OLH:
 			olhs = append(olhs, typed)
-		case *domain.PlainBIEntry:
+		case *domain.Plain:
 			plains = append(plains, typed)
-		case *domain.InstanceBIEntry:
+		case *domain.Instance:
 			instances = append(instances, typed)
 		}
 	}

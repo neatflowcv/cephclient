@@ -114,7 +114,7 @@ func newObjectIndexEntriesResponse(biList *domain.BIList) (*objectIndexEntriesRe
 
 func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse, error) {
 	switch typed := entry.(type) {
-	case *domain.PlainBIEntry:
+	case *domain.Plain:
 		return plainObjectIndexEntryResponse{
 			Type:           typed.Type(),
 			IDX:            typed.IDX(),
@@ -124,7 +124,7 @@ func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse
 			VersionedEpoch: typed.Entry().VersionedEpoch(),
 			MTime:          formatObjectMTime(typed.Entry()),
 		}, nil
-	case *domain.InstanceBIEntry:
+	case *domain.Instance:
 		return instanceObjectIndexEntryResponse{
 			Type:           typed.Type(),
 			IDX:            typed.IDX(),

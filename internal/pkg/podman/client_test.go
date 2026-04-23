@@ -145,7 +145,7 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	entries := biList.Entries()
 	require.Len(t, entries, 4)
 
-	plain, okPlain := entries[0].(*domain.PlainBIEntry)
+	plain, okPlain := entries[0].(*domain.Plain)
 	require.True(t, okPlain)
 	require.Equal(t, "test.txt", plain.IDX())
 	require.Equal(t, "test.txt", plain.Entry().Name())
@@ -153,7 +153,7 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	require.Equal(t, 0, plain.Entry().VersionedEpoch())
 	require.True(t, plain.Entry().Pending())
 
-	plainVersioned, okPlainVersioned := entries[1].(*domain.PlainBIEntry)
+	plainVersioned, okPlainVersioned := entries[1].(*domain.Plain)
 	require.True(t, okPlainVersioned)
 	require.Equal(t, "test.txt\\x00v913\\x00iPDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", plainVersioned.IDX())
 	require.Equal(t, "PDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", plainVersioned.Entry().Instance())
@@ -161,7 +161,7 @@ func TestClientBIListByObjectParsesFixture(t *testing.T) {
 	require.Equal(t, 119, plainVersioned.Entry().Ver().Epoch())
 	require.False(t, plainVersioned.Entry().Pending())
 
-	instance, okInstance := entries[2].(*domain.InstanceBIEntry)
+	instance, okInstance := entries[2].(*domain.Instance)
 	require.True(t, okInstance)
 	require.Equal(t, "\\x801000_test.txt\\x00iPDGqmtJA7imna.RLH.1nsBhSy1ZWf9m", instance.IDX())
 	require.Equal(t, "test.txt", instance.Entry().Name())

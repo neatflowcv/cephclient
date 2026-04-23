@@ -28,7 +28,7 @@ func writeBucketIndexEntries(stdout io.Writer, biList *domain.BIList) error {
 
 func formatBIEntry(entry domain.BIEntry) (string, error) {
 	switch typed := entry.(type) {
-	case *domain.PlainBIEntry:
+	case *domain.Plain:
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d mtime=%s",
 			typed.Type(),
@@ -39,7 +39,7 @@ func formatBIEntry(entry domain.BIEntry) (string, error) {
 			typed.Entry().VersionedEpoch(),
 			quoteField(formatObjectMTime(typed.Entry())),
 		), nil
-	case *domain.InstanceBIEntry:
+	case *domain.Instance:
 		return fmt.Sprintf(
 			"type=%s idx=%s name=%s instance=%s exists=%t versioned_epoch=%d mtime=%s",
 			typed.Type(),

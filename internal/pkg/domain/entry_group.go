@@ -2,18 +2,18 @@ package domain
 
 type EntryGroup struct {
 	olhs      []*OLH
-	plains    []*PlainBIEntry
-	instances []*InstanceBIEntry
+	plains    []*Plain
+	instances []*Instance
 }
 
-func NewEntryGroup(olhs []*OLH, plains []*PlainBIEntry, instances []*InstanceBIEntry) *EntryGroup {
+func NewEntryGroup(olhs []*OLH, plains []*Plain, instances []*Instance) *EntryGroup {
 	copiedOLHs := make([]*OLH, len(olhs))
 	copy(copiedOLHs, olhs)
 
-	copiedPlains := make([]*PlainBIEntry, len(plains))
+	copiedPlains := make([]*Plain, len(plains))
 	copy(copiedPlains, plains)
 
-	copiedInstances := make([]*InstanceBIEntry, len(instances))
+	copiedInstances := make([]*Instance, len(instances))
 	copy(copiedInstances, instances)
 
 	return &EntryGroup{
@@ -30,15 +30,15 @@ func (g *EntryGroup) OLHs() []*OLH {
 	return copied
 }
 
-func (g *EntryGroup) Plains() []*PlainBIEntry {
-	copied := make([]*PlainBIEntry, len(g.plains))
+func (g *EntryGroup) Plains() []*Plain {
+	copied := make([]*Plain, len(g.plains))
 	copy(copied, g.plains)
 
 	return copied
 }
 
-func (g *EntryGroup) Instances() []*InstanceBIEntry {
-	copied := make([]*InstanceBIEntry, len(g.instances))
+func (g *EntryGroup) Instances() []*Instance {
+	copied := make([]*Instance, len(g.instances))
 	copy(copied, g.instances)
 
 	return copied
