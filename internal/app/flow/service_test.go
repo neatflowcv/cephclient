@@ -1250,9 +1250,9 @@ func newOLHEntry(
 	name, instance string,
 	pendingLog []domain.BIPendingLogEntry,
 ) *domain.OLHBIEntry {
-	return domain.NewOLHBIEntry(
-		domain.NewBIIndex(name),
-		domain.NewBIOLHEntry(
+	return domain.NewOLHBIEntry(domain.OLHBIEntryParams{
+		IDX: domain.NewBIIndex(name),
+		Entry: domain.NewBIOLHEntry(
 			domain.NewBIOLHKey(name, instance),
 			false,
 			2,
@@ -1261,5 +1261,5 @@ func newOLHEntry(
 			true,
 			false,
 		),
-	)
+	})
 }

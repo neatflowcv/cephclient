@@ -5,10 +5,15 @@ type OLHBIEntry struct {
 	idx   *BIIndex
 }
 
-func NewOLHBIEntry(idx *BIIndex, entry *BIOLHEntry) *OLHBIEntry {
+type OLHBIEntryParams struct {
+	Entry *BIOLHEntry
+	IDX   *BIIndex
+}
+
+func NewOLHBIEntry(p OLHBIEntryParams) *OLHBIEntry {
 	return &OLHBIEntry{
-		entry: entry,
-		idx:   idx,
+		entry: p.Entry,
+		idx:   p.IDX,
 	}
 }
 

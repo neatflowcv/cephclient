@@ -83,9 +83,9 @@ func TestEntryGroupExtractOmapKeys(t *testing.T) {
 func newEntryGroupForExtractionTests() *domain.EntryGroup {
 	return domain.NewEntryGroup(
 		[]*domain.OLHBIEntry{
-			domain.NewOLHBIEntry(
-				domain.NewBIIndex("test.txt"),
-				domain.NewBIOLHEntry(
+			domain.NewOLHBIEntry(domain.OLHBIEntryParams{
+				IDX: domain.NewBIIndex("test.txt"),
+				Entry: domain.NewBIOLHEntry(
 					domain.NewBIOLHKey("test.txt", "instance-1"),
 					false,
 					2,
@@ -94,7 +94,7 @@ func newEntryGroupForExtractionTests() *domain.EntryGroup {
 					true,
 					false,
 				),
-			),
+			}),
 		},
 		[]*domain.PlainBIEntry{
 			domain.NewPlainBIEntry(
