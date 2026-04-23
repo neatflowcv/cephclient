@@ -6,7 +6,7 @@ type OLH struct {
 	exists         bool
 	instance       string
 	name           string
-	pendingLog     []BIPendingLogEntry
+	pendingLog     []PendingLog
 	pendingRemoval bool
 	tag            string
 	idx            *BIIndex
@@ -18,14 +18,14 @@ type OLHParams struct {
 	Exists         bool
 	Instance       string
 	Name           string
-	PendingLog     []BIPendingLogEntry
+	PendingLog     []PendingLog
 	PendingRemoval bool
 	Tag            string
 	IDX            *BIIndex
 }
 
 func NewOLH(p OLHParams) *OLH {
-	copiedPendingLog := make([]BIPendingLogEntry, len(p.PendingLog))
+	copiedPendingLog := make([]PendingLog, len(p.PendingLog))
 	copy(copiedPendingLog, p.PendingLog)
 
 	return &OLH{
@@ -65,8 +65,8 @@ func (o *OLH) Instance() string {
 	return o.instance
 }
 
-func (o *OLH) PendingLog() []BIPendingLogEntry {
-	copied := make([]BIPendingLogEntry, len(o.pendingLog))
+func (o *OLH) PendingLog() []PendingLog {
+	copied := make([]PendingLog, len(o.pendingLog))
 	copy(copied, o.pendingLog)
 
 	return copied

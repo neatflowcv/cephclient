@@ -125,9 +125,9 @@ func (g *EntryGroup) versions() []string {
 		seen.Set(version)
 		versions = append(versions, version)
 
-		for _, log := range olh.PendingLog() {
-			for _, val := range log.Val() {
-				valVersion := val.Instance()
+		for _, pendingLog := range olh.PendingLog() {
+			for _, item := range pendingLog.Val() {
+				valVersion := item.Instance()
 				if seen.Check(valVersion) {
 					continue
 				}

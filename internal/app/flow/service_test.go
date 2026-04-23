@@ -808,10 +808,10 @@ func TestServiceObjectInspectChecksOLHAndPendingLogVersionsInDataPool(t *testing
 		newOLHEntry(
 			"test.txt",
 			"instance-olh",
-			[]domain.BIPendingLogEntry{
-				domain.NewBIPendingLogEntry(8, []domain.BIPendingLogItem{
-					domain.NewBIPendingLogItem(8, "unlink_olh", "tag-1", "test.txt", "", false),
-					domain.NewBIPendingLogItem(
+			[]domain.PendingLog{
+				domain.NewPendingLog(8, []domain.PendingLogItem{
+					domain.NewPendingLogItem(8, "unlink_olh", "tag-1", "test.txt", "", false),
+					domain.NewPendingLogItem(
 						8,
 						"remove_instance",
 						"tag-1",
@@ -1249,7 +1249,7 @@ func newVersionedInstanceEntry() *domain.InstanceBIEntry {
 
 func newOLHEntry(
 	name, instance string,
-	pendingLog []domain.BIPendingLogEntry,
+	pendingLog []domain.PendingLog,
 ) *domain.OLH {
 	return domain.NewOLH(domain.OLHParams{
 		DeleteMarker:   false,
