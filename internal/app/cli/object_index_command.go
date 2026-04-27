@@ -30,10 +30,10 @@ func (c *objectIndexCommand) Run(ctx context.Context, service *flow.Service, std
 		return fmt.Errorf("read bucket index list: %w", err)
 	}
 
-	return writeObjectIndexEntriesJSON(stdout, resp)
+	return WriteObjectIndexEntriesJSON(stdout, resp)
 }
 
-func writeObjectIndexEntriesJSON(stdout io.Writer, resp *flow.ListBIByObjectResponse) error {
+func WriteObjectIndexEntriesJSON(stdout io.Writer, resp *flow.ListBIByObjectResponse) error {
 	payload, err := newObjectIndexEntriesResponse(resp)
 	if err != nil {
 		return err
@@ -102,13 +102,19 @@ func (olhObjectIndexEntryResponse) isObjectIndexEntryResponse() {}
 func newObjectIndexEntriesResponse(resp *flow.ListBIByObjectResponse) (*objectIndexEntriesResponse, error) {
 	var entries []objectIndexEntryResponse
 
-	for _, entry := range resp.BIList.Entries() {
-		item, err := newObjectIndexEntryResponse(entry)
-		if err != nil {
-			return nil, err
-		}
+	groupEntries, err := appendObjectIndexEntries(entries, resp.EntryGroup.OLHs())
+	if err != nil {
+		return nil, err
+	}
 
-		entries = append(entries, item)
+	groupEntries, err = appendObjectIndexEntries(groupEntries, resp.EntryGroup.Plains())
+	if err != nil {
+		return nil, err
+	}
+
+	groupEntries, err = appendObjectIndexEntries(groupEntries, resp.EntryGroup.Instances())
+	if err != nil {
+		return nil, err
 	}
 
 	return &objectIndexEntriesResponse{
@@ -116,8 +122,24 @@ func newObjectIndexEntriesResponse(resp *flow.ListBIByObjectResponse) (*objectIn
 		Bucket:    resp.Bucket,
 		Object:    resp.Object,
 		ShardID:   resp.ShardID,
-		Entries:   entries,
+		Entries:   groupEntries,
 	}, nil
+}
+
+func appendObjectIndexEntries[T domain.BIEntry](
+	items []objectIndexEntryResponse,
+	entries []T,
+) ([]objectIndexEntryResponse, error) {
+	for _, entry := range entries {
+		item, err := newObjectIndexEntryResponse(entry)
+		if err != nil {
+			return nil, err
+		}
+
+		items = append(items, item)
+	}
+
+	return items, nil
 }
 
 func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse, error) {

@@ -240,7 +240,52 @@ func TestServiceListBIByObjectDelegatesToClient(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	requireListBIByObjectResponse(t, resp, 3)
-	require.Equal(t, []domain.BIEntry{wantEntry}, resp.BIList.Entries())
+	require.Equal(t, []*domain.Plain{wantEntry}, resp.EntryGroup.Plains())
+	require.Empty(t, resp.EntryGroup.OLHs())
+	require.Empty(t, resp.EntryGroup.Instances())
+	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
+}
+
+func TestServiceListBIByObjectNormalizesNilEntryGroup(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := t.Context()
+
+	var mockClient ClientMock
+
+	mockClient.ListBucketIndexByObjectFunc = func(
+		gotCtx context.Context,
+		containerName, bucketName, objectName string,
+		shardID int,
+	) (*domain.EntryGroup, error) {
+		var entryGroup *domain.EntryGroup
+
+		require.Equal(t, ctx, gotCtx)
+		require.Equal(t, "rgw", containerName)
+		require.Equal(t, "bucket-a", bucketName)
+		require.Equal(t, "test.txt", objectName)
+		require.Equal(t, 3, shardID)
+
+		return entryGroup, nil
+	}
+	service := flow.NewService(&mockClient)
+
+	// Act
+	shardID := 3
+	resp, err := service.ListBIByObject(ctx, flow.ListBIByObjectRequest{
+		ContainerName: "rgw",
+		BucketName:    "bucket-a",
+		ObjectName:    "test.txt",
+		ShardID:       &shardID,
+		TotalShards:   nil,
+	})
+
+	// Assert
+	require.NoError(t, err)
+	requireListBIByObjectResponse(t, resp, 3)
+	require.NotNil(t, resp.EntryGroup)
+	require.True(t, resp.EntryGroup.IsEmpty())
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
 }
 
@@ -302,7 +347,7 @@ func TestServiceListBIByObjectResolvesShardWhenRequestShardIsNil(t *testing.T) {
 	require.NoError(t, err)
 
 	requireListBIByObjectResponse(t, resp, 7)
-	require.Empty(t, resp.BIList.Entries())
+	require.True(t, resp.EntryGroup.IsEmpty())
 	require.Len(t, mockClient.GetBucketStatsCalls(), 1)
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
@@ -356,7 +401,7 @@ func TestServiceListBIByObjectUsesRequestTotalShardsWhenProvided(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	requireListBIByObjectResponse(t, resp, 5)
-	require.Empty(t, resp.BIList.Entries())
+	require.True(t, resp.EntryGroup.IsEmpty())
 	require.Empty(t, mockClient.GetBucketStatsCalls())
 	require.Len(t, mockClient.ObjectShardCalls(), 1)
 	require.Len(t, mockClient.ListBucketIndexByObjectCalls(), 1)
