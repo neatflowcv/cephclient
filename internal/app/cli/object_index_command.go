@@ -68,6 +68,8 @@ type plainObjectIndexEntryResponse struct {
 	Name           string `json:"name"`
 	Instance       string `json:"instance"`
 	Exists         bool   `json:"exists"`
+	Pending        bool   `json:"pending"`
+	Flags          int    `json:"flags"`
 	VersionedEpoch int    `json:"versioned_epoch,omitempty"`
 	MTime          string `json:"mtime,omitempty"`
 }
@@ -78,6 +80,8 @@ type instanceObjectIndexEntryResponse struct {
 	Name           string `json:"name"`
 	Instance       string `json:"instance"`
 	Exists         bool   `json:"exists"`
+	Pending        bool   `json:"pending"`
+	Flags          int    `json:"flags"`
 	VersionedEpoch int    `json:"versioned_epoch,omitempty"`
 	MTime          string `json:"mtime,omitempty"`
 }
@@ -88,6 +92,7 @@ type olhObjectIndexEntryResponse struct {
 	Name           string `json:"name"`
 	Instance       string `json:"instance"`
 	Exists         bool   `json:"exists"`
+	Pending        bool   `json:"pending"`
 	Epoch          int    `json:"epoch,omitempty"`
 	PendingRemoval bool   `json:"pending_removal,omitempty"`
 	DeleteMarker   bool   `json:"delete_marker,omitempty"`
@@ -151,6 +156,8 @@ func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse
 			Name:           typed.Name(),
 			Instance:       typed.Instance(),
 			Exists:         typed.Exists(),
+			Pending:        typed.Pending(),
+			Flags:          typed.Flags(),
 			VersionedEpoch: typed.VersionedEpoch(),
 			MTime:          typed.MTime(),
 		}, nil
@@ -161,6 +168,8 @@ func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse
 			Name:           typed.Name(),
 			Instance:       typed.Instance(),
 			Exists:         typed.Exists(),
+			Pending:        typed.Pending(),
+			Flags:          typed.Flags(),
 			VersionedEpoch: typed.VersionedEpoch(),
 			MTime:          typed.MTime(),
 		}, nil
@@ -171,6 +180,7 @@ func newObjectIndexEntryResponse(entry domain.BIEntry) (objectIndexEntryResponse
 			Name:           typed.Name(),
 			Instance:       typed.Instance(),
 			Exists:         typed.Exists(),
+			Pending:        typed.Pending(),
 			Epoch:          typed.Epoch(),
 			PendingRemoval: typed.PendingRemoval(),
 			DeleteMarker:   typed.DeleteMarker(),

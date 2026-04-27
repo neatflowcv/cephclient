@@ -90,6 +90,10 @@ func (o *OLH) PendingRemoval() bool {
 	return o.pendingRemoval
 }
 
+func (o *OLH) Pending() bool {
+	return o.pendingRemoval || len(o.pendingLog) > 0
+}
+
 func (o *OLH) Tag() string {
 	return o.tag
 }
