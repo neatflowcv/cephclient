@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/alecthomas/kong"
 	"github.com/neatflowcv/cephclient/internal/app/flow"
+	"github.com/neatflowcv/cephclient/internal/pkg/cache"
 	"github.com/neatflowcv/cephclient/internal/pkg/podman"
 )
 
@@ -35,20 +37,45 @@ func RunWithArgs(ctx context.Context, args []string, stdin io.Reader, stdout io.
 		return fmt.Errorf("parse CLI arguments: %w", err)
 	}
 
-	client, err := podman.NewClient(cliApp.Debug, os.Stderr)
+	podmanClient, err := podman.NewClient(cliApp.Debug, os.Stderr)
 	if err != nil {
 		return fmt.Errorf("create podman client: %w", err)
 	}
 
-	service := flow.NewService(client)
+	cachePath, err := defaultCachePath()
+	if err != nil {
+		return err
+	}
+
+	cachedClient, err := cache.NewClient(ctx, podmanClient, cachePath)
+	if err != nil {
+		return fmt.Errorf("create cache client: %w", err)
+	}
+
+	service := flow.NewService(cachedClient)
 	kctx.Bind(service)
 
-	err = kctx.Run()
-	if err != nil {
-		return fmt.Errorf("run CLI command: %w", err)
+	runErr := kctx.Run()
+	closeErr := cachedClient.Close()
+
+	if runErr != nil {
+		return fmt.Errorf("run CLI command: %w", runErr)
+	}
+
+	if closeErr != nil {
+		return fmt.Errorf("close cache client: %w", closeErr)
 	}
 
 	return nil
+}
+
+func defaultCachePath() (string, error) {
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		return "", fmt.Errorf("get user cache dir: %w", err)
+	}
+
+	return filepath.Join(cacheDir, "cephclient", "cache.sqlite"), nil
 }
 
 func NewParser(
