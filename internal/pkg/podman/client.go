@@ -14,6 +14,14 @@ import (
 
 var _ pkgclient.Client = (*Client)(nil)
 
+const (
+	podmanExecCommand = "exec"
+	radosgwAdmin      = "radosgw-admin"
+	radosCommand      = "rados"
+	bucketCommand     = "bucket"
+	listCommand       = "list"
+)
+
 type Client struct {
 	runner Runner
 }
@@ -39,12 +47,12 @@ func (c *Client) BIListByShard(
 	shardID int,
 ) (*domain.BIList, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
+		radosgwAdmin,
 		"bi",
-		"list",
+		listCommand,
 		"--bucket=" + bucketName,
 		fmt.Sprintf("--shard-id=%d", shardID),
 	}
@@ -73,12 +81,12 @@ func (c *Client) ListBIByObject(
 	shardID int,
 ) (*domain.BIList, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
+		radosgwAdmin,
 		"bi",
-		"list",
+		listCommand,
 		"--bucket=" + bucketName,
 		"--object=" + objectName,
 		fmt.Sprintf("--shard-id=%d", shardID),
@@ -108,12 +116,12 @@ func (c *Client) ListBucketIndexByObject(
 	shardID int,
 ) (*domain.EntryGroup, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
+		radosgwAdmin,
 		"bi",
-		"list",
+		listCommand,
 		"--bucket=" + bucketName,
 		"--object=" + objectName,
 		fmt.Sprintf("--shard-id=%d", shardID),
@@ -164,11 +172,11 @@ func toEntryGroup(biList *domain.BIList) *domain.EntryGroup {
 
 func (c *Client) GetBucketStats(ctx context.Context, containerName, bucketName string) (*domain.BucketStats, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
-		"bucket",
+		radosgwAdmin,
+		bucketCommand,
 		"stats",
 		"--bucket=" + bucketName,
 	}
@@ -193,11 +201,11 @@ func (c *Client) GetBucketStats(ctx context.Context, containerName, bucketName s
 
 func (c *Client) GetBucketLayout(ctx context.Context, containerName, bucketName string) (*domain.Layout, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
-		"bucket",
+		radosgwAdmin,
+		bucketCommand,
 		"layout",
 		"--bucket=" + bucketName,
 	}
@@ -222,10 +230,10 @@ func (c *Client) GetBucketLayout(ctx context.Context, containerName, bucketName 
 
 func (c *Client) GetDefaultZone(ctx context.Context, containerName string) (*domain.Zone, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
+		radosgwAdmin,
 		"zone",
 		"get",
 	}
@@ -253,10 +261,10 @@ func (c *Client) HasRawObject(
 	containerName, pool, rawObject string,
 ) (bool, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"rados",
+		radosCommand,
 		"-p",
 		pool,
 		"stat",
@@ -286,10 +294,10 @@ func (c *Client) ListOmapKeys(
 	rawObject string,
 ) ([]*domain.BIIndex, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"rados",
+		radosCommand,
 		"-p",
 		indexPool,
 		"listomapkeys",
@@ -318,7 +326,7 @@ func (c *Client) RemoveOmapKey(
 	key string,
 ) error {
 	stdout, err := c.runPodmanCommand(ctx, []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
 		"mktemp",
@@ -331,7 +339,7 @@ func (c *Client) RemoveOmapKey(
 	writeKeyCommand := `printf "` + key + `" > "` + tmpFile + `"`
 
 	err = c.runPodmanNoOutput(ctx, []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
 		"sh",
@@ -343,10 +351,10 @@ func (c *Client) RemoveOmapKey(
 	}
 
 	err = c.runPodmanNoOutput(ctx, []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"rados",
+		radosCommand,
 		"-p",
 		indexPool,
 		"rmomapkey",
@@ -362,12 +370,12 @@ func (c *Client) RemoveOmapKey(
 
 func (c *Client) ListBuckets(ctx context.Context, containerName string) ([]string, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
-		"bucket",
-		"list",
+		radosgwAdmin,
+		bucketCommand,
+		listCommand,
 	}
 
 	stdout, stderr, err := c.runner.Run(ctx, commandArgs...)
@@ -394,11 +402,11 @@ func (c *Client) ObjectShard(
 	totalShards int,
 ) (*domain.ObjectShard, error) {
 	commandArgs := []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
-		"bucket",
+		radosgwAdmin,
+		bucketCommand,
 		"object",
 		"shard",
 		"--object=" + objectName,
@@ -428,10 +436,10 @@ func (c *Client) RemoveObject(
 	containerName, bucketName, objectName, version string,
 ) error {
 	return c.runPodmanNoOutput(ctx, []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"radosgw-admin",
+		radosgwAdmin,
 		"object",
 		"rm",
 		"--bucket=" + bucketName,
@@ -445,10 +453,10 @@ func (c *Client) RemoveRawObject(
 	containerName, pool, rawObject string,
 ) error {
 	return c.runPodmanNoOutput(ctx, []string{
-		"exec",
+		podmanExecCommand,
 		"-i",
 		containerName,
-		"rados",
+		radosCommand,
 		"-p",
 		pool,
 		"rm",
