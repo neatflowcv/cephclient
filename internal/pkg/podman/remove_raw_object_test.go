@@ -1,3 +1,4 @@
+//nolint:goconst // Podman tests repeat literal CLI arguments to preserve expected command shape.
 package podman_test
 
 import (

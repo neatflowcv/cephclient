@@ -1,3 +1,4 @@
+//nolint:goconst // Repeated request fixture values make each case self-contained.
 package flow_test
 
 import (

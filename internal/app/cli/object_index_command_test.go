@@ -1,3 +1,4 @@
+//nolint:goconst // JSON fixture values are repeated intentionally for readability.
 package cli_test
 
 import (

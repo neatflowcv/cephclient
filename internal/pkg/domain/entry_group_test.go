@@ -1,3 +1,4 @@
+//nolint:goconst // Entry group fixtures repeat object names to show expected raw keys.
 package domain_test
 
 import (

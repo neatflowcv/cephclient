@@ -1,3 +1,4 @@
+//nolint:goconst // Service tests keep repeated fixture values local to each scenario.
 package flow_test
 
 import (
